@@ -226,6 +226,22 @@ services:
         "/data/reports/synthetic-validation.json",
       ]
 
+  gemini-live:
+    profiles: ["live"]
+    build:
+      context: ./backend
+      target: runtime
+    environment:
+      DATABASE_URL: postgresql://live:not-used@not-used:5432/live
+      REDIS_URL: redis://not-used:6379/0
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash-lite}
+      GEMINI_TIMEOUT_SECONDS: ${GEMINI_TIMEOUT_SECONDS:-15}
+      GEMINI_MAX_ATTEMPTS: ${GEMINI_MAX_ATTEMPTS:-3}
+      GEMINI_MAX_INPUT_CHARS: ${GEMINI_MAX_INPUT_CHARS:-12000}
+      GEMINI_MAX_OUTPUT_TOKENS: ${GEMINI_MAX_OUTPUT_TOKENS:-2048}
+    command: ["uv", "run", "--no-sync", "python", "-m", "vbe_hub.ai_live"]
+
 volumes:
   postgres_data:
   redis_data:

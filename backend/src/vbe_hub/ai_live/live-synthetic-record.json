@@ -1,0 +1,23 @@
+{
+  "synthetic": true,
+  "source_kind": "community",
+  "source_name": "vbe-hub-live-smoke",
+  "published_at": "2026-09-29T12:00:00-04:00",
+  "language": "pt-BR",
+  "text": "Relato inteiramente sintético: moradores do bairro Flores mencionam febre e manchas vermelhas nos últimos três dias. Uma investigação simulada está em andamento.",
+  "location": {
+    "country": "Brasil",
+    "state": "Amazonas",
+    "municipality": "Manaus",
+    "district": "Flores",
+    "specific": null,
+    "precision": "district"
+  },
+  "magnitude": {
+    "estimated_cases": null,
+    "estimated_deaths": null
+  },
+  "symptoms": ["febre", "manchas vermelhas"],
+  "affected_group": "moradores",
+  "environment": null
+}
