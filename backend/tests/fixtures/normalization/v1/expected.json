@@ -1,0 +1,56 @@
+[
+  {
+    "source_kind": "media",
+    "source_name": "Agência Sentinela Sintética",
+    "external_id": "media-cbcfeaec9aa9-000000",
+    "published_at": "2026-03-16T12:00:00+00:00",
+    "language": "pt-BR",
+    "title": "Boletim republicado",
+    "text": "Conteúdo sintético republica alerta sobre manchas vermelhas e febre.",
+    "location": {
+      "country": null,
+      "state": null,
+      "municipality": "Manaus",
+      "district": null,
+      "specific": null,
+      "precision": "municipality"
+    },
+    "magnitude": {"estimated_cases": null, "estimated_deaths": null},
+    "symptoms": ["febre", "manchas vermelhas"],
+    "affected_group": null,
+    "environment": null,
+    "metadata": {
+      "source_url": "https://dados-sinteticos.invalid/media-cbcfeaec9aa9-000000",
+      "reported_window_start": null,
+      "reported_window_end": null,
+      "topic": null
+    }
+  },
+  {
+    "source_kind": "community",
+    "source_name": "Canal Comunitário Sintético",
+    "external_id": "community-cbcfeaec9aa9-000001",
+    "published_at": "2026-02-26T12:00:00+00:00",
+    "language": "pt-BR",
+    "title": "Relato agregado sintético",
+    "text": "Relato sintético agregado informa várias pessoas com febre e manchas vermelhas.",
+    "location": {
+      "country": null,
+      "state": null,
+      "municipality": "Manaus",
+      "district": null,
+      "specific": null,
+      "precision": "municipality"
+    },
+    "magnitude": {"estimated_cases": 3, "estimated_deaths": null},
+    "symptoms": ["febre", "manchas vermelhas"],
+    "affected_group": null,
+    "environment": null,
+    "metadata": {
+      "source_url": "https://dados-sinteticos.invalid/community-cbcfeaec9aa9-000001",
+      "reported_window_start": null,
+      "reported_window_end": null,
+      "topic": null
+    }
+  }
+]
