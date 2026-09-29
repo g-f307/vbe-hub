@@ -8,3 +8,5 @@ __pycache__/
 htmlcov/
 data/generated/*
 !data/generated/.gitkeep
+data/reports/*
+!data/reports/.gitkeep

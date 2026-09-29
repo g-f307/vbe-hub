@@ -102,7 +102,7 @@ def _record_id(config: GeneratorConfig, fingerprint: str, index: int) -> str:
 
 
 def _weighted_relation(rng: random.Random, config: GeneratorConfig) -> RelationKind:
-    relations = tuple(config.relation_distribution)
+    relations = tuple(sorted(config.relation_distribution, key=lambda relation: relation.value))
     weights = tuple(config.relation_distribution[relation] for relation in relations)
     return rng.choices(relations, weights=weights, k=1)[0]
 
