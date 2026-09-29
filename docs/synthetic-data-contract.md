@@ -38,6 +38,10 @@ Os dados sintéticos devem permitir repetir experimentos e medir corretamente a 
 
 O envelope do pipeline não contém rótulos de avaliação. O importador pode associar `scenario_id` à proveniência persistida e `gold_event_id` à tabela de avaliação, sem acrescentá-los ao registro bruto.
 
+Depois da ingestão, os dois tipos de envelope seguem o mesmo
+[contrato de normalização](normalization-contract.md). Essa etapa apenas padroniza valores presentes;
+a ficha técnica abaixo pertence à extração estruturada posterior.
+
 ## Entrada inspirada em mídia/EIOS
 
 Além do envelope: idioma, veículo, URL, data de publicação, título, resumo/narrativa e possível localidade ou tópico. O gerador deve produzir republicações, textos em português e outros idiomas, detalhes conflitantes e notícias preventivas para testar falsos agrupamentos.
