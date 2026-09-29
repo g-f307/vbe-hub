@@ -14,19 +14,25 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-Planejamento e documentação inicial. Ainda não há código executável, integração com APIs reais ou credenciais configuradas.
+Fundação executável da API: FastAPI, PostgreSQL com pgvector e Redis são reproduzíveis por Docker Compose. Ainda não há tabelas de domínio, pipeline analítico, interface web ou integração com APIs reais.
 
-## Reprodutibilidade planejada
+## Início rápido
 
-Docker Compose será a interface oficial de execução e validação da PoC. Ao concluir a primeira etapa, um dispositivo com Git, Docker e Docker Compose deverá conseguir preparar o ambiente a partir do repositório, sem instalar diretamente Python, Node.js, PostgreSQL ou Redis.
-
-O contrato de inicialização pretendido é:
+Com Git, Docker e Docker Compose:
 
 ```bash
 git clone https://github.com/g-f307/vbe-hub.git
 cd vbe-hub
 cp .env.example .env
-docker compose up --build
+docker compose up --build --detach --wait
 ```
 
-Esses comandos ainda não estão implementados. A Issue #1 é responsável por torná-los executáveis e documentar qualquer comando adicional estritamente necessário, como migrations e carga do cenário sintético.
+A API estará em `http://localhost:8000`. Verifique:
+
+```bash
+docker compose ps
+docker compose --profile tools run --rm test
+docker compose --profile tools run --rm lint
+```
+
+Consulte o [guia de execução local](docs/development.md) para desenvolvimento com hot reload, portas, volumes, reconstrução sem cache e reset. O host não precisa de Python, uv, PostgreSQL ou Redis.
