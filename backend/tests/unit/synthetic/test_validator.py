@@ -1,3 +1,4 @@
+import hashlib
 import json
 import shutil
 from collections.abc import Callable
@@ -33,6 +34,13 @@ def _mutate_record(directory: Path, mutation: Callable[[dict[str, Any]], None]) 
     records = _read_records(directory)
     mutation(records[0])
     _write_records(directory, records)
+
+
+def _refresh_hash(directory: Path, filename: str) -> None:
+    manifest_path = directory / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["sha256"][filename] = hashlib.sha256((directory / filename).read_bytes()).hexdigest()
+    manifest_path.write_text(json.dumps(manifest))
 
 
 def test_accepts_versioned_fixture_without_issues() -> None:
@@ -138,3 +146,62 @@ def test_rejects_missing_required_scenario(tmp_path: Path) -> None:
     report = validate_dataset(dataset)
 
     assert "coverage.scenarios" in {issue.rule for issue in report.issues}
+
+
+def test_rejects_content_that_diverges_from_declared_generation(tmp_path: Path) -> None:
+    dataset = _dataset_copy(tmp_path)
+    _mutate_record(dataset, lambda record: record.__setitem__("body", "Texto sintético alterado."))
+    _refresh_hash(dataset, "records.jsonl")
+
+    report = validate_dataset(dataset)
+
+    assert "reproducibility.content" in {issue.rule for issue in report.issues}
+
+
+def test_rejects_gold_identifier_embedded_in_pipeline_text(tmp_path: Path) -> None:
+    dataset = _dataset_copy(tmp_path)
+    gold = json.loads((dataset / "gold.json").read_text())
+    leaked_identifier = gold["labels"][0]["scenario_id"]
+    _mutate_record(dataset, lambda record: record.__setitem__("body", leaked_identifier))
+    _refresh_hash(dataset, "records.jsonl")
+
+    report = validate_dataset(dataset)
+
+    assert "record.gold_identifier_leak" in {issue.rule for issue in report.issues}
+
+
+def test_rejects_source_ratio_inconsistent_with_configuration(tmp_path: Path) -> None:
+    dataset = _dataset_copy(tmp_path)
+    manifest_path = dataset / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["config"]["media_ratio"] = 0.9
+    manifest_path.write_text(json.dumps(manifest))
+
+    report = validate_dataset(dataset)
+
+    assert "coverage.source_ratio" in {issue.rule for issue in report.issues}
+
+
+def test_rejects_impossible_event_composition(tmp_path: Path) -> None:
+    dataset = _dataset_copy(tmp_path)
+    gold_path = dataset / "gold.json"
+    gold = json.loads(gold_path.read_text())
+    gold["labels"][0]["gold_event_id"] = None
+    gold_path.write_text(json.dumps(gold))
+    _refresh_hash(dataset, "gold.json")
+
+    report = validate_dataset(dataset)
+
+    assert "label.event_composition" in {issue.rule for issue in report.issues}
+
+
+def test_rejects_manifest_distribution_divergence(tmp_path: Path) -> None:
+    dataset = _dataset_copy(tmp_path)
+    manifest_path = dataset / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["scenario_counts"]["duplicate"] = 99
+    manifest_path.write_text(json.dumps(manifest))
+
+    report = validate_dataset(dataset)
+
+    assert "manifest.distributions" in {issue.rule for issue in report.issues}

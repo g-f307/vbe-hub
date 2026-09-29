@@ -7,13 +7,16 @@ import json
 import re
 from collections import Counter
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 from urllib.parse import urlparse
 from uuid import UUID
 
-from vbe_hub.synthetic.models import RelationKind, ScenarioKind
+from vbe_hub.synthetic.artifacts import write_dataset
+from vbe_hub.synthetic.generator import generate_dataset
+from vbe_hub.synthetic.models import GeneratorConfig, RelationKind, ScenarioKind
 
 _REQUIRED_RECORD_FIELDS = {
     "id",
@@ -210,11 +213,13 @@ def _read_records(path: Path, issues: list[ValidationIssue]) -> tuple[list[Any],
     return records, content
 
 
-def _validate_gold(gold: Any, record_ids: set[str], issues: list[ValidationIssue]) -> Counter[str]:
+def _validate_gold(
+    gold: Any, record_ids: set[str], issues: list[ValidationIssue]
+) -> tuple[Counter[str], set[str]]:
     scenarios: Counter[str] = Counter()
     if not isinstance(gold, dict) or not isinstance(gold.get("labels"), list):
         _issue(issues, "gold.structure", "gold.json", "labels must be an array")
-        return scenarios
+        return scenarios, set()
     labels = gold["labels"]
     labeled_records: set[str] = set()
     gold_identifiers: set[str] = set()
@@ -264,6 +269,20 @@ def _validate_gold(gold: Any, record_ids: set[str], issues: list[ValidationIssue
             _issue(issues, "label.scenario_kind", "gold.json", "unknown scenario kind", record_id)
         else:
             scenarios[scenario] += 1
+        if (
+            scenario == ScenarioKind.IRRELEVANT.value
+            and label.get("gold_event_id") is not None
+        ) or (
+            scenario in {item.value for item in ScenarioKind if item is not ScenarioKind.IRRELEVANT}
+            and label.get("gold_event_id") is None
+        ):
+            _issue(
+                issues,
+                "label.event_composition",
+                "gold.json",
+                "scenario and gold event association are inconsistent",
+                record_id,
+            )
         if isinstance(label.get("scenario_id"), str):
             gold_identifiers.add(label["scenario_id"])
         else:
@@ -274,7 +293,7 @@ def _validate_gold(gold: Any, record_ids: set[str], issues: list[ValidationIssue
     relations = gold.get("relations")
     if not isinstance(relations, list):
         _issue(issues, "relation.structure", "gold.json", "relations must be an array")
-        return scenarios
+        return scenarios, gold_identifiers
     for relation in relations:
         if not isinstance(relation, dict):
             _issue(issues, "relation.object", "gold.json", "relation must be an object")
@@ -290,7 +309,7 @@ def _validate_gold(gold: Any, record_ids: set[str], issues: list[ValidationIssue
                     f"{side} references an unknown record",
                     relation.get(side) if isinstance(relation.get(side), str) else None,
                 )
-    return scenarios
+    return scenarios, gold_identifiers
 
 
 def _validate_manifest(
@@ -325,6 +344,104 @@ def _validate_manifest(
         expected_hashes["gold.json"] = hashlib.sha256(gold_content).hexdigest()
     if manifest.get("sha256") != expected_hashes:
         _issue(issues, "manifest.sha256", "manifest.json", "manifest hashes do not reconcile")
+    scenario_counts = Counter(
+        label.get("scenario_kind") for label in labels if isinstance(label, dict)
+    )
+    relation_counts = Counter(
+        relation.get("relation") for relation in relations if isinstance(relation, dict)
+    )
+    if manifest.get("scenario_counts") != dict(sorted(scenario_counts.items())) or manifest.get(
+        "relation_counts"
+    ) != dict(sorted(relation_counts.items())):
+        _issue(
+            issues,
+            "manifest.distributions",
+            "manifest.json",
+            "manifest distributions do not reconcile",
+        )
+    config = manifest.get("config")
+    if isinstance(config, dict) and isinstance(config.get("media_ratio"), int | float):
+        expected_media = round(len(records) * config["media_ratio"])
+        if source_counts["media"] != expected_media:
+            _issue(
+                issues,
+                "coverage.source_ratio",
+                "manifest.json",
+                "source counts do not match the configured media ratio",
+            )
+
+
+def _config_from_manifest(manifest: Any) -> GeneratorConfig | None:
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("config"), dict):
+        return None
+    config = manifest["config"]
+    try:
+        return GeneratorConfig(
+            seed=config["seed"],
+            total_records=config["total_records"],
+            media_ratio=config["media_ratio"],
+            event_count=config["event_count"],
+            relation_distribution={
+                RelationKind(relation): weight
+                for relation, weight in config["relation_distribution"].items()
+            },
+            languages=tuple(config["languages"]),
+            noise_level=config["noise_level"],
+            missing_field_rate=config["missing_field_rate"],
+            start_date=date.fromisoformat(config["start_date"]),
+            end_date=date.fromisoformat(config["end_date"]),
+            allowed_locations=tuple(config["allowed_locations"]),
+            generator_version=manifest["generator_version"],
+            scenario_kinds=tuple(ScenarioKind(item) for item in config["scenario_kinds"]),
+        )
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def _validate_reproducibility(
+    manifest: Any,
+    records_content: bytes | None,
+    gold_content: bytes | None,
+    issues: list[ValidationIssue],
+) -> None:
+    config = _config_from_manifest(manifest)
+    if config is None:
+        _issue(
+            issues,
+            "manifest.config",
+            "manifest.json",
+            "generator configuration is incomplete or invalid",
+        )
+        return
+    with TemporaryDirectory() as temporary:
+        output = Path(temporary)
+        write_dataset(generate_dataset(config), config, output)
+        expected_records = (output / "records.jsonl").read_bytes()
+        expected_gold = (output / "gold.json").read_bytes()
+    if records_content != expected_records or gold_content != expected_gold:
+        _issue(
+            issues,
+            "reproducibility.content",
+            "manifest.json",
+            "artifacts differ from a generation with the declared configuration",
+        )
+
+
+def _validate_gold_leaks(
+    records: list[Any], gold_identifiers: set[str], issues: list[ValidationIssue]
+) -> None:
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        serialized = json.dumps(record, ensure_ascii=False, sort_keys=True)
+        if any(identifier in serialized for identifier in gold_identifiers):
+            _issue(
+                issues,
+                "record.gold_identifier_leak",
+                "records.jsonl",
+                "pipeline content contains an evaluation identifier",
+                record.get("id") if isinstance(record.get("id"), str) else None,
+            )
 
 
 def validate_dataset(directory: Path) -> ValidationReport:
@@ -348,7 +465,7 @@ def validate_dataset(directory: Path) -> ValidationReport:
                     record_id,
                 )
             record_ids.append(record_id)
-    scenarios = _validate_gold(gold, set(record_ids), issues)
+    scenarios, gold_identifiers = _validate_gold(gold, set(record_ids), issues)
     required_scenarios = {scenario.value for scenario in ScenarioKind}
     if set(scenarios) != required_scenarios:
         _issue(
@@ -358,6 +475,8 @@ def validate_dataset(directory: Path) -> ValidationReport:
             "required scenario coverage is incomplete",
         )
     _validate_manifest(manifest, records, gold, records_content, gold_content, issues)
+    _validate_gold_leaks(records, gold_identifiers, issues)
+    _validate_reproducibility(manifest, records_content, gold_content, issues)
     return ValidationReport(
         issues=tuple(issues),
         coverage={

@@ -1,7 +1,7 @@
 from collections import Counter
 
 from vbe_hub.synthetic.generator import generate_dataset
-from vbe_hub.synthetic.models import GeneratorConfig, ScenarioKind
+from vbe_hub.synthetic.models import GeneratorConfig, RelationKind, ScenarioKind
 
 
 def test_generation_is_deterministic_for_the_same_configuration() -> None:
@@ -23,6 +23,16 @@ def test_different_configurations_use_distinct_record_identities() -> None:
     assert {record.external_id for record in first.records}.isdisjoint(
         record.external_id for record in second.records
     )
+
+
+def test_relation_mapping_order_does_not_change_generation() -> None:
+    forward = {relation: 1 for relation in RelationKind}
+    reverse = dict(reversed(tuple(forward.items())))
+
+    first = generate_dataset(GeneratorConfig(relation_distribution=forward))
+    second = generate_dataset(GeneratorConfig(relation_distribution=reverse))
+
+    assert first == second
 
 
 def test_generation_covers_required_scenarios_and_source_ratio() -> None:
