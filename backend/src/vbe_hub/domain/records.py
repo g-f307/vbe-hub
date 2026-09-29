@@ -155,3 +155,16 @@ class ProcessingRun:
     skipped_count: int = 0
     failed_count: int = 0
     sanitized_error: dict[str, str] | None = None
+
+    def __post_init__(self) -> None:
+        _require_aware(self.started_at, "started_at")
+        if self.finished_at is not None:
+            _require_aware(self.finished_at, "finished_at")
+        counters = (
+            self.received_count,
+            self.processed_count,
+            self.skipped_count,
+            self.failed_count,
+        )
+        if any(count < 0 for count in counters):
+            raise ValueError("processing counters must be non-negative")

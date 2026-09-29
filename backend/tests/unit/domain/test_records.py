@@ -6,6 +6,8 @@ import pytest
 from vbe_hub.domain.records import (
     EvaluationLabel,
     NormalizationStatus,
+    ProcessingRun,
+    ProcessingState,
     Provenance,
     RawRecord,
     SourceKind,
@@ -119,3 +121,24 @@ def test_normalization_failure_is_structured_and_retryable() -> None:
         "message": "Município ausente",
     }
     assert failure.retryable is True
+
+
+def test_processing_run_rejects_datetime_without_timezone() -> None:
+    with pytest.raises(ValueError, match="timezone"):
+        ProcessingRun(
+            id=UUID("30700000-0000-0000-0000-000000000001"),
+            run_type="synthetic_import",
+            state=ProcessingState.RUNNING,
+            started_at=datetime(2026, 9, 28),
+        )
+
+
+def test_processing_run_rejects_negative_counters() -> None:
+    with pytest.raises(ValueError, match="non-negative"):
+        ProcessingRun(
+            id=UUID("30700000-0000-0000-0000-000000000002"),
+            run_type="synthetic_import",
+            state=ProcessingState.FAILED,
+            started_at=datetime(2026, 9, 28, tzinfo=UTC),
+            failed_count=-1,
+        )
