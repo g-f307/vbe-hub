@@ -96,12 +96,48 @@ services:
         condition: service_healthy
     command: ["uv", "run", "--no-sync", "pytest"]
 
+  unit-test:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+      target: development
+    environment:
+      DATABASE_URL: postgresql://unit:unit@not-used:5432/unit
+      REDIS_URL: redis://not-used:6379/0
+    command: ["uv", "run", "--no-sync", "pytest", "-m", "not integration", "tests/unit"]
+
+  integration-test:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+      target: development
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_APP_USER}:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/0
+      DEPENDENCY_TIMEOUT_SECONDS: ${DEPENDENCY_TIMEOUT_SECONDS:-2}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["uv", "run", "--no-sync", "pytest", "-m", "integration", "tests/integration"]
+
   lint:
     profiles: ["tools"]
     build:
       context: ./backend
       target: development
     command: ["uv", "run", "--no-sync", "ruff", "check", "--no-cache", "."]
+
+  docs-check:
+    profiles: ["tools"]
+    image: python:3.12.8-slim-bookworm
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace:ro
+    command: ["python", "scripts/audit_docs.py", "--root", "/workspace", "--strict"]
 
   synthetic-generate:
     profiles: ["tools"]

@@ -1,0 +1,31 @@
+x-backend-cache: &backend-cache
+  cache_from:
+    - type=gha,scope=${CI_CACHE_SCOPE:-backend}
+  cache_to:
+    - type=gha,scope=${CI_CACHE_SCOPE:-backend},mode=max
+
+services:
+  migrate:
+    build:
+      <<: *backend-cache
+  api:
+    build:
+      <<: *backend-cache
+  lint:
+    build:
+      <<: *backend-cache
+  unit-test:
+    build:
+      <<: *backend-cache
+  integration-test:
+    build:
+      <<: *backend-cache
+  synthetic-generate:
+    build:
+      <<: *backend-cache
+  synthetic-validate:
+    build:
+      <<: *backend-cache
+  synthetic-import:
+    build:
+      <<: *backend-cache

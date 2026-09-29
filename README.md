@@ -35,6 +35,9 @@ docker compose --profile tools run --rm test
 docker compose --profile tools run --rm lint
 ```
 
+Os checks automatizados também possuem comandos separados para documentação, testes unitários,
+integração e smoke test. Consulte o [guia de integração contínua](docs/continuous-integration.md).
+
 Gere, valide e importe o dataset sintético padrão:
 
 ```bash

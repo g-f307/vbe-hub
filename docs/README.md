@@ -11,8 +11,9 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 5. [Modelo persistente inicial](data-model.md)
 6. [Plano de implementação](implementation-plan.md)
 7. [Execução e validação local](development.md)
-8. [Decisões arquiteturais](decisions/README.md)
+8. [Integração contínua](continuous-integration.md)
+9. [Decisões arquiteturais](decisions/README.md)
 
 ## Situação
 
-Fundação Docker executável da PoC e gerador sintético determinístico, com validação prevista para o fim de outubro/início de novembro de 2026. As integrações EIOS e Guardiões da Saúde são futuras; a etapa atual simula contratos de entrada sem afirmar que eles reproduzem endpoints oficiais.
+Fundação Docker executável da PoC, gerador sintético determinístico e validações automatizadas, com validação da solução prevista para o fim de outubro/início de novembro de 2026. As integrações EIOS e Guardiões da Saúde são futuras; a etapa atual simula contratos de entrada sem afirmar que eles reproduzem endpoints oficiais.

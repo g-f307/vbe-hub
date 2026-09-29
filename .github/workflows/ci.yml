@@ -2,47 +2,163 @@ name: CI
 
 on:
   pull_request:
+    branches: [main]
   push:
     branches: [main]
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COMPOSE_FILE: compose.yaml:compose.ci.yaml
+
 jobs:
-  docker-validation:
+  docs:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Prepare local configuration
         run: cp .env.example .env
+      - name: Test documentation auditor
+        run: docker compose --profile tools run --rm docs-check python -m unittest scripts.tests.test_audit_docs
+      - name: Audit documentation
+        run: docker compose --profile tools run --rm docs-check
 
-      - name: Build and start the stack
-        run: docker compose up --build --detach --wait
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI_CACHE_SCOPE: quality
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Configure Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Prepare local configuration
+        run: cp .env.example .env
+      - name: Build quality image
+        run: docker compose build lint
+      - name: Run lint
+        run: docker compose --profile tools run --rm lint
 
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI_CACHE_SCOPE: unit-tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Configure Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Prepare local configuration
+        run: cp .env.example .env
+      - name: Build unit-test image
+        run: docker compose build unit-test
+      - name: Run unit tests without external services
+        run: docker compose --profile tools run --rm --no-deps unit-test
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI_CACHE_SCOPE: integration-tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Configure Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Prepare local configuration
+        run: cp .env.example .env
+      - name: Build migration and integration images
+        run: docker compose build migrate integration-test
+      - name: Start PostgreSQL, pgvector, Redis and migrations
+        run: docker compose up --detach --wait --no-build postgres redis migrate
+      - name: Verify migration state
+        run: docker compose run --rm migrate uv run --no-sync alembic check
+      - name: Run integration tests
+        run: docker compose --profile tools run --rm integration-test
+      - name: Show infrastructure logs on failure
+        if: failure()
+        run: docker compose logs --no-color postgres redis migrate
+      - name: Stop the ephemeral integration stack
+        if: always()
+        run: docker compose down --volumes
+
+  synthetic-data-validation:
+    needs: integration-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI_CACHE_SCOPE: synthetic-data-validation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Configure Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Prepare local configuration
+        run: cp .env.example .env
+      - name: Map runner ownership into tool containers
+        run: |
+          echo "LOCAL_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "LOCAL_GID=$(id -g)" >> "$GITHUB_ENV"
+      - name: Build synthetic-data tools
+        run: docker compose build synthetic-generate synthetic-validate
+      - name: Generate deterministic dataset
+        run: docker compose --profile tools run --rm synthetic-generate
+      - name: Validate deterministic dataset
+        run: docker compose --profile tools run --rm synthetic-validate
+
+  docker-smoke:
+    needs: [docs, quality, unit-tests, synthetic-data-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI_CACHE_SCOPE: docker-smoke
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Configure Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Prepare local configuration
+        run: cp .env.example .env
+      - name: Map runner ownership into tool containers
+        run: |
+          echo "LOCAL_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "LOCAL_GID=$(id -g)" >> "$GITHUB_ENV"
+      - name: Build clean application and tool images
+        run: >-
+          docker compose build --pull migrate api synthetic-generate
+          synthetic-validate synthetic-import
+      - name: Start the application stack
+        run: docker compose up --detach --wait --no-build postgres redis migrate api
       - name: Verify health endpoints
         run: |
           docker compose exec -T api python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/live', timeout=3)"
           docker compose exec -T api python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"
-
       - name: Verify reversible migrations
         run: |
           docker compose run --rm migrate uv run --no-sync alembic downgrade -1
           docker compose run --rm migrate uv run --no-sync alembic upgrade head
           docker compose run --rm migrate uv run --no-sync alembic check
-
-      - name: Run tests
-        run: docker compose --profile tools run --rm test
-
-      - name: Run lint
-        run: docker compose --profile tools run --rm lint
-
-      - name: Show service logs on failure
+      - name: Generate, validate and import deterministic data
+        run: |
+          docker compose --profile tools run --rm synthetic-generate
+          docker compose --profile tools run --rm synthetic-validate
+          docker compose --profile tools run --rm synthetic-import
+      - name: Verify minimum persistence
+        run: |
+          record_count="$(docker compose exec -T postgres sh -c 'psql --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" --tuples-only --no-align --command "SELECT count(*) FROM raw_records;"')"
+          test "$record_count" = "120"
+      - name: Show sanitized service logs on failure
         if: failure()
-        run: docker compose logs --no-color
-
+        run: docker compose logs --no-color postgres redis migrate api
       - name: Stop the ephemeral stack
         if: always()
         run: docker compose down --volumes
