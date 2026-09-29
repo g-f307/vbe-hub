@@ -43,6 +43,15 @@ docker compose --profile tools run --rm test
 docker compose --profile tools run --rm lint
 ```
 
+O gerador e o importador sintéticos também são ferramentas da composição:
+
+```bash
+docker compose --profile tools run --rm synthetic-generate
+docker compose --profile tools run --rm synthetic-import
+```
+
+Os artefatos massivos ficam em `data/generated/` e não são versionados. Consulte [geração e importação de dados sintéticos](synthetic-data-generation.md) para configuração e verificação dos hashes.
+
 Para reconstruir sem reaproveitar o cache local:
 
 ```bash

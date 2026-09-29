@@ -6,6 +6,8 @@ from vbe_hub.synthetic.artifacts import write_dataset
 from vbe_hub.synthetic.generator import generate_dataset
 from vbe_hub.synthetic.models import GeneratorConfig
 
+FIXTURE = Path(__file__).parents[2] / "fixtures" / "synthetic" / "v1"
+
 
 def _contents(directory: Path) -> dict[str, bytes]:
     return {path.name: path.read_bytes() for path in sorted(directory.iterdir())}
@@ -55,3 +57,17 @@ def test_pipeline_jsonl_does_not_leak_evaluation_fields(tmp_path: Path) -> None:
         assert "scenario_id" not in record
         assert "gold_event_id" not in record
         assert "scenario_id" not in record["provenance"]
+
+
+def test_versioned_fixture_matches_its_manifest_and_covers_all_scenarios() -> None:
+    manifest = json.loads((FIXTURE / "manifest.json").read_text())
+    records = (FIXTURE / "records.jsonl").read_bytes()
+    gold_content = (FIXTURE / "gold.json").read_bytes()
+    gold = json.loads(gold_content)
+
+    assert manifest["counts"]["records"] == 12
+    assert len(manifest["scenario_counts"]) == 12
+    assert set(manifest["scenario_counts"].values()) == {1}
+    assert manifest["sha256"]["records.jsonl"] == hashlib.sha256(records).hexdigest()
+    assert manifest["sha256"]["gold.json"] == hashlib.sha256(gold_content).hexdigest()
+    assert len(gold["labels"]) == 12
