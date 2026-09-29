@@ -23,6 +23,13 @@ class Settings(BaseSettings):
         validation_alias="DEPENDENCY_TIMEOUT_SECONDS",
     )
 
+    @property
+    def sqlalchemy_database_url(self) -> str:
+        url = self.database_url.get_secret_value()
+        if url.startswith("postgresql://"):
+            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return url
+
 
 @lru_cache
 def get_settings() -> Settings:
