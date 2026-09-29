@@ -1,4 +1,5 @@
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 from sqlalchemy import func, select
@@ -17,15 +18,26 @@ async def test_imports_dataset_and_reprocessing_is_idempotent(
 ) -> None:
     config = GeneratorConfig(total_records=24)
     output = tmp_path / "dataset"
-    write_dataset(generate_dataset(config), config, output)
+    dataset = generate_dataset(config)
+    write_dataset(dataset, config, output)
 
     first = await import_dataset(db_session, output / "records.jsonl", output / "gold.json")
     await db_session.commit()
     second = await import_dataset(db_session, output / "records.jsonl", output / "gold.json")
     await db_session.commit()
 
-    record_count = await db_session.scalar(select(func.count()).select_from(RawRecordModel))
-    label_count = await db_session.scalar(select(func.count()).select_from(EvaluationLabelModel))
+    record_ids = [UUID(record.id) for record in dataset.records]
+    labeled_ids = [
+        UUID(label.record_id) for label in dataset.labels if label.gold_event_id is not None
+    ]
+    record_count = await db_session.scalar(
+        select(func.count()).select_from(RawRecordModel).where(RawRecordModel.id.in_(record_ids))
+    )
+    label_count = await db_session.scalar(
+        select(func.count())
+        .select_from(EvaluationLabelModel)
+        .where(EvaluationLabelModel.raw_record_id.in_(labeled_ids))
+    )
     assert first.created == 24
     assert first.skipped == 0
     assert second.created == 0

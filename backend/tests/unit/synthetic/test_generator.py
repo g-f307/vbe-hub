@@ -13,6 +13,18 @@ def test_generation_is_deterministic_for_the_same_configuration() -> None:
     assert first == second
 
 
+def test_different_configurations_use_distinct_record_identities() -> None:
+    first = generate_dataset(GeneratorConfig(total_records=12, media_ratio=1))
+    second = generate_dataset(GeneratorConfig(total_records=24, media_ratio=1))
+
+    assert {record.id for record in first.records}.isdisjoint(
+        record.id for record in second.records
+    )
+    assert {record.external_id for record in first.records}.isdisjoint(
+        record.external_id for record in second.records
+    )
+
+
 def test_generation_covers_required_scenarios_and_source_ratio() -> None:
     config = GeneratorConfig(total_records=120, media_ratio=0.6)
 

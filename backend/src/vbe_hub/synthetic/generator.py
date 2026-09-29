@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import random
 from datetime import UTC, datetime, time, timedelta
 from uuid import NAMESPACE_URL, uuid5
@@ -68,8 +70,35 @@ _NARRATIVES: dict[ScenarioKind, tuple[str, str]] = {
 }
 
 
-def _record_id(config: GeneratorConfig, index: int) -> str:
-    return str(uuid5(NAMESPACE_URL, f"vbe-hub:{config.generator_version}:{config.seed}:{index}"))
+def _config_fingerprint(config: GeneratorConfig) -> str:
+    canonical = json.dumps(
+        {
+            "allowed_locations": config.allowed_locations,
+            "end_date": config.end_date.isoformat(),
+            "event_count": config.event_count,
+            "generator_version": config.generator_version,
+            "languages": config.languages,
+            "media_ratio": config.media_ratio,
+            "missing_field_rate": config.missing_field_rate,
+            "noise_level": config.noise_level,
+            "relation_distribution": sorted(
+                (relation.value, weight)
+                for relation, weight in config.relation_distribution.items()
+            ),
+            "scenario_kinds": [scenario.value for scenario in config.scenario_kinds],
+            "seed": config.seed,
+            "start_date": config.start_date.isoformat(),
+            "total_records": config.total_records,
+        },
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode()
+    return hashlib.sha256(canonical).hexdigest()[:12]
+
+
+def _record_id(config: GeneratorConfig, fingerprint: str, index: int) -> str:
+    return str(uuid5(NAMESPACE_URL, f"vbe-hub:{config.generator_version}:{fingerprint}:{index}"))
 
 
 def _weighted_relation(rng: random.Random, config: GeneratorConfig) -> RelationKind:
@@ -82,6 +111,7 @@ def generate_dataset(config: GeneratorConfig) -> SyntheticDataset:
     """Generate pipeline records and separate gold-standard metadata."""
 
     rng = random.Random(config.seed)
+    fingerprint = _config_fingerprint(config)
     media_count = round(config.total_records * config.media_ratio)
     source_kinds = ["media"] * media_count + ["community"] * (
         config.total_records - media_count
@@ -94,7 +124,7 @@ def generate_dataset(config: GeneratorConfig) -> SyntheticDataset:
     for index in range(config.total_records):
         scenario = config.scenario_kinds[index % len(config.scenario_kinds)]
         source_kind = source_kinds[index]
-        record_id = _record_id(config, index)
+        record_id = _record_id(config, fingerprint, index)
         event_number = index % config.event_count
         gold_event_id = None if scenario is ScenarioKind.IRRELEVANT else f"event-{event_number:04d}"
         scenario_id = f"scenario-{index:06d}"
@@ -109,7 +139,7 @@ def generate_dataset(config: GeneratorConfig) -> SyntheticDataset:
         title, body = _NARRATIVES[scenario]
         if rng.random() < config.noise_level:
             body = f"{body} Informação agregada pode conter grafia imprecisa."
-        external_id = f"{source_kind}-{index:06d}"
+        external_id = f"{source_kind}-{fingerprint}-{index:06d}"
         records.append(
             GeneratedRecord(
                 id=record_id,
