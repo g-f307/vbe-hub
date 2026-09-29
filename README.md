@@ -15,3 +15,18 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 ## Estado atual
 
 Planejamento e documentação inicial. Ainda não há código executável, integração com APIs reais ou credenciais configuradas.
+
+## Reprodutibilidade planejada
+
+Docker Compose será a interface oficial de execução e validação da PoC. Ao concluir a primeira etapa, um dispositivo com Git, Docker e Docker Compose deverá conseguir preparar o ambiente a partir do repositório, sem instalar diretamente Python, Node.js, PostgreSQL ou Redis.
+
+O contrato de inicialização pretendido é:
+
+```bash
+git clone https://github.com/g-f307/vbe-hub.git
+cd vbe-hub
+cp .env.example .env
+docker compose up --build
+```
+
+Esses comandos ainda não estão implementados. A Issue #1 é responsável por torná-los executáveis e documentar qualquer comando adicional estritamente necessário, como migrations e carga do cenário sintético.
