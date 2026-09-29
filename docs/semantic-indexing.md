@@ -64,4 +64,7 @@ docker compose run --rm test uv run --no-sync pytest \
 Os testes cobrem a representação estável, o contrato do adapter, persistência, reprocessamento,
 ordenação por similaridade e isolamento entre versões de modelo.
 
+A etapa seguinte combina os vizinhos recuperados com regras documentadas em
+[seleção de pares candidatos](candidate-selection.md).
+
 [Voltar ao índice da documentação](README.md)
