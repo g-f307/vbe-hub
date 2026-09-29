@@ -104,6 +104,10 @@ jobs:
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - name: Prepare local configuration
         run: cp .env.example .env
+      - name: Map runner ownership into tool containers
+        run: |
+          echo "LOCAL_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "LOCAL_GID=$(id -g)" >> "$GITHUB_ENV"
       - name: Build synthetic-data tools
         run: docker compose build synthetic-generate synthetic-validate
       - name: Generate deterministic dataset
@@ -124,6 +128,10 @@ jobs:
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - name: Prepare local configuration
         run: cp .env.example .env
+      - name: Map runner ownership into tool containers
+        run: |
+          echo "LOCAL_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "LOCAL_GID=$(id -g)" >> "$GITHUB_ENV"
       - name: Build clean application and tool images
         run: >-
           docker compose build --pull migrate api synthetic-generate
