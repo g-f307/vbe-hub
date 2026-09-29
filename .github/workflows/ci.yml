@@ -27,6 +27,12 @@ jobs:
           docker compose exec -T api python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/live', timeout=3)"
           docker compose exec -T api python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"
 
+      - name: Verify reversible migrations
+        run: |
+          docker compose run --rm migrate uv run --no-sync alembic downgrade -1
+          docker compose run --rm migrate uv run --no-sync alembic upgrade head
+          docker compose run --rm migrate uv run --no-sync alembic check
+
       - name: Run tests
         run: docker compose --profile tools run --rm test
 
