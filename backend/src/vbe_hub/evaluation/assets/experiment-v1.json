@@ -1,0 +1,43 @@
+{
+  "dataset_version": "technical-sheet-eval-v1",
+  "seed": 307,
+  "prompt_version": "extract-v1",
+  "schema_version": "technical-sheet-v1",
+  "normalizer_version": "1.0.0",
+  "field_kinds": {
+    "record_nature": "scalar",
+    "disease_or_condition": "scalar",
+    "pathogen": "scalar",
+    "syndrome": "scalar",
+    "symptoms": "list",
+    "estimated_cases": "numeric",
+    "estimated_deaths": "numeric",
+    "affected_group": "scalar",
+    "environment": "scalar",
+    "temporal.start": "scalar",
+    "temporal.end": "scalar",
+    "temporal.precision": "scalar",
+    "location.country": "scalar",
+    "location.state": "scalar",
+    "location.municipality": "scalar",
+    "location.district": "scalar",
+    "location.specific": "scalar",
+    "location.precision": "scalar",
+    "action_in_progress": "scalar",
+    "suggested_relevance": "scalar"
+  },
+  "targets": {
+    "critical_field_hallucination_rate_max": 0.10,
+    "critical_field_omission_rate_max": 0.25,
+    "symptoms_f1_min": 0.80,
+    "operational_failure_rate_max": 0.05
+  },
+  "critical_fields": [
+    "disease_or_condition",
+    "estimated_cases",
+    "estimated_deaths",
+    "temporal.start",
+    "location.municipality",
+    "location.district"
+  ]
+}

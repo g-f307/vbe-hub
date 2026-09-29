@@ -1,0 +1,52 @@
+[
+  {
+    "record_id": "10000000-0000-0000-0000-000000000001",
+    "normalized_data": {
+      "source_kind": "media",
+      "text": "Boletim de 10 de março de 2026 informa 12 casos suspeitos de sarampo, com febre e manchas vermelhas, no bairro Centro, em Manaus, Amazonas, Brasil.",
+      "published_at": "2026-03-10T12:00:00+00:00",
+      "municipality": "Manaus",
+      "district": "Centro",
+      "symptoms": ["febre", "manchas vermelhas"],
+      "estimated_cases": 12,
+      "synthetic": true
+    }
+  },
+  {
+    "record_id": "10000000-0000-0000-0000-000000000002",
+    "normalized_data": {
+      "source_kind": "community",
+      "text": "Relato comunitário agregado registra 5 pessoas com febre e manchas vermelhas na Compensa, em Manaus. A causa ainda é desconhecida.",
+      "published_at": "2026-03-12T12:00:00+00:00",
+      "municipality": "Manaus",
+      "district": "Compensa",
+      "symptoms": ["febre", "manchas vermelhas"],
+      "estimated_cases": 5,
+      "synthetic": true
+    }
+  },
+  {
+    "record_id": "10000000-0000-0000-0000-000000000003",
+    "normalized_data": {
+      "source_kind": "media",
+      "text": "Manaus inicia campanha preventiva de vacinação contra sarampo, sem registro de novos casos.",
+      "published_at": "2026-03-14T12:00:00+00:00",
+      "municipality": "Manaus",
+      "symptoms": [],
+      "estimated_cases": null,
+      "synthetic": true
+    }
+  },
+  {
+    "record_id": "10000000-0000-0000-0000-000000000004",
+    "normalized_data": {
+      "source_kind": "community",
+      "text": "Associação comunitária anuncia oficina de artesanato no sábado.",
+      "published_at": "2026-03-15T12:00:00+00:00",
+      "municipality": null,
+      "symptoms": [],
+      "estimated_cases": null,
+      "synthetic": true
+    }
+  }
+]

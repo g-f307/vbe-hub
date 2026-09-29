@@ -1,0 +1,53 @@
+[
+  {
+    "record_id": "20000000-0000-0000-0000-000000000001",
+    "normalized_data": {
+      "source_kind": "media",
+      "text": "Em 20 de abril de 2026, notícia informa 18 casos suspeitos de dengue, com febre e dor no corpo, no bairro Cidade Nova, em Manaus, Amazonas, Brasil.",
+      "published_at": "2026-04-20T12:00:00+00:00",
+      "municipality": "Manaus",
+      "district": "Cidade Nova",
+      "symptoms": ["febre", "dor no corpo"],
+      "estimated_cases": 18,
+      "synthetic": true
+    }
+  },
+  {
+    "record_id": "20000000-0000-0000-0000-000000000002",
+    "normalized_data": {
+      "source_kind": "community",
+      "text": "Relato agregado aponta 7 moradores com febre e tosse no bairro Flores, em Manaus, sem causa definida.",
+      "published_at": "2026-04-22T12:00:00+00:00",
+      "municipality": "Manaus",
+      "district": "Flores",
+      "symptoms": ["febre", "tosse"],
+      "estimated_cases": 7,
+      "synthetic": true
+    }
+  },
+  {
+    "record_id": "20000000-0000-0000-0000-000000000003",
+    "normalized_data": {
+      "source_kind": "media",
+      "text": "Boletim de 24 de abril de 2026 registra 30 casos de influenza e 2 óbitos em Manaus, Amazonas, Brasil.",
+      "published_at": "2026-04-24T12:00:00+00:00",
+      "municipality": "Manaus",
+      "symptoms": [],
+      "estimated_cases": 30,
+      "estimated_deaths": 2,
+      "synthetic": true
+    }
+  },
+  {
+    "record_id": "20000000-0000-0000-0000-000000000004",
+    "normalized_data": {
+      "source_kind": "media",
+      "text": "Jornal publica agenda cultural com exposição de fotografia e apresentação musical.",
+      "published_at": "2026-04-25T12:00:00+00:00",
+      "municipality": null,
+      "symptoms": [],
+      "estimated_cases": null,
+      "synthetic": true
+    }
+  }
+]
