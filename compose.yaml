@@ -1,0 +1,91 @@
+name: vbe-hub
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg17-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?configure POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER:?configure POSTGRES_ADMIN_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?configure POSTGRES_ADMIN_PASSWORD in .env}
+      APP_DB_USER: ${POSTGRES_APP_USER:?configure POSTGRES_APP_USER in .env}
+      APP_DB_PASSWORD: ${POSTGRES_APP_PASSWORD:?configure POSTGRES_APP_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/001-bootstrap.sh:/docker-entrypoint-initdb.d/001-bootstrap.sh:ro
+      - ./infra/postgres/002-bootstrap.sql:/opt/vbe-hub/bootstrap.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4.2-alpine
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./backend
+      target: runtime
+    environment:
+      APP_ENVIRONMENT: ${APP_ENVIRONMENT:-development}
+      DATABASE_URL: postgresql://${POSTGRES_APP_USER}:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/0
+      DEPENDENCY_TIMEOUT_SECONDS: ${DEPENDENCY_TIMEOUT_SECONDS:-2}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)",
+        ]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  test:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+      target: development
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_APP_USER}:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/0
+      DEPENDENCY_TIMEOUT_SECONDS: ${DEPENDENCY_TIMEOUT_SECONDS:-2}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["uv", "run", "--no-sync", "pytest"]
+
+  lint:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+      target: development
+    command: ["uv", "run", "--no-sync", "ruff", "check", "--no-cache", "."]
+
+volumes:
+  postgres_data:
+  redis_data:

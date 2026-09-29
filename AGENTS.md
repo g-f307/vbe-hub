@@ -12,9 +12,9 @@ O VBE Hub é uma prova de conceito de Vigilância Baseada em Eventos (VBE) para 
 ## Diretórios previstos
 
 - `docs/`: requisitos, arquitetura, contrato dos dados sintéticos e decisões.
-- `backend/`: API e processamento assíncrono (a criar).
+- `backend/`: API e base do processamento, organizadas por camadas.
 - `frontend/`: painel web (a criar).
-- `infra/`: execução local e banco de dados (a criar).
+- `infra/`: bootstrap e recursos da execução local.
 
 ## Regras obrigatórias
 

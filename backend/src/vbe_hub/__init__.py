@@ -1,0 +1,1 @@
+"""VBE Hub backend."""
