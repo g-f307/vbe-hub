@@ -141,3 +141,31 @@ class GeneratedRecord:
             "payload": dict(self.payload),
             "provenance": dict(self.provenance),
         }
+
+
+@dataclass(frozen=True, slots=True)
+class GoldLabel:
+    """Evaluation-only classification for one generated record."""
+
+    record_id: str
+    scenario_id: str
+    gold_event_id: str | None
+    scenario_kind: ScenarioKind
+
+
+@dataclass(frozen=True, slots=True)
+class ExpectedRelation:
+    """Evaluation-only expected relation between two records."""
+
+    left_record_id: str
+    right_record_id: str
+    relation: RelationKind
+
+
+@dataclass(frozen=True, slots=True)
+class SyntheticDataset:
+    """Generated inputs and a physically separable evaluation reference."""
+
+    records: tuple[GeneratedRecord, ...]
+    labels: tuple[GoldLabel, ...]
+    relations: tuple[ExpectedRelation, ...]
