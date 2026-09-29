@@ -160,3 +160,6 @@ docker compose --profile live run --rm \
 
 Consulte o [contrato da ficha técnica](technical-sheet-contract.md) para schema, segurança,
 cache e fontes oficiais de modelo, limites e preços.
+## Avaliação live da ficha técnica
+
+Com `GEMINI_API_KEY` apenas no `.env`, execute primeiro `EVALUATION_SPLIT=calibration docker compose --profile live run --rm --build technical-sheet-evaluate` e, sem ajustar o prompt pela amostra reservada, repita com `EVALUATION_SPLIT=evaluation`. Os relatórios sanitizados são gravados em `data/reports/`, fora do Git. Consulte o [protocolo de avaliação](technical-sheet-evaluation.md).

@@ -28,9 +28,9 @@ busca e correlação. Ela não representa diagnóstico, confirmação de surto, 
 ou decisão sanitária.
 
 - schema: `technical-sheet-v1`;
-- prompt: `extract-v1`;
+- prompt atual: `extract-v2` (`extract-v1` preservado como histórico de calibração);
 - JSON Schema versionado: `backend/src/vbe_hub/application/ai/assets/technical-sheet-v1.schema.json`;
-- prompt versionado: `backend/src/vbe_hub/application/ai/assets/extract-v1.prompt.txt`.
+- prompt versionado: `backend/src/vbe_hub/application/ai/assets/extract-v2.prompt.txt`.
 
 O teste de contrato exige que o arquivo JSON Schema permaneça idêntico ao schema produzido pelo
 modelo Pydantic. Mudanças incompatíveis exigem nova versão, sem editar silenciosamente a versão
@@ -79,6 +79,13 @@ invalida a chave. A tabela `technical_sheet_extractions` mantém no máximo uma 
 registra sucesso ou última falha, ficha, evidências, modelo, versões, início, duração, unidades,
 erro sanitizado e repetibilidade. Uma falha transitória pode ser substituída pelo sucesso da
 mesma chave, sem duplicar a ficha.
+
+## Avaliação
+
+O protocolo, as metas e a linha de base reservada estão documentados em
+[avaliação da ficha técnica](technical-sheet-evaluation.md) e no
+[relatório sanitizado de 29 de setembro](technical-sheet-baseline-2026-09-29.md).
+
 
 ## Gemini
 
