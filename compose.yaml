@@ -103,6 +103,14 @@ services:
       target: development
     command: ["uv", "run", "--no-sync", "ruff", "check", "--no-cache", "."]
 
+  docs-check:
+    profiles: ["tools"]
+    image: python:3.12.8-slim-bookworm
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace:ro
+    command: ["python", "scripts/audit_docs.py", "--root", "/workspace", "--strict"]
+
   synthetic-generate:
     profiles: ["tools"]
     build:
