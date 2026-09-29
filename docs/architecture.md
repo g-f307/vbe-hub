@@ -16,6 +16,7 @@ related_docs:
   - ADR-001
   - ADR-002
   - ADR-003
+  - ADR-004
 ---
 
 # Arquitetura
@@ -57,6 +58,39 @@ flowchart LR
 - Persistência: PostgreSQL com extensão `pgvector`.
 - Frontend: Next.js/React e Leaflet para mapa, após o núcleo analítico estar demonstrado.
 - Execução local: Docker Compose.
+
+## Docker como fronteira operacional
+
+Docker Compose é o contrato oficial entre a aplicação e o dispositivo de validação. O fluxo suportado não pressupõe runtimes ou bancos instalados diretamente no host.
+
+Na etapa 1, a composição contém:
+
+```text
+api ───────────────► postgres + pgvector
+ │                         ▲
+ └──────────────────► redis
+generator/importer ────────┘
+```
+
+- `api`: imagem do backend FastAPI, também usada para comandos de migrations, testes e utilitários quando adequado;
+- `postgres`: banco com versão fixada e extensão pgvector habilitada;
+- `redis`: infraestrutura preparada para filas e cache posteriores;
+- `generator/importer`: comando ou serviço de execução finita que gera e importa dados sintéticos sem exigir Python no host.
+
+Frontend e worker serão incorporados à mesma composição em seus milestones. A composição final deve ser inicializada por um comando documentado e oferecer dois modos:
+
+- desenvolvimento: volumes de código e recarga automática, sem comprometer o caminho reproduzível;
+- validação/demonstração: imagens construídas, dataset e semente identificados, sem dependência do ambiente do desenvolvedor.
+
+### Invariantes operacionais
+
+- Imagens-base usam versões explícitas; não usar tags flutuantes como `latest`.
+- Serviços possuem health checks e dependências condicionadas a prontidão, não apenas ordem de inicialização.
+- Migrations são executadas por comando idempotente e falham visivelmente.
+- Segredos entram apenas por variáveis/arquivos ignorados; não são incorporados às imagens.
+- Volumes nomeados, portas, comandos de reset e consequências de limpeza são documentados.
+- Testes e lint possuem comandos em contêiner equivalentes aos checks da CI.
+- O modo de validação pode operar com provider falso ou resultado previamente gerado quando a API externa não estiver disponível, deixando essa condição explícita.
 
 ## IA: decisão operacional
 
