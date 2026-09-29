@@ -14,7 +14,7 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-Fundação, dados sintéticos, normalização e extração auditável da ficha técnica estão implementados. A linha de base reservada do Gemini foi executada e recomenda peso reduzido ou somente evidência; correlação, interface web e integrações EIOS/GdS ainda não foram implementadas.
+Fundação, dados sintéticos, normalização e extração auditável da ficha técnica estão implementados. A indexação semântica versionada e a busca de candidatos no pgvector estão em implementação. A linha de base reservada do Gemini foi executada e recomenda peso reduzido ou somente evidência; julgamento das relações, interface web e integrações EIOS/GdS ainda não foram implementados.
 
 ## Início rápido
 
