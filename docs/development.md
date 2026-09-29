@@ -43,6 +43,18 @@ docker compose --profile tools run --rm test
 docker compose --profile tools run --rm lint
 ```
 
+Para reproduzir separadamente os checks da CI:
+
+```bash
+docker compose --profile tools run --rm docs-check
+docker compose --profile tools run --rm --no-deps unit-test
+docker compose --profile tools run --rm integration-test
+```
+
+O serviço `unit-test` não inicia dependências. O serviço `integration-test` aguarda PostgreSQL com
+pgvector, Redis e migrations. Consulte [integração contínua](continuous-integration.md) para a
+relação completa entre comandos e checks.
+
 O gerador, o validador e o importador sintéticos também são ferramentas da composição:
 
 ```bash
@@ -76,6 +88,24 @@ Downgrade é uma operação de desenvolvimento e pode remover dados. Para testar
 docker compose run --rm migrate uv run --no-sync alembic downgrade -1
 docker compose run --rm migrate uv run --no-sync alembic upgrade head
 ```
+
+## Smoke test reproduzível
+
+Em uma cópia sem dados locais, o percurso validado pela CI é:
+
+```bash
+docker compose build --pull migrate api synthetic-generate synthetic-validate synthetic-import
+docker compose up --detach --wait --no-build postgres redis migrate api
+docker compose exec -T api python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"
+docker compose run --rm migrate uv run --no-sync alembic check
+docker compose --profile tools run --rm synthetic-generate
+docker compose --profile tools run --rm synthetic-validate
+docker compose --profile tools run --rm synthetic-import
+```
+
+A CI também consulta a quantidade persistida e exige os 120 registros da configuração padrão. Use
+um nome de projeto Compose exclusivo ou remova intencionalmente os volumes de uma execução anterior
+antes de empregar essa contagem como evidência de banco vazio.
 
 ## Desenvolvimento com recarga automática
 
