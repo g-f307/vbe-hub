@@ -96,6 +96,30 @@ def test_rejects_duplicate_record_identifier(tmp_path: Path) -> None:
     assert "record.id_unique" in {issue.rule for issue in report.issues}
 
 
+def test_rejects_media_record_without_title(tmp_path: Path) -> None:
+    dataset = _dataset_copy(tmp_path)
+    records = _read_records(dataset)
+    media = next(record for record in records if record["source_kind"] == "media")
+    media["title"] = None
+    _write_records(dataset, records)
+
+    report = validate_dataset(dataset)
+
+    assert "record.media_fields" in {issue.rule for issue in report.issues}
+
+
+def test_rejects_community_record_without_aggregate_fields(tmp_path: Path) -> None:
+    dataset = _dataset_copy(tmp_path)
+    records = _read_records(dataset)
+    community = next(record for record in records if record["source_kind"] == "community")
+    community["payload"].pop("symptoms")
+    _write_records(dataset, records)
+
+    report = validate_dataset(dataset)
+
+    assert "record.community_fields" in {issue.rule for issue in report.issues}
+
+
 def test_rejects_relation_to_unknown_record(tmp_path: Path) -> None:
     dataset = _dataset_copy(tmp_path)
     gold_path = dataset / "gold.json"

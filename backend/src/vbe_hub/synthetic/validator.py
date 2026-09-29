@@ -212,6 +212,27 @@ def _validate_record(record: Any, issues: list[ValidationIssue], index: int) -> 
             "evaluation-only field is present in a pipeline record",
             record_id,
         )
+    if record.get("source_kind") == "media" and not isinstance(record.get("title"), str):
+        _issue(
+            issues,
+            "record.media_fields",
+            "records.jsonl",
+            "media records require a title",
+            record_id,
+        )
+    community_fields = {"estimated_cases", "geographic_precision", "municipality", "symptoms"}
+    if record.get("source_kind") == "community" and (
+        not isinstance(payload, dict)
+        or not community_fields.issubset(payload)
+        or not isinstance(payload.get("symptoms"), list)
+    ):
+        _issue(
+            issues,
+            "record.community_fields",
+            "records.jsonl",
+            "community payload lacks required aggregate fields",
+            record_id,
+        )
     if _contains_forbidden_key(record):
         _issue(
             issues,
