@@ -31,7 +31,9 @@ Os dados sintéticos devem permitir repetir experimentos e medir corretamente a 
 | `published_at` | data/hora | Momento em que a informação foi publicada/reportada. |
 | `title` | texto opcional | Título, usual para mídia. |
 | `body` | texto | Narrativa original sintética. |
-| `source_url` | URL sintética opcional | Referência de origem; não deve apontar a pessoa real. |
+| `source_url` | URL sintética | Referência HTTPS sob o domínio reservado `.invalid`. |
+| `language` | texto | Idioma configurado para o lote. |
+| `payload` | objeto | Campos agregados específicos da fonte, sem identificadores pessoais. |
 | `provenance` | objeto | Gerador, versão e semente usados. |
 
 O envelope do pipeline não contém rótulos de avaliação. O importador pode associar `scenario_id` à proveniência persistida e `gold_event_id` à tabela de avaliação, sem acrescentá-los ao registro bruto.
@@ -75,3 +77,18 @@ Cada par candidato pode ser rotulado como:
 - `manifest.json`: configuração, contagens, versão e hashes SHA-256 dos outros dois arquivos.
 
 O fixture pequeno versionado está em `backend/tests/fixtures/synthetic/v1/`. Lotes de escala ficam em `data/generated/` e são ignorados pelo Git.
+
+## Regras de validação
+
+O lote é inválido quando houver, entre outros casos:
+
+- campo obrigatório, enum, UUID, data com fuso ou URL sintética inválida;
+- IDs duplicados ou referência de label/relação para registro inexistente;
+- rótulo gold ausente, duplicado ou incompatível com o cenário;
+- identificador gold presente em chave ou texto entregue ao pipeline;
+- chave ou padrão determinístico de possível identificador pessoal;
+- cenário obrigatório ou proporção de fontes divergente da configuração;
+- contagem, distribuição ou hash divergente no manifesto;
+- artefato diferente de uma nova geração com a configuração declarada.
+
+O diagnóstico informa regra, arquivo e UUID quando disponível, sem copiar o conteúdo potencialmente sensível para logs ou relatórios.

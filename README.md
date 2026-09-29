@@ -35,10 +35,11 @@ docker compose --profile tools run --rm test
 docker compose --profile tools run --rm lint
 ```
 
-Gere e importe o dataset sintético padrão:
+Gere, valide e importe o dataset sintético padrão:
 
 ```bash
 docker compose --profile tools run --rm synthetic-generate
+docker compose --profile tools run --rm synthetic-validate
 docker compose --profile tools run --rm synthetic-import
 ```
 
