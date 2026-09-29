@@ -49,4 +49,3 @@ def test_results_preserve_source_identity_and_normalizer_version() -> None:
     assert result.status.state is ProcessingState.SUCCEEDED
     assert result.status.error is None
     assert result.status.retryable is False
-

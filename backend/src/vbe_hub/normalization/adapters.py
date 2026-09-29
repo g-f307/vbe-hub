@@ -6,7 +6,6 @@ from typing import Any
 from vbe_hub.domain.records import RawRecord, SourceKind
 from vbe_hub.normalization.errors import NormalizationError
 
-
 _PRECISION_ALIASES = {
     "country": "country",
     "state": "state",

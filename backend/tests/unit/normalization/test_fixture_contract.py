@@ -5,7 +5,6 @@ from pathlib import Path
 from vbe_hub.domain.records import RawRecord, SourceKind
 from vbe_hub.normalization.service import NormalizationService
 
-
 FIXTURES = Path(__file__).parents[2] / "fixtures"
 
 
