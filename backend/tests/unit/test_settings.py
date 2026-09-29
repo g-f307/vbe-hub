@@ -20,3 +20,15 @@ def test_settings_reject_non_positive_dependency_timeout() -> None:
             DEPENDENCY_TIMEOUT_SECONDS=0,
             _env_file=None,
         )
+
+
+def test_settings_selects_asyncpg_for_sqlalchemy() -> None:
+    settings = Settings(
+        DATABASE_URL="postgresql://user:password@postgres:5432/vbehub",
+        REDIS_URL="redis://redis:6379/0",
+        _env_file=None,
+    )
+
+    assert settings.sqlalchemy_database_url == (
+        "postgresql+asyncpg://user:password@postgres:5432/vbehub"
+    )
