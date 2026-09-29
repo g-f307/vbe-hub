@@ -66,6 +66,38 @@ class ValidationReport:
         return not self.issues
 
 
+def validation_exit_code(report: ValidationReport) -> int:
+    """Return the process status associated with a validation report."""
+
+    return 0 if report.valid else 1
+
+
+def write_validation_report(report: ValidationReport, output_path: Path) -> None:
+    """Write a deterministic report without copying untrusted record content."""
+
+    document = {
+        "coverage": report.coverage,
+        "issue_count": len(report.issues),
+        "issues": [
+            {
+                "file": issue.file,
+                "message": issue.message,
+                "record_id": issue.record_id,
+                "rule": issue.rule,
+            }
+            for issue in report.issues
+        ],
+        "status": "valid" if report.valid else "invalid",
+    }
+    content = (
+        json.dumps(document, ensure_ascii=False, separators=(",", ":"), sort_keys=True) + "\n"
+    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output_path.with_suffix(f"{output_path.suffix}.tmp")
+    temporary.write_text(content, encoding="utf-8")
+    temporary.replace(output_path)
+
+
 def _issue(
     issues: list[ValidationIssue],
     rule: str,

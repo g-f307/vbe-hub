@@ -164,6 +164,32 @@ services:
         "/data/generated/gold.json",
       ]
 
+  synthetic-validate:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+      target: runtime
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    environment:
+      UV_CACHE_DIR: /tmp/uv-cache
+    volumes:
+      - ./data/generated:/data/generated:ro
+      - ./data/reports:/data/reports
+    command:
+      [
+        "uv",
+        "run",
+        "--no-sync",
+        "python",
+        "-m",
+        "vbe_hub.synthetic",
+        "validate",
+        "--input",
+        "/data/generated",
+        "--report",
+        "/data/reports/synthetic-validation.json",
+      ]
+
 volumes:
   postgres_data:
   redis_data:
