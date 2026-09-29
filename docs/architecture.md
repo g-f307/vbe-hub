@@ -55,7 +55,7 @@ flowchart LR
 
 - Backend: Python e FastAPI.
 - Processamento em lote: Celery e Redis; o uso pode começar síncrono para o primeiro experimento pequeno e migrar antes do lote massivo.
-- Persistência: PostgreSQL com extensão `pgvector`.
+- Persistência: PostgreSQL com extensão `pgvector`, SQLAlchemy 2.x nos adapters e Alembic para migrations.
 - Frontend: Next.js/React e Leaflet para mapa, após o núcleo analítico estar demonstrado.
 - Execução local: Docker Compose.
 

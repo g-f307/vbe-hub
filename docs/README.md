@@ -7,9 +7,10 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 1. [Requisitos e escopo](requirements.md)
 2. [Arquitetura](architecture.md)
 3. [Contrato de dados sintéticos](synthetic-data-contract.md)
-4. [Plano de implementação](implementation-plan.md)
-5. [Execução e validação local](development.md)
-6. [Decisões arquiteturais](decisions/README.md)
+4. [Modelo persistente inicial](data-model.md)
+5. [Plano de implementação](implementation-plan.md)
+6. [Execução e validação local](development.md)
+7. [Decisões arquiteturais](decisions/README.md)
 
 ## Situação
 

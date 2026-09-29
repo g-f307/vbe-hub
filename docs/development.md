@@ -50,7 +50,22 @@ docker compose build --pull --no-cache
 docker compose up --detach --wait
 ```
 
-O bootstrap atual cria a extensão `vector` e um usuário não administrador para a aplicação. As migrations das tabelas de domínio começam na Issue #2.
+O bootstrap cria a extensão `vector` e um usuário não administrador para a aplicação. O schema da aplicação é gerido exclusivamente pelas migrations versionadas.
+
+O serviço `migrate` aplica automaticamente as migrations antes da API. Os comandos abaixo permitem verificar ou operar o histórico sem Alembic instalado no host:
+
+```bash
+docker compose run --rm migrate uv run --no-sync alembic current
+docker compose run --rm migrate uv run --no-sync alembic upgrade head
+docker compose run --rm migrate uv run --no-sync alembic check
+```
+
+Downgrade é uma operação de desenvolvimento e pode remover dados. Para testar a reversibilidade da última migration em um banco descartável:
+
+```bash
+docker compose run --rm migrate uv run --no-sync alembic downgrade -1
+docker compose run --rm migrate uv run --no-sync alembic upgrade head
+```
 
 ## Desenvolvimento com recarga automática
 
@@ -75,3 +90,5 @@ docker compose down --volumes
 ```
 
 Use o reset apenas quando a perda dos dados locais for intencional. O arquivo `.env` é ignorado pelo Git e não deve conter credenciais reais destinadas ao repositório.
+
+Após um reset, `docker compose up --build --detach --wait` recria o banco, habilita pgvector e reaplica todas as migrations. Backup e restauração não fazem parte desta etapa; os volumes locais não substituem uma política de backup.

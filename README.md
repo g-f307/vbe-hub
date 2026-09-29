@@ -14,7 +14,7 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-Fundação executável da API: FastAPI, PostgreSQL com pgvector e Redis são reproduzíveis por Docker Compose. Ainda não há tabelas de domínio, pipeline analítico, interface web ou integração com APIs reais.
+Fundação executável da API: FastAPI, PostgreSQL com pgvector, persistência auditável e Redis são reproduzíveis por Docker Compose. Ainda não há pipeline analítico, interface web ou integração com APIs reais.
 
 ## Início rápido
 
