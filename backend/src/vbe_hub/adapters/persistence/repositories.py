@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from vbe_hub.adapters.persistence.models import (
@@ -9,7 +10,15 @@ from vbe_hub.adapters.persistence.models import (
     ProcessingRunModel,
     ProvenanceModel,
     RawRecordModel,
+    TechnicalSheetExtractionModel,
 )
+from vbe_hub.application.ai import (
+    AIExecutionMetadata,
+    ExecutionStatus,
+    FieldEvidence,
+    ProviderErrorCode,
+)
+from vbe_hub.application.ai.extraction import ExtractionRecord
 from vbe_hub.application.repositories import IngestResult, StoredRawRecord
 from vbe_hub.domain.records import (
     EvaluationLabel,
@@ -224,3 +233,85 @@ class SqlAlchemyEvaluationRepository:
         if row is None:
             return None
         return EvaluationLabel(raw_record_id=row.raw_record_id, gold_event_id=row.gold_event_id)
+
+
+class SqlAlchemyExtractionRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def get_succeeded(self, cache_key: str) -> ExtractionRecord | None:
+        query = select(TechnicalSheetExtractionModel).where(
+            TechnicalSheetExtractionModel.cache_key == cache_key,
+            TechnicalSheetExtractionModel.state == ExecutionStatus.SUCCEEDED.value,
+        )
+        row = await self._session.scalar(query)
+        if row is None:
+            return None
+        return self._to_record(row)
+
+    async def save(self, record: ExtractionRecord) -> None:
+        values = self._values(record)
+        statement = insert(TechnicalSheetExtractionModel).values(**values)
+        statement = statement.on_conflict_do_update(
+            index_elements=[TechnicalSheetExtractionModel.cache_key],
+            set_=values,
+        )
+        await self._session.execute(statement)
+        await self._session.flush()
+
+    @staticmethod
+    def _values(record: ExtractionRecord) -> dict[str, object]:
+        return {
+            "id": record.id,
+            "normalized_record_id": record.normalized_record_id,
+            "cache_key": record.cache_key,
+            "input_hash": record.input_hash,
+            "provider": record.metadata.provider,
+            "model": record.metadata.model,
+            "schema_version": record.metadata.contract_version,
+            "prompt_version": record.metadata.prompt_version,
+            "state": record.metadata.status.value,
+            "technical_sheet": dict(record.technical_sheet) if record.technical_sheet else None,
+            "evidence": [
+                {"field": evidence.field, "excerpt": evidence.excerpt}
+                for evidence in record.evidence
+            ],
+            "started_at": record.metadata.started_at,
+            "duration_ms": record.metadata.duration_ms,
+            "input_units": record.metadata.input_units,
+            "output_units": record.metadata.output_units,
+            "cache_hit": record.metadata.cache_hit,
+            "error_code": (
+                record.metadata.error_code.value if record.metadata.error_code else None
+            ),
+            "retryable": record.metadata.retryable,
+            "sanitized_error": record.sanitized_error,
+            "created_at": record.created_at,
+        }
+
+    @staticmethod
+    def _to_record(row: TechnicalSheetExtractionModel) -> ExtractionRecord:
+        return ExtractionRecord(
+            id=row.id,
+            normalized_record_id=row.normalized_record_id,
+            cache_key=row.cache_key,
+            input_hash=row.input_hash,
+            technical_sheet=row.technical_sheet,
+            evidence=tuple(FieldEvidence(**item) for item in row.evidence),
+            metadata=AIExecutionMetadata(
+                provider=row.provider,
+                model=row.model,
+                contract_version=row.schema_version,
+                prompt_version=row.prompt_version,
+                started_at=row.started_at,
+                duration_ms=row.duration_ms,
+                status=ExecutionStatus(row.state),
+                input_units=row.input_units,
+                output_units=row.output_units,
+                cache_hit=row.cache_hit,
+                error_code=ProviderErrorCode(row.error_code) if row.error_code else None,
+                retryable=row.retryable,
+            ),
+            sanitized_error=row.sanitized_error,
+            created_at=row.created_at,
+        )
