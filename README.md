@@ -14,7 +14,7 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-Fundação executável da API: FastAPI, PostgreSQL com pgvector, persistência auditável e Redis são reproduzíveis por Docker Compose. Ainda não há pipeline analítico, interface web ou integração com APIs reais.
+Fundação executável da API e geração sintética: FastAPI, PostgreSQL com pgvector, persistência auditável, Redis e datasets rotulados são reproduzíveis por Docker Compose. Ainda não há pipeline analítico, interface web ou integração com APIs reais.
 
 ## Início rápido
 
@@ -35,4 +35,11 @@ docker compose --profile tools run --rm test
 docker compose --profile tools run --rm lint
 ```
 
-Consulte o [guia de execução local](docs/development.md) para desenvolvimento com hot reload, portas, volumes, reconstrução sem cache e reset. O host não precisa de Python, uv, PostgreSQL ou Redis.
+Gere e importe o dataset sintético padrão:
+
+```bash
+docker compose --profile tools run --rm synthetic-generate
+docker compose --profile tools run --rm synthetic-import
+```
+
+Consulte o [guia de execução local](docs/development.md) para desenvolvimento com hot reload, portas, volumes, reconstrução sem cache e reset, e o [guia do dataset sintético](docs/synthetic-data-generation.md) para parâmetros, artefatos e reprodutibilidade. O host não precisa de Python, uv, PostgreSQL ou Redis.

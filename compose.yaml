@@ -103,6 +103,67 @@ services:
       target: development
     command: ["uv", "run", "--no-sync", "ruff", "check", "--no-cache", "."]
 
+  synthetic-generate:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+      target: runtime
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    environment:
+      UV_CACHE_DIR: /tmp/uv-cache
+    volumes:
+      - ./data/generated:/data/generated
+    command:
+      [
+        "uv",
+        "run",
+        "--no-sync",
+        "python",
+        "-m",
+        "vbe_hub.synthetic",
+        "generate",
+        "--output",
+        "/data/generated",
+        "--seed",
+        "${SYNTHETIC_SEED:-307}",
+        "--total-records",
+        "${SYNTHETIC_TOTAL_RECORDS:-120}",
+        "--media-ratio",
+        "${SYNTHETIC_MEDIA_RATIO:-0.6}",
+        "--event-count",
+        "${SYNTHETIC_EVENT_COUNT:-12}",
+      ]
+
+  synthetic-import:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+      target: runtime
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_APP_USER}:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./data/generated:/data/generated:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    command:
+      [
+        "uv",
+        "run",
+        "--no-sync",
+        "python",
+        "-m",
+        "vbe_hub.synthetic",
+        "import",
+        "--records",
+        "/data/generated/records.jsonl",
+        "--gold",
+        "/data/generated/gold.json",
+      ]
+
 volumes:
   postgres_data:
   redis_data:
