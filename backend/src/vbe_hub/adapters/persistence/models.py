@@ -140,3 +140,55 @@ class EvaluationLabelModel(Base):
         primary_key=True,
     )
     gold_event_id: Mapped[str] = mapped_column(Text)
+
+
+class TechnicalSheetExtractionModel(Base):
+    __tablename__ = "technical_sheet_extractions"
+    __table_args__ = (
+        CheckConstraint(
+            "state IN ('succeeded', 'failed')",
+            name="technical_sheet_extractions_state_check",
+        ),
+        CheckConstraint(
+            "char_length(cache_key) = 64 AND char_length(input_hash) = 64",
+            name="technical_sheet_extractions_hash_length_check",
+        ),
+        CheckConstraint(
+            "duration_ms >= 0 AND (input_units IS NULL OR input_units >= 0) "
+            "AND (output_units IS NULL OR output_units >= 0)",
+            name="technical_sheet_extractions_usage_nonnegative_check",
+        ),
+        Index(
+            "technical_sheet_extractions_cache_key_uidx",
+            "cache_key",
+            unique=True,
+        ),
+        Index(
+            "technical_sheet_extractions_normalized_record_id_idx",
+            "normalized_record_id",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(PostgreSQLUUID(as_uuid=True), primary_key=True)
+    normalized_record_id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("normalized_records.id", ondelete="CASCADE"),
+    )
+    cache_key: Mapped[str] = mapped_column(Text)
+    input_hash: Mapped[str] = mapped_column(Text)
+    provider: Mapped[str] = mapped_column(Text)
+    model: Mapped[str] = mapped_column(Text)
+    schema_version: Mapped[str] = mapped_column(Text)
+    prompt_version: Mapped[str | None] = mapped_column(Text)
+    state: Mapped[str] = mapped_column(Text)
+    technical_sheet: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    evidence: Mapped[list[dict[str, str]]] = mapped_column(JSONB, default=list)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    duration_ms: Mapped[int] = mapped_column(BigInteger)
+    input_units: Mapped[int | None] = mapped_column(BigInteger)
+    output_units: Mapped[int | None] = mapped_column(BigInteger)
+    cache_hit: Mapped[bool] = mapped_column(Boolean, default=False)
+    error_code: Mapped[str | None] = mapped_column(Text)
+    retryable: Mapped[bool | None] = mapped_column(Boolean)
+    sanitized_error: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

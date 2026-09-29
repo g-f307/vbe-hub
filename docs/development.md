@@ -4,7 +4,7 @@ type: operations
 status: active
 title: Execução e validação local
 created: 2026-09-28
-updated: 2026-09-28
+updated: 2026-09-29
 owner: VBE Hub
 related_docs:
   - DES-001
@@ -132,3 +132,31 @@ docker compose down --volumes
 Use o reset apenas quando a perda dos dados locais for intencional. O arquivo `.env` é ignorado pelo Git e não deve conter credenciais reais destinadas ao repositório.
 
 Após um reset, `docker compose up --build --detach --wait` recria o banco, habilita pgvector e reaplica todas as migrations. Backup e restauração não fazem parte desta etapa; os volumes locais não substituem uma política de backup.
+
+## Smoke live opcional do Gemini
+
+Testes e CI não usam chave nem rede externa. Para uma verificação manual, preencha
+`GEMINI_API_KEY` somente no `.env` local ignorado pelo Git e execute:
+
+```bash
+docker compose --profile live run --rm gemini-live
+```
+
+O comando usa exclusivamente a fixture sintética empacotada, não aceita arquivo arbitrário e
+imprime apenas ficha, modelo, versões, duração e unidades. Sem chave, termina antes de criar o
+cliente de rede. A chave e a narrativa integral não aparecem na saída.
+
+Modelo, timeout, tentativas e limites podem ser ajustados pelas variáveis `GEMINI_MODEL`,
+`GEMINI_TIMEOUT_SECONDS`, `GEMINI_MAX_ATTEMPTS`, `GEMINI_MAX_INPUT_CHARS` e
+`GEMINI_MAX_OUTPUT_TOKENS`. Para estimar custo sem codificar preços históricos, passe as taxas
+observadas no dia da execução:
+
+```bash
+docker compose --profile live run --rm \
+  -e GEMINI_INPUT_USD_PER_MILLION=VALOR_ATUAL \
+  -e GEMINI_OUTPUT_USD_PER_MILLION=VALOR_ATUAL \
+  gemini-live
+```
+
+Consulte o [contrato da ficha técnica](technical-sheet-contract.md) para schema, segurança,
+cache e fontes oficiais de modelo, limites e preços.

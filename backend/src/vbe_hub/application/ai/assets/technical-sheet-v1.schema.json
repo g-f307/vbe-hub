@@ -1,0 +1,63 @@
+{
+  "$defs": {
+    "GeographicPrecision": {"enum": ["country", "state", "municipality", "district", "specific", "unknown"], "title": "GeographicPrecision", "type": "string"},
+    "LocationInformation": {
+      "additionalProperties": false,
+      "properties": {
+        "country": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Country"},
+        "state": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "State"},
+        "municipality": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Municipality"},
+        "district": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "District"},
+        "specific": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Specific"},
+        "precision": {"$ref": "#/$defs/GeographicPrecision"}
+      },
+      "required": ["country", "state", "municipality", "district", "specific", "precision"],
+      "title": "LocationInformation",
+      "type": "object"
+    },
+    "SuggestedRelevance": {"enum": ["low", "moderate", "high"], "title": "SuggestedRelevance", "type": "string"},
+    "TechnicalSheetEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {"maxLength": 80, "minLength": 1, "title": "Field", "type": "string"},
+        "excerpt": {"maxLength": 240, "minLength": 1, "title": "Excerpt", "type": "string"}
+      },
+      "required": ["field", "excerpt"],
+      "title": "TechnicalSheetEvidence",
+      "type": "object"
+    },
+    "TemporalInformation": {
+      "additionalProperties": false,
+      "properties": {
+        "start": {"anyOf": [{"format": "date", "type": "string"}, {"type": "null"}], "title": "Start"},
+        "end": {"anyOf": [{"format": "date", "type": "string"}, {"type": "null"}], "title": "End"},
+        "precision": {"$ref": "#/$defs/TemporalPrecision"}
+      },
+      "required": ["start", "end", "precision"],
+      "title": "TemporalInformation",
+      "type": "object"
+    },
+    "TemporalPrecision": {"enum": ["exact", "day", "week", "month", "approximate", "unknown"], "title": "TemporalPrecision", "type": "string"}
+  },
+  "additionalProperties": false,
+  "properties": {
+    "record_nature": {"anyOf": [{"enum": ["media", "community"], "type": "string"}, {"type": "null"}], "title": "Record Nature"},
+    "disease_or_condition": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Disease Or Condition"},
+    "pathogen": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Pathogen"},
+    "syndrome": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Syndrome"},
+    "symptoms": {"items": {"type": "string"}, "title": "Symptoms", "type": "array"},
+    "estimated_cases": {"anyOf": [{"minimum": 0, "type": "integer"}, {"type": "null"}], "title": "Estimated Cases"},
+    "estimated_deaths": {"anyOf": [{"minimum": 0, "type": "integer"}, {"type": "null"}], "title": "Estimated Deaths"},
+    "affected_group": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Affected Group"},
+    "environment": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Environment"},
+    "temporal": {"$ref": "#/$defs/TemporalInformation"},
+    "location": {"$ref": "#/$defs/LocationInformation"},
+    "action_in_progress": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Action In Progress"},
+    "suggested_relevance": {"anyOf": [{"$ref": "#/$defs/SuggestedRelevance"}, {"type": "null"}]},
+    "confidence": {"anyOf": [{"maximum": 1, "minimum": 0, "type": "number"}, {"type": "null"}], "title": "Confidence"},
+    "evidence": {"items": {"$ref": "#/$defs/TechnicalSheetEvidence"}, "title": "Evidence", "type": "array"}
+  },
+  "required": ["record_nature", "disease_or_condition", "pathogen", "syndrome", "symptoms", "estimated_cases", "estimated_deaths", "affected_group", "environment", "temporal", "location", "action_in_progress", "suggested_relevance", "confidence", "evidence"],
+  "title": "TechnicalSheet",
+  "type": "object"
+}

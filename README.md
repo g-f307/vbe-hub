@@ -14,7 +14,7 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-Fundação executável da API e geração sintética: FastAPI, PostgreSQL com pgvector, persistência auditável, Redis e datasets rotulados são reproduzíveis por Docker Compose. Ainda não há pipeline analítico, interface web ou integração com APIs reais.
+Fundação, dados sintéticos, normalização e extração auditável da ficha técnica estão implementados. O Gemini é opt-in e os testes usam providers falsos offline. Correlação, interface web e integrações EIOS/GdS ainda não foram implementadas.
 
 ## Início rápido
 
