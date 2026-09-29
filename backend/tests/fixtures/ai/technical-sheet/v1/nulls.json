@@ -1,0 +1,28 @@
+{
+  "record_nature": null,
+  "disease_or_condition": null,
+  "pathogen": null,
+  "syndrome": null,
+  "symptoms": [],
+  "estimated_cases": null,
+  "estimated_deaths": null,
+  "affected_group": null,
+  "environment": null,
+  "temporal": {
+    "start": null,
+    "end": null,
+    "precision": "unknown"
+  },
+  "location": {
+    "country": null,
+    "state": null,
+    "municipality": null,
+    "district": null,
+    "specific": null,
+    "precision": "unknown"
+  },
+  "action_in_progress": null,
+  "suggested_relevance": null,
+  "confidence": null,
+  "evidence": []
+}

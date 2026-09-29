@@ -1,0 +1,38 @@
+{
+  "record_nature": "community",
+  "disease_or_condition": "sarampo",
+  "pathogen": null,
+  "syndrome": "síndrome febril exantemática",
+  "symptoms": ["febre", "manchas vermelhas"],
+  "estimated_cases": null,
+  "estimated_deaths": null,
+  "affected_group": "moradores",
+  "environment": null,
+  "temporal": {
+    "start": null,
+    "end": null,
+    "precision": "unknown"
+  },
+  "location": {
+    "country": null,
+    "state": null,
+    "municipality": null,
+    "district": "Flores",
+    "specific": null,
+    "precision": "district"
+  },
+  "action_in_progress": "investigação epidemiológica",
+  "suggested_relevance": "moderate",
+  "confidence": 0.82,
+  "evidence": [
+    {"field": "record_nature", "excerpt": "community"},
+    {"field": "disease_or_condition", "excerpt": "febre e manchas vermelhas"},
+    {"field": "syndrome", "excerpt": "febre e manchas vermelhas"},
+    {"field": "symptoms", "excerpt": "febre e manchas vermelhas"},
+    {"field": "affected_group", "excerpt": "moradores"},
+    {"field": "location.district", "excerpt": "bairro Flores"},
+    {"field": "action_in_progress", "excerpt": "investigação epidemiológica está em andamento"},
+    {"field": "suggested_relevance", "excerpt": "febre e manchas vermelhas"},
+    {"field": "confidence", "excerpt": "febre e manchas vermelhas"}
+  ]
+}
