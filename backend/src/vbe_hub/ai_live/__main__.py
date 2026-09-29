@@ -43,7 +43,7 @@ async def run_live(
         input_hash=hashlib.sha256(canonical).hexdigest(),
         normalized_data=normalized_data,
         schema_version=SCHEMA_VERSION,
-        prompt_version="extract-v1",
+        prompt_version="extract-v2",
         trace_id="live-synthetic-fixture-v1",
     )
     root_client = client_factory(

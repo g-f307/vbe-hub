@@ -1,0 +1,22 @@
+{
+  "dataset_version": "technical-sheet-eval-v1",
+  "split": "calibration",
+  "labels": [
+    {
+      "record_id": "10000000-0000-0000-0000-000000000001",
+      "fields": {"record_nature":"media","disease_or_condition":"sarampo","pathogen":null,"syndrome":null,"symptoms":["febre","manchas vermelhas"],"estimated_cases":12,"estimated_deaths":null,"affected_group":null,"environment":null,"temporal.start":"2026-03-10","temporal.end":null,"temporal.precision":"day","location.country":"Brasil","location.state":"Amazonas","location.municipality":"Manaus","location.district":"Centro","location.specific":null,"location.precision":"district","action_in_progress":null,"suggested_relevance":"high"}
+    },
+    {
+      "record_id": "10000000-0000-0000-0000-000000000002",
+      "fields": {"record_nature":"community","disease_or_condition":null,"pathogen":null,"syndrome":null,"symptoms":["febre","manchas vermelhas"],"estimated_cases":5,"estimated_deaths":null,"affected_group":"moradores","environment":null,"temporal.start":null,"temporal.end":null,"temporal.precision":"unknown","location.country":null,"location.state":null,"location.municipality":"Manaus","location.district":"Compensa","location.specific":null,"location.precision":"district","action_in_progress":null,"suggested_relevance":"high"}
+    },
+    {
+      "record_id": "10000000-0000-0000-0000-000000000003",
+      "fields": {"record_nature":"media","disease_or_condition":"sarampo","pathogen":null,"syndrome":null,"symptoms":[],"estimated_cases":null,"estimated_deaths":null,"affected_group":null,"environment":null,"temporal.start":null,"temporal.end":null,"temporal.precision":"unknown","location.country":null,"location.state":null,"location.municipality":"Manaus","location.district":null,"location.specific":null,"location.precision":"municipality","action_in_progress":"campanha preventiva de vacinação","suggested_relevance":"moderate"}
+    },
+    {
+      "record_id": "10000000-0000-0000-0000-000000000004",
+      "fields": {"record_nature":"community","disease_or_condition":null,"pathogen":null,"syndrome":null,"symptoms":[],"estimated_cases":null,"estimated_deaths":null,"affected_group":null,"environment":null,"temporal.start":null,"temporal.end":null,"temporal.precision":"unknown","location.country":null,"location.state":null,"location.municipality":null,"location.district":null,"location.specific":null,"location.precision":"unknown","action_in_progress":null,"suggested_relevance":"low"}
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "dataset_version": "technical-sheet-eval-v1",
+  "split": "evaluation",
+  "labels": [
+    {
+      "record_id": "20000000-0000-0000-0000-000000000001",
+      "fields": {"record_nature":"media","disease_or_condition":"dengue","pathogen":null,"syndrome":null,"symptoms":["febre","dor no corpo"],"estimated_cases":18,"estimated_deaths":null,"affected_group":null,"environment":null,"temporal.start":"2026-04-20","temporal.end":null,"temporal.precision":"day","location.country":"Brasil","location.state":"Amazonas","location.municipality":"Manaus","location.district":"Cidade Nova","location.specific":null,"location.precision":"district","action_in_progress":null,"suggested_relevance":"high"}
+    },
+    {
+      "record_id": "20000000-0000-0000-0000-000000000002",
+      "fields": {"record_nature":"community","disease_or_condition":null,"pathogen":null,"syndrome":null,"symptoms":["febre","tosse"],"estimated_cases":7,"estimated_deaths":null,"affected_group":"moradores","environment":null,"temporal.start":null,"temporal.end":null,"temporal.precision":"unknown","location.country":null,"location.state":null,"location.municipality":"Manaus","location.district":"Flores","location.specific":null,"location.precision":"district","action_in_progress":null,"suggested_relevance":"high"}
+    },
+    {
+      "record_id": "20000000-0000-0000-0000-000000000003",
+      "fields": {"record_nature":"media","disease_or_condition":"influenza","pathogen":null,"syndrome":null,"symptoms":[],"estimated_cases":30,"estimated_deaths":2,"affected_group":null,"environment":null,"temporal.start":"2026-04-24","temporal.end":null,"temporal.precision":"day","location.country":"Brasil","location.state":"Amazonas","location.municipality":"Manaus","location.district":null,"location.specific":null,"location.precision":"municipality","action_in_progress":null,"suggested_relevance":"high"}
+    },
+    {
+      "record_id": "20000000-0000-0000-0000-000000000004",
+      "fields": {"record_nature":"media","disease_or_condition":null,"pathogen":null,"syndrome":null,"symptoms":[],"estimated_cases":null,"estimated_deaths":null,"affected_group":null,"environment":null,"temporal.start":null,"temporal.end":null,"temporal.precision":"unknown","location.country":null,"location.state":null,"location.municipality":null,"location.district":null,"location.specific":null,"location.precision":"unknown","action_in_progress":null,"suggested_relevance":"low"}
+    }
+  ]
+}
