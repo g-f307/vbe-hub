@@ -8,10 +8,11 @@ updated: 2026-09-29
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/application/ai/
-  - backend/src/vbe_hub/adapters/ai/fake.py
+  - backend/src/vbe_hub/adapters/ai/
 related_docs:
   - DES-001
   - ADR-002
+  - API-004
 ---
 
 # Contratos de provedores de inteligência artificial
@@ -36,8 +37,9 @@ na avaliação experimental.
 | `EmbeddingProvider` | texto preparado, ID estável, hash e dimensão esperada | vetor finito com dimensão conferida e metadata de execução |
 | `RelationJudge` | dois candidatos distintos, versões e rastreio | relação enumerada, justificativa de até 500 caracteres, confiança entre 0 e 1 e metadata |
 
-A estrutura definitiva da ficha técnica será definida na issue #8. Por isso, o contrato atual
-transporta um mapa validado pelo adapter, sem antecipar campos clínicos ainda em estudo.
+A estrutura da ficha técnica `technical-sheet-v1` está descrita no
+[contrato específico](technical-sheet-contract.md). A porta transporta o mapa já validado para
+preservar independência entre casos de uso e a biblioteca de validação.
 
 ## Relações sugeridas
 
@@ -62,8 +64,9 @@ usam `ProviderError`, com mensagem sanitizada, indicação de repetibilidade e u
 - indisponibilidade temporária;
 - falha permanente não classificada.
 
-Adapters não devem propagar respostas brutas, credenciais, prompts completos ou detalhes
-internos do fornecedor. Timeouts, cotas e limites de consumo serão configurados no adapter real.
+Adapters não propagam respostas brutas, credenciais, prompts completos ou detalhes internos do
+fornecedor. O adapter Gemini aplica timeout, tentativas, backoff, entrada e saída limitados por
+configuração.
 
 ## Fronteiras de confiança
 
