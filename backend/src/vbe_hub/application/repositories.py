@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
 
-from vbe_hub.domain.records import NormalizedRecord, Provenance, RawRecord
+from vbe_hub.domain.records import NormalizedRecord, ProcessingRun, Provenance, RawRecord
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,3 +27,9 @@ class RawRecordRepository(Protocol):
     async def get_normalized(
         self, raw_record_id: UUID, normalizer_version: str
     ) -> NormalizedRecord | None: ...
+
+
+class ProcessingRunRepository(Protocol):
+    async def add(self, run: ProcessingRun) -> None: ...
+
+    async def get(self, run_id: UUID) -> ProcessingRun | None: ...

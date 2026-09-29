@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from vbe_hub.adapters.persistence.models import (
     EvaluationLabelModel,
     NormalizedRecordModel,
+    ProcessingRunModel,
     ProvenanceModel,
     RawRecordModel,
 )
@@ -14,6 +15,7 @@ from vbe_hub.domain.records import (
     EvaluationLabel,
     NormalizationStatus,
     NormalizedRecord,
+    ProcessingRun,
     ProcessingState,
     Provenance,
     RawRecord,
@@ -23,6 +25,47 @@ from vbe_hub.domain.records import (
 
 class DuplicateExternalRecordError(ValueError):
     pass
+
+
+class SqlAlchemyProcessingRunRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, run: ProcessingRun) -> None:
+        self._session.add(
+            ProcessingRunModel(
+                id=run.id,
+                run_type=run.run_type,
+                state=run.state.value,
+                started_at=run.started_at,
+                finished_at=run.finished_at,
+                component_versions=run.component_versions,
+                received_count=run.received_count,
+                processed_count=run.processed_count,
+                skipped_count=run.skipped_count,
+                failed_count=run.failed_count,
+                sanitized_error=run.sanitized_error,
+            )
+        )
+        await self._session.flush()
+
+    async def get(self, run_id: UUID) -> ProcessingRun | None:
+        row = await self._session.get(ProcessingRunModel, run_id)
+        if row is None:
+            return None
+        return ProcessingRun(
+            id=row.id,
+            run_type=row.run_type,
+            state=ProcessingState(row.state),
+            started_at=row.started_at,
+            finished_at=row.finished_at,
+            component_versions=row.component_versions,
+            received_count=row.received_count,
+            processed_count=row.processed_count,
+            skipped_count=row.skipped_count,
+            failed_count=row.failed_count,
+            sanitized_error=row.sanitized_error,
+        )
 
 
 class SqlAlchemyRawRecordRepository:
