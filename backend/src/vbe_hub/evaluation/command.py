@@ -51,7 +51,7 @@ async def run_evaluation(
     )
 
     successes = []
-    failures: list[dict[str, str]] = []
+    failures: list[dict[str, Any]] = []
     for record in records:
         try:
             successes.extend(
@@ -60,8 +60,16 @@ async def run_evaluation(
                 )
             )
         except ProviderError as error:
+            metadata = error.metadata
             failures.append(
-                {"record_id": record.record_id, "kind": "schema/operational", "code": error.code}
+                {
+                    "record_id": record.record_id,
+                    "kind": "schema/operational",
+                    "code": error.code,
+                    "duration_ms": metadata.duration_ms if metadata else None,
+                    "input_units": metadata.input_units if metadata else None,
+                    "output_units": metadata.output_units if metadata else None,
+                }
             )
 
     predictions = {item.record_id: _flatten(item.technical_sheet) for item in successes}
@@ -71,9 +79,15 @@ async def run_evaluation(
         )
         for record in records
     ]
-    latencies = [item.metadata.duration_ms for item in successes]
-    input_units = sum(item.metadata.input_units or 0 for item in successes)
-    output_units = sum(item.metadata.output_units or 0 for item in successes)
+    latencies = [item.metadata.duration_ms for item in successes] + [
+        item["duration_ms"] for item in failures if item["duration_ms"] is not None
+    ]
+    input_units = sum(item.metadata.input_units or 0 for item in successes) + sum(
+        item["input_units"] or 0 for item in failures
+    )
+    output_units = sum(item.metadata.output_units or 0 for item in successes) + sum(
+        item["output_units"] or 0 for item in failures
+    )
     execution = {
         "attempted": len(records),
         "succeeded": len(successes),

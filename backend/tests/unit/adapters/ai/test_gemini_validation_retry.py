@@ -53,3 +53,5 @@ async def test_invalid_grounding_is_retried_before_returning_success() -> None:
 
     assert result.technical_sheet["record_nature"] == "community"
     assert client.calls == 2
+    assert result.metadata.input_units == 20
+    assert result.metadata.output_units == 20

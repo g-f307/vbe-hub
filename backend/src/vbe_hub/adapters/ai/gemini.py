@@ -117,9 +117,13 @@ class GeminiStructuredExtractor:
         )
         response: GeminiClientResponse | None = None
         sheet: TechnicalSheet | None = None
+        total_input_units = 0
+        total_output_units = 0
         for attempt in range(1, self._max_attempts + 1):
             try:
                 response = await self._client.generate(client_request)
+                total_input_units += response.input_tokens or 0
+                total_output_units += response.output_tokens or 0
             except GeminiTransportError as error:
                 code, retryable = _classify_transport_error(error.status_code)
                 if retryable and attempt < self._max_attempts:
@@ -147,6 +151,8 @@ class GeminiStructuredExtractor:
                     request=request,
                     started_at=started_at,
                     started_monotonic=started_monotonic,
+                    input_units=total_input_units,
+                    output_units=total_output_units,
                 ) from None
 
         if response is None or sheet is None:
@@ -165,8 +171,8 @@ class GeminiStructuredExtractor:
                 started_at=started_at,
                 duration_ms=self._duration_ms(started_monotonic),
                 status=ExecutionStatus.SUCCEEDED,
-                input_units=response.input_tokens,
-                output_units=response.output_tokens,
+                input_units=total_input_units,
+                output_units=total_output_units,
             ),
         )
 
@@ -191,6 +197,8 @@ class GeminiStructuredExtractor:
         request: StructuredExtractionRequest,
         started_at: datetime,
         started_monotonic: float,
+        input_units: int | None = None,
+        output_units: int | None = None,
     ) -> ProviderError:
         return ProviderError(
             code=code,
@@ -202,6 +210,8 @@ class GeminiStructuredExtractor:
                 contract_version=request.schema_version,
                 prompt_version=request.prompt_version,
                 started_at=started_at,
+                input_units=input_units,
+                output_units=output_units,
                 duration_ms=self._duration_ms(started_monotonic),
                 status=ExecutionStatus.FAILED,
                 error_code=code,
