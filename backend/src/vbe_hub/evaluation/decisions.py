@@ -9,6 +9,7 @@ def derive_field_decisions(
     fields: Mapping[str, Mapping[str, Any]],
     critical_fields: list[str],
     targets: Mapping[str, float],
+    operational_failure_rate: float = 0.0,
 ) -> dict[str, str]:
     decisions: dict[str, str] = {}
     critical = set(critical_fields)
@@ -34,4 +35,9 @@ def derive_field_decisions(
             decisions[name] = "evidence_only"
         else:
             decisions[name] = "reduced_weight"
+    if operational_failure_rate > targets.get("operational_failure_rate_max", 1.0):
+        decisions = {
+            name: "reduced_weight" if decision == "direct" else decision
+            for name, decision in decisions.items()
+        }
     return decisions

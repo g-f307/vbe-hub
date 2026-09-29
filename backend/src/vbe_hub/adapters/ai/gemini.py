@@ -26,7 +26,7 @@ from vbe_hub.application.ai.technical_sheet import (
 )
 
 _ASSETS = Path(__file__).parents[2] / "application" / "ai" / "assets"
-PROMPT_VERSION = "extract-v1"
+PROMPT_VERSION = "extract-v2"
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,10 +116,10 @@ class GeminiStructuredExtractor:
             max_output_tokens=self._max_output_tokens,
         )
         response: GeminiClientResponse | None = None
+        sheet: TechnicalSheet | None = None
         for attempt in range(1, self._max_attempts + 1):
             try:
                 response = await self._client.generate(client_request)
-                break
             except GeminiTransportError as error:
                 code, retryable = _classify_transport_error(error.status_code)
                 if retryable and attempt < self._max_attempts:
@@ -133,21 +133,24 @@ class GeminiStructuredExtractor:
                     started_at=started_at,
                     started_monotonic=started_monotonic,
                 ) from None
+            try:
+                sheet = validate_grounded_sheet(response.payload, source_text=source_content)
+                break
+            except (ValidationError, ValueError, TypeError):
+                if attempt < self._max_attempts:
+                    await self._sleep(0.25 * (2 ** (attempt - 1)))
+                    continue
+                raise self._provider_error(
+                    code=ProviderErrorCode.INVALID_RESPONSE,
+                    message="Gemini returned an invalid structured response.",
+                    retryable=False,
+                    request=request,
+                    started_at=started_at,
+                    started_monotonic=started_monotonic,
+                ) from None
 
-        if response is None:  # pragma: no cover - loop guarantees response or exception
+        if response is None or sheet is None:
             raise RuntimeError("Gemini extraction finished without a response")
-
-        try:
-            sheet = validate_grounded_sheet(response.payload, source_text=source_content)
-        except (ValidationError, ValueError, TypeError):
-            raise self._provider_error(
-                code=ProviderErrorCode.INVALID_RESPONSE,
-                message="Gemini returned an invalid structured response.",
-                retryable=False,
-                request=request,
-                started_at=started_at,
-                started_monotonic=started_monotonic,
-            ) from None
 
         return StructuredExtractionResult(
             technical_sheet=sheet.model_dump(mode="json"),
@@ -168,7 +171,9 @@ class GeminiStructuredExtractor:
         )
 
     def _build_contents(self, request: StructuredExtractionRequest, source_content: str) -> str:
-        instructions = (_ASSETS / "extract-v1.prompt.txt").read_text(encoding="utf-8").strip()
+        instructions = (
+            (_ASSETS / f"{request.prompt_version}.prompt.txt").read_text(encoding="utf-8").strip()
+        )
         delimiter = hashlib.sha256(request.trace_id.encode()).hexdigest()[:16]
         return (
             f"{instructions}\n\n"

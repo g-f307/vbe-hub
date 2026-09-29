@@ -32,7 +32,7 @@ async def extract_predictions(
     records: list[EvaluationInput],
     *,
     extractor: StructuredExtractor,
-    prompt_version: str = "extract-v1",
+    prompt_version: str = "extract-v2",
 ) -> list[EvaluationPrediction]:
     predictions: list[EvaluationPrediction] = []
     for record in records:

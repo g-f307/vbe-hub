@@ -1,7 +1,7 @@
 {
   "dataset_version": "technical-sheet-eval-v1",
   "seed": 307,
-  "prompt_version": "extract-v1",
+  "prompt_version": "extract-v2",
   "schema_version": "technical-sheet-v1",
   "normalizer_version": "1.0.0",
   "field_kinds": {

@@ -103,6 +103,7 @@ async def run_evaluation(
         fields=report["fields"],
         critical_fields=definition["critical_fields"],
         targets=definition["targets"],
+        operational_failure_rate=execution["failure_rate"],
     )
     _write_reports(report, output_directory)
     return report

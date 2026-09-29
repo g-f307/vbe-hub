@@ -42,7 +42,7 @@ def valid_payload() -> dict[str, object]:
 def extraction_request(
     text: str,
     *,
-    prompt_version: str = "extract-v1",
+    prompt_version: str = "extract-v2",
     schema_version: str = "technical-sheet-v1",
 ) -> StructuredExtractionRequest:
     return StructuredExtractionRequest(
@@ -125,7 +125,7 @@ async def test_invalid_or_ungrounded_response_becomes_sanitized_non_retryable_er
     payload = valid_payload()
     payload["evidence"][0]["excerpt"] = "not present in source"
     client = StubGeminiClient(
-        [GeminiClientResponse(payload=payload, input_tokens=10, output_tokens=10)]
+        [GeminiClientResponse(payload=payload, input_tokens=10, output_tokens=10)] * 3
     )
 
     with pytest.raises(ProviderError) as captured:
@@ -151,8 +151,7 @@ async def test_transport_errors_are_classified_without_raw_payload(
     status_code: int, expected_code: ProviderErrorCode, retryable: bool
 ) -> None:
     client = StubGeminiClient(
-        [GeminiTransportError(status_code=status_code, detail="secret raw provider payload")]
-        * 3
+        [GeminiTransportError(status_code=status_code, detail="secret raw provider payload")] * 3
     )
 
     with pytest.raises(ProviderError) as captured:
@@ -202,7 +201,7 @@ async def test_oversized_input_fails_before_network() -> None:
 
 @pytest.mark.parametrize(
     ("prompt_version", "schema_version"),
-    [("extract-v2", "technical-sheet-v1"), ("extract-v1", "technical-sheet-v2")],
+    [("extract-v3", "technical-sheet-v1"), ("extract-v2", "technical-sheet-v2")],
 )
 async def test_unknown_contract_version_fails_before_network(
     prompt_version: str, schema_version: str
