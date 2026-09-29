@@ -8,6 +8,7 @@ dependencies = [
   "asyncpg>=0.30,<0.31",
   "fastapi>=0.115,<0.116",
   "google-genai>=1.47,<2",
+  "pgvector>=0.4,<0.5",
   "pydantic-settings>=2.7,<3",
   "redis>=5.2,<6",
   "sqlalchemy[asyncio]>=2.0,<2.1",
