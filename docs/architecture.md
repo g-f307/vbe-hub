@@ -4,7 +4,7 @@ type: design
 status: active
 title: Arquitetura
 created: 2026-09-28
-updated: 2026-09-28
+updated: 2026-09-29
 owner: VBE Hub
 planned_code:
   - backend/
@@ -94,7 +94,7 @@ Frontend e worker serão incorporados à mesma composição em seus milestones. 
 
 ## IA: decisão operacional
 
-O domínio depende de interfaces `StructuredExtractor`, `EmbeddingProvider` e `RelationJudge`, não de Gemini ou Ollama diretamente.
+A camada de aplicação depende das portas `StructuredExtractor`, `EmbeddingProvider` e `RelationJudge`; domínio e aplicação não dependem de Gemini ou Ollama diretamente.
 
 - Padrão para validação: Gemini, com saída JSON estruturada e embeddings multilíngues.
 - Alternativa local: Ollama para experimentos, testes offline e comparação de custo/latência.
