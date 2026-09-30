@@ -8,6 +8,7 @@ def config(
     concurrency: int = 1,
     attempts: int = 1,
     repetitions: int = 1,
+    processing_order: str = "dataset-order-v1",
 ) -> CorrelationExperimentConfig:
     return CorrelationExperimentConfig(
         dataset_version="synthetic-v1",
@@ -29,6 +30,7 @@ def config(
         provider_concurrency=concurrency,
         provider_max_attempts=attempts,
         repetitions=repetitions,
+        processing_order=processing_order,
     )
 
 
@@ -46,6 +48,12 @@ def test_identity_changes_when_retry_attempts_change() -> None:
 
 def test_identity_changes_when_repetition_count_changes() -> None:
     assert config(repetitions=1).identity != config(repetitions=2).identity
+
+
+def test_identity_changes_when_processing_order_changes() -> None:
+    assert config(processing_order="dataset-order-v1").identity != config(
+        processing_order="seeded-shuffle-v1"
+    ).identity
 
 
 def test_report_is_deterministic_and_keeps_false_negative_identifiers() -> None:

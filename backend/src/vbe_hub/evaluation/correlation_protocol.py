@@ -25,6 +25,7 @@ class CorrelationExperimentConfig(BaseModel):
     provider_concurrency: int = Field(default=1, gt=0, le=8)
     provider_max_attempts: int = Field(default=1, ge=1, le=4)
     repetitions: int = Field(default=1, gt=0)
+    processing_order: Literal["dataset-order-v1", "seeded-shuffle-v1"] = "dataset-order-v1"
     temporal_window_days: int = Field(ge=0)
     geographic_level: Literal["country", "state", "municipality", "district"]
     minimum_semantic_score: float = Field(ge=0, le=1)

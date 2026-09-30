@@ -72,6 +72,7 @@ async def run_relation_experiment(
         provider_concurrency=provider_concurrency,
         provider_max_attempts=settings.gemini_max_attempts,
         repetitions=repetitions,
+        processing_order="seeded-shuffle-v1",
         temporal_window_days=policy.max_temporal_gap_days,
         geographic_level=policy.geographic_level.value,
         minimum_semantic_score=policy.minimum_semantic_score,
@@ -97,6 +98,7 @@ async def run_relation_experiment(
             )
             predictions = await _predict_with_concurrency(
                 dataset,
+                order_seed=seed + run - 1,
                 judge=judge,
                 policy=policy,
                 concurrency=provider_concurrency,
@@ -105,6 +107,7 @@ async def run_relation_experiment(
                 output_usd_per_million=settings.gemini_output_usd_per_million,
             )
             metrics = evaluate_predictions(predictions, gold_relations=gold)
+            provider_attempts = sum(item.sent_to_provider for item in predictions)
             provider_case_rows.extend(
                 _build_provider_case_rows(dataset, predictions, gold, run=run)
             )
@@ -112,6 +115,7 @@ async def run_relation_experiment(
                 {
                     **build_correlation_report(config=config, metrics=metrics),
                     "macro_f1_ci95": _bootstrap_macro_f1(predictions, gold, seed),
+                    "provider_attempts": provider_attempts,
                 }
             )
 
@@ -123,6 +127,7 @@ async def run_relation_experiment(
 async def _predict_with_concurrency(
     dataset,
     *,
+    order_seed=None,
     judge,
     policy,
     concurrency,
@@ -131,6 +136,11 @@ async def _predict_with_concurrency(
     output_usd_per_million,
 ):
     semaphore = asyncio.Semaphore(concurrency)
+    pairs = (
+        _shuffled_pairs(dataset.inputs, seed=order_seed)
+        if order_seed is not None
+        else list(dataset.inputs)
+    )
 
     async def predict_one(pair):
         async with semaphore:
@@ -144,7 +154,13 @@ async def _predict_with_concurrency(
             )
             return predictions[0]
 
-    return list(await asyncio.gather(*(predict_one(pair) for pair in dataset.inputs)))
+    return list(await asyncio.gather(*(predict_one(pair) for pair in pairs)))
+
+
+def _shuffled_pairs(pairs, *, seed: int):
+    shuffled = list(pairs)
+    Random(seed).shuffle(shuffled)
+    return shuffled
 
 
 def _serialized_partitions(dataset: RelationDataset) -> tuple[bytes, bytes]:
@@ -198,12 +214,18 @@ def _evidence_level(dataset: RelationDataset) -> str:
     return "expanded" if min(dataset.relation_counts.values()) >= 50 else "exploratory"
 
 
+def _operational_failure_rate(*, failures: int, provider_attempts: int) -> float:
+    return round(failures / provider_attempts, 6) if provider_attempts else 0.0
+
+
 def _experiment_result(config, dataset, reports: list[dict]) -> dict:
     run_summaries = []
     for index, report in enumerate(reports, start=1):
-        selected = report["candidates"]["selected_pairs"]
         failures = report["classification"]["failures"]
-        failure_rate = round(failures / selected, 6) if selected else 0.0
+        provider_attempts = report["provider_attempts"]
+        failure_rate = _operational_failure_rate(
+            failures=failures, provider_attempts=provider_attempts
+        )
         run_summaries.append(
             {
                 "run": index,
@@ -211,6 +233,7 @@ def _experiment_result(config, dataset, reports: list[dict]) -> dict:
                 "pair_reduction": report["candidates"]["pair_reduction"],
                 "macro_f1": report["classification"]["macro_f1"],
                 "operational_failure_rate": failure_rate,
+                "provider_attempts": provider_attempts,
                 "macro_f1_ci95": report["macro_f1_ci95"],
                 "classification": report["classification"],
                 "operations": report["operations"],
@@ -224,7 +247,7 @@ def _experiment_result(config, dataset, reports: list[dict]) -> dict:
         for name, target in _TARGETS.items()
     }
     return {
-        "report_version": "relation-experiment-report-v3",
+        "report_version": "relation-experiment-report-v4",
         "experiment": {**config.model_dump(), "identity": config.identity},
         "dataset": {
             "input_pairs": len(dataset.inputs),
@@ -320,14 +343,16 @@ def _write_report(
         f"- Nível da evidência: `{report['decision']['evidence_level']}`",
         f"- Relações gold: {report['dataset']['gold_relations']}",
         "",
-        "| Rodada | Recall candidatos | Redução | Macro-F1 | Falhas | IC95% Macro-F1 |",
-        "| ---: | ---: | ---: | ---: | ---: | --- |",
+        "| Rodada | Recall candidatos | Redução | Macro-F1 | Chamadas provider "
+        "| Falhas | IC95% Macro-F1 |",
+        "| ---: | ---: | ---: | ---: | ---: | ---: | --- |",
     ]
     for run in report["runs"]:
         interval = run["macro_f1_ci95"]
         lines.append(
             f"| {run['run']} | {run['candidate_recall']} | {run['pair_reduction']} | "
-            f"{run['macro_f1']} | {run['operational_failure_rate']} | "
+            f"{run['macro_f1']} | {run['provider_attempts']} | "
+            f"{run['operational_failure_rate']} | "
             f"[{interval['lower']}, {interval['upper']}] |"
         )
     lines.extend(["", "Validação técnica sintética; não confirma evento nem validade clínica."])

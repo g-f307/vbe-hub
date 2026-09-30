@@ -14,7 +14,9 @@ from vbe_hub.evaluation.relation_dataset import build_relation_dataset
 from vbe_hub.evaluation.relation_experiment import (
     _build_provider_case_rows,
     _evidence_level,
+    _operational_failure_rate,
     _predict_with_concurrency,
+    _shuffled_pairs,
     _write_case_report,
 )
 
@@ -61,6 +63,26 @@ async def test_relation_experiment_limits_and_uses_configured_concurrency() -> N
 
     assert len(predictions) == len(dataset.inputs)
     assert judge.maximum == 2
+
+
+def test_operational_failure_rate_uses_only_provider_attempts() -> None:
+    assert _operational_failure_rate(failures=28, provider_attempts=44) == 0.636364
+    assert _operational_failure_rate(failures=0, provider_attempts=0) == 0.0
+
+
+def test_pair_order_is_seeded_and_preserves_every_input() -> None:
+    dataset = build_relation_dataset(split="evaluation", cases_per_relation=1, seed=4040)
+
+    first = _shuffled_pairs(dataset.inputs, seed=4040)
+    repeated = _shuffled_pairs(dataset.inputs, seed=4040)
+    another_seed = _shuffled_pairs(dataset.inputs, seed=4041)
+
+    def pair_ids(pairs):
+        return [(item.left_id, item.right_id) for item in pairs]
+
+    assert pair_ids(first) == pair_ids(repeated)
+    assert pair_ids(first) != pair_ids(another_seed)
+    assert set(pair_ids(first)) == set(pair_ids(dataset.inputs))
 
 
 def test_evidence_is_exploratory_below_expanded_sample() -> None:
