@@ -3,7 +3,13 @@ from vbe_hub.evaluation.correlation_protocol import CorrelationExperimentConfig
 from vbe_hub.evaluation.correlation_report import build_correlation_report
 
 
-def config(threshold: float = 0.70) -> CorrelationExperimentConfig:
+def config(
+    threshold: float = 0.70,
+    concurrency: int = 1,
+    attempts: int = 1,
+    repetitions: int = 1,
+    processing_order: str = "dataset-order-v1",
+) -> CorrelationExperimentConfig:
     return CorrelationExperimentConfig(
         dataset_version="synthetic-v1",
         dataset_sha256="a" * 64,
@@ -21,11 +27,33 @@ def config(threshold: float = 0.70) -> CorrelationExperimentConfig:
         geographic_level="municipality",
         minimum_semantic_score=threshold,
         minimum_total_score=0.65,
+        provider_concurrency=concurrency,
+        provider_max_attempts=attempts,
+        repetitions=repetitions,
+        processing_order=processing_order,
     )
 
 
 def test_identity_changes_when_threshold_changes() -> None:
     assert config().identity != config(0.75).identity
+
+
+def test_identity_changes_when_concurrency_changes() -> None:
+    assert config(concurrency=1).identity != config(concurrency=4).identity
+
+
+def test_identity_changes_when_retry_attempts_change() -> None:
+    assert config(attempts=1).identity != config(attempts=3).identity
+
+
+def test_identity_changes_when_repetition_count_changes() -> None:
+    assert config(repetitions=1).identity != config(repetitions=2).identity
+
+
+def test_identity_changes_when_processing_order_changes() -> None:
+    assert config(processing_order="dataset-order-v1").identity != config(
+        processing_order="seeded-shuffle-v1"
+    ).identity
 
 
 def test_report_is_deterministic_and_keeps_false_negative_identifiers() -> None:

@@ -1,0 +1,148 @@
+{
+  "dataset": {
+    "decoys_per_target": 4,
+    "distribution": {
+      "corroborates": 10,
+      "duplicate": 10,
+      "related_context": 10,
+      "unrelated": 10,
+      "updates": 10
+    },
+    "gold_relations": 50,
+    "input_pairs": 250
+  },
+  "decision": {
+    "passed": {
+      "candidate_recall": true,
+      "macro_f1": false,
+      "operational_failure_rate": false,
+      "pair_reduction": true
+    },
+    "scope": "technical synthetic validation; no clinical or epidemiological validity",
+    "status": "block",
+    "targets": {
+      "candidate_recall": 0.9,
+      "macro_f1": 0.75,
+      "operational_failure_rate": 0.05,
+      "pair_reduction": 0.8
+    }
+  },
+  "experiment": {
+    "commit": "1cb6413",
+    "dataset_sha256": "741de2eec974e25d9ba17e63b36a39835cd478437053d6e562bde73ba1c5fb19",
+    "dataset_version": "relation-calibration-v3",
+    "embedding_model": "synthetic-frozen-semantic-scores-v3",
+    "extraction_model": "synthetic-technical-sheets-v3",
+    "geographic_level": "municipality",
+    "identity": "f4123ff0834d3f5d",
+    "max_neighbors": 5,
+    "minimum_semantic_score": 0.65,
+    "minimum_total_score": 0.65,
+    "normalizer_version": "not-applicable-precomputed-sheets",
+    "provider_concurrency": 1,
+    "provider_max_attempts": 3,
+    "relation_model": "gemini-3.5-flash-lite",
+    "relation_prompt_version": "relate-v2.1",
+    "representation_version": "relation-pair-v3",
+    "seed": 3040,
+    "split": "calibration",
+    "temporal_window_days": 14
+  },
+  "report_version": "relation-experiment-report-v3",
+  "runs": [
+    {
+      "candidate_recall": 1.0,
+      "classification": {
+        "by_class": {
+          "corroborates": {
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0
+          },
+          "duplicate": {
+            "f1": 1.0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "related_context": {
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0
+          },
+          "unrelated": {
+            "f1": 1.0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "updates": {
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0
+          }
+        },
+        "confusion": {
+          "corroborates": {
+            "corroborates": 0,
+            "duplicate": 0,
+            "related_context": 0,
+            "unrelated": 0,
+            "updates": 0
+          },
+          "duplicate": {
+            "corroborates": 0,
+            "duplicate": 5,
+            "related_context": 0,
+            "unrelated": 0,
+            "updates": 0
+          },
+          "related_context": {
+            "corroborates": 0,
+            "duplicate": 0,
+            "related_context": 0,
+            "unrelated": 0,
+            "updates": 0
+          },
+          "unrelated": {
+            "corroborates": 0,
+            "duplicate": 0,
+            "related_context": 0,
+            "unrelated": 202,
+            "updates": 0
+          },
+          "updates": {
+            "corroborates": 0,
+            "duplicate": 0,
+            "related_context": 0,
+            "unrelated": 0,
+            "updates": 0
+          }
+        },
+        "failures": 43,
+        "failures_by_code": {
+          "temporarily_unavailable": 43
+        },
+        "macro_f1": 0.4,
+        "micro_f1": 1.0
+      },
+      "macro_f1": 0.4,
+      "macro_f1_ci95": {
+        "iterations": 500,
+        "lower": 0.2,
+        "method": "paired nonparametric bootstrap over target relations",
+        "upper": 0.4
+      },
+      "operational_failure_rate": 0.877551,
+      "operations": {
+        "cache_hits": 0,
+        "estimated_cost_usd": null,
+        "input_units": 517,
+        "latency_ms_p50": 509,
+        "latency_ms_p95": 718,
+        "output_units": 56,
+        "provider_calls": 44
+      },
+      "pair_reduction": 0.804,
+      "run": 1
+    }
+  ]
+}

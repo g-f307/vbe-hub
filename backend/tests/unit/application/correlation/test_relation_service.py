@@ -49,9 +49,11 @@ class Judge:
         self.result = result
         self.error = error
         self.calls = 0
+        self.request = None
 
     async def judge(self, request: RelationRequest) -> RelationResult:
         self.calls += 1
+        self.request = request
         if self.error:
             raise self.error
         return self.result
@@ -143,3 +145,28 @@ async def test_reversed_pair_uses_same_cache_entry() -> None:
 
     assert first.id == second.id
     assert judge.calls == 1
+
+
+async def test_prompt_versions_use_distinct_cache_entries() -> None:
+    repository = Repository()
+    judge = Judge(
+        RelationResult(
+            relation=RelationKind.CORROBORATES,
+            justification="Fontes independentes convergem.",
+            confidence=0.9,
+            metadata=metadata(),
+        )
+    )
+    v1 = RelationAssessmentService(
+        judge=judge, repository=repository, relation_prompt_version="relate-v1", now=lambda: NOW
+    )
+    v2 = RelationAssessmentService(
+        judge=judge, repository=repository, relation_prompt_version="relate-v2", now=lambda: NOW
+    )
+
+    first = await v1.assess(left_id=LEFT, right_id=RIGHT, left=sheet(), right=sheet(cases=8))
+    second = await v2.assess(left_id=LEFT, right_id=RIGHT, left=sheet(), right=sheet(cases=8))
+
+    assert first.cache_key != second.cache_key
+    assert judge.calls == 2
+    assert judge.request.prompt_version == "relate-v2"

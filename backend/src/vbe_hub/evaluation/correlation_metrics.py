@@ -1,3 +1,4 @@
+from collections import Counter
 from dataclasses import dataclass
 from math import ceil
 
@@ -41,6 +42,7 @@ class ClassificationMetrics:
     macro_f1: float
     micro_f1: float
     failures: int
+    failures_by_code: dict[str, int]
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,9 +91,11 @@ def evaluate_correlation(
     )
     confusion = {gold: {predicted: 0 for predicted in CLASSES} for gold in CLASSES}
     failures = 0
+    failures_by_code: Counter[str] = Counter()
     for case in cases:
         if case.failure_code:
             failures += 1
+            failures_by_code[case.failure_code] += 1
             continue
         prediction = case.predicted_relation if case.selected else "unrelated"
         if case.gold_relation not in CLASSES or prediction not in CLASSES:
@@ -124,6 +128,7 @@ def evaluate_correlation(
         macro_f1=round(sum(item["f1"] for item in by_class.values()) / len(CLASSES), 6),
         micro_f1=micro_f1,
         failures=failures,
+        failures_by_code=dict(sorted(failures_by_code.items())),
     )
     samples = operational_samples or []
     paid = [sample for sample in samples if not sample.cache_hit]

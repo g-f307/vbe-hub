@@ -46,6 +46,10 @@ limitadas; falha do SDK ou resposta inválida vira erro sanitizado e nunca rela�
 versões, metadados operacionais e falha sanitizada. O upsert por chave mantém reprocessamento
 idempotente. FKs preservam a origem e remoção do registro elimina suas avaliações.
 
+## Versões calibradas
+
+`relate-v2` tornou explícita a fronteira entre evidência independente de ocorrência (`corroborates`) e conteúdo preventivo sem nova evidência (`related_context`). `relate-v2.1` acrescentou que `updates` exige datas distintas e continuidade do mesmo evento. As versões anteriores permanecem disponíveis para auditoria e não compartilham cache.
+
 ## Validação
 
 ```bash

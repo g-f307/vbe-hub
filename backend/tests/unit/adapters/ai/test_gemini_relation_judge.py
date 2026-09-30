@@ -20,13 +20,13 @@ class Client:
         return GeminiClientResponse(payload=self.payload, input_tokens=20, output_tokens=8)
 
 
-def request():
+def request(prompt_version: str = "relate-v1"):
     return RelationRequest(
         left_id=UUID("00000000-0000-0000-0000-000000000012"),
         right_id=UUID("00000000-0000-0000-0000-000000000013"),
         left={"disease_or_condition": "Sarampo"},
         right={"symptoms": ["febre"]},
-        prompt_version="relate-v1",
+        prompt_version=prompt_version,
         trace_id="trace-12-13",
     )
 
@@ -54,6 +54,7 @@ async def test_judge_fences_records_and_validates_structured_relation() -> None:
     assert "UNTRUSTED_PAIR_START" in client.request.contents
     assert client.request.tools == ()
 
+
 async def test_judge_measures_provider_latency() -> None:
     judge = GeminiRelationJudge(
         client=Client(
@@ -74,6 +75,44 @@ async def test_judge_measures_provider_latency() -> None:
 
     assert result.metadata.duration_ms == 1250
 
+
+async def test_relate_v2_defines_corroboration_boundary() -> None:
+    client = Client(
+        {
+            "relation": "corroborates",
+            "justification": "Relato independente apresenta evidência do mesmo evento.",
+            "confidence": 0.9,
+        }
+    )
+    judge = GeminiRelationJudge(
+        client=client,
+        model="gemini-test",
+        timeout_seconds=10,
+        max_input_chars=4000,
+        now=lambda: NOW,
+    )
+
+    await judge.judge(request("relate-v2"))
+
+    assert "independent source reports occurrence evidence" in client.request.contents
+    assert (
+        "prevention or general information without occurrence evidence" in client.request.contents
+    )
+
+
+async def test_relate_v2_1_requires_distinct_dates_for_updates() -> None:
+    client = Client({"relation": "unrelated", "justification": "Datas iguais.", "confidence": 0.8})
+    judge = GeminiRelationJudge(
+        client=client,
+        model="gemini-test",
+        timeout_seconds=10,
+        max_input_chars=4000,
+        now=lambda: NOW,
+    )
+
+    await judge.judge(request("relate-v2.1"))
+
+    assert "records on the same date can never be updates" in client.request.contents
 
 
 async def test_judge_rejects_invalid_relation_without_persistable_result() -> None:

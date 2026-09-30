@@ -1,0 +1,234 @@
+{
+  "dataset": {
+    "decoys_per_target": 4,
+    "distribution": {
+      "corroborates": 50,
+      "duplicate": 50,
+      "related_context": 50,
+      "unrelated": 50,
+      "updates": 50
+    },
+    "gold_relations": 250,
+    "input_pairs": 1250
+  },
+  "decision": {
+    "passed": {
+      "candidate_recall": true,
+      "macro_f1": true,
+      "operational_failure_rate": false,
+      "pair_reduction": true
+    },
+    "scope": "technical synthetic validation; no clinical or epidemiological validity",
+    "status": "block",
+    "targets": {
+      "candidate_recall": 0.9,
+      "macro_f1": 0.75,
+      "operational_failure_rate": 0.05,
+      "pair_reduction": 0.8
+    }
+  },
+  "experiment": {
+    "commit": "1fad065",
+    "dataset_sha256": "831aa47e1545151bbeb3b0720be3c6d38b1c028d8c37876b05ace17477bb5180",
+    "dataset_version": "relation-evaluation-v2",
+    "embedding_model": "synthetic-frozen-semantic-scores-v2",
+    "extraction_model": "synthetic-technical-sheets-v2",
+    "geographic_level": "municipality",
+    "identity": "6164a61a98a12346",
+    "max_neighbors": 5,
+    "minimum_semantic_score": 0.65,
+    "minimum_total_score": 0.65,
+    "normalizer_version": "not-applicable-precomputed-sheets",
+    "relation_model": "gemini-3.5-flash-lite",
+    "relation_prompt_version": "relate-v2.1",
+    "representation_version": "relation-pair-v2",
+    "seed": 4040,
+    "split": "evaluation",
+    "temporal_window_days": 14
+  },
+  "report_version": "relation-experiment-report-v2",
+  "runs": [
+    {
+      "candidate_recall": 1.0,
+      "classification": {
+        "by_class": {
+          "corroborates": {
+            "f1": 0.934579,
+            "precision": 0.877193,
+            "recall": 1.0
+          },
+          "duplicate": {
+            "f1": 1.0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "related_context": {
+            "f1": 0.952381,
+            "precision": 1.0,
+            "recall": 0.909091
+          },
+          "unrelated": {
+            "f1": 0.995683,
+            "precision": 0.991404,
+            "recall": 1.0
+          },
+          "updates": {
+            "f1": 0.860465,
+            "precision": 1.0,
+            "recall": 0.755102
+          }
+        },
+        "confusion": {
+          "corroborates": {
+            "corroborates": 50,
+            "duplicate": 0,
+            "related_context": 0,
+            "unrelated": 0,
+            "updates": 0
+          },
+          "duplicate": {
+            "corroborates": 0,
+            "duplicate": 50,
+            "related_context": 0,
+            "unrelated": 0,
+            "updates": 0
+          },
+          "related_context": {
+            "corroborates": 4,
+            "duplicate": 0,
+            "related_context": 40,
+            "unrelated": 0,
+            "updates": 0
+          },
+          "unrelated": {
+            "corroborates": 0,
+            "duplicate": 0,
+            "related_context": 0,
+            "unrelated": 1038,
+            "updates": 0
+          },
+          "updates": {
+            "corroborates": 3,
+            "duplicate": 0,
+            "related_context": 0,
+            "unrelated": 9,
+            "updates": 37
+          }
+        },
+        "failures": 19,
+        "macro_f1": 0.948622,
+        "micro_f1": 0.987002
+      },
+      "macro_f1": 0.948622,
+      "macro_f1_ci95": {
+        "iterations": 500,
+        "lower": 0.891538,
+        "method": "paired nonparametric bootstrap over target relations",
+        "upper": 0.957646
+      },
+      "operational_failure_rate": 0.076,
+      "operations": {
+        "cache_hits": 0,
+        "estimated_cost_usd": null,
+        "input_units": 86820,
+        "latency_ms_p50": 5325,
+        "latency_ms_p95": 20767,
+        "output_units": 14347,
+        "provider_calls": 200
+      },
+      "pair_reduction": 0.8,
+      "run": 1
+    },
+    {
+      "candidate_recall": 1.0,
+      "classification": {
+        "by_class": {
+          "corroborates": {
+            "f1": 0.895238,
+            "precision": 0.824561,
+            "recall": 0.979167
+          },
+          "duplicate": {
+            "f1": 1.0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "related_context": {
+            "f1": 0.965517,
+            "precision": 1.0,
+            "recall": 0.933333
+          },
+          "unrelated": {
+            "f1": 0.996094,
+            "precision": 0.992218,
+            "recall": 1.0
+          },
+          "updates": {
+            "f1": 0.837209,
+            "precision": 1.0,
+            "recall": 0.72
+          }
+        },
+        "confusion": {
+          "corroborates": {
+            "corroborates": 47,
+            "duplicate": 0,
+            "related_context": 0,
+            "unrelated": 1,
+            "updates": 0
+          },
+          "duplicate": {
+            "corroborates": 0,
+            "duplicate": 50,
+            "related_context": 0,
+            "unrelated": 0,
+            "updates": 0
+          },
+          "related_context": {
+            "corroborates": 3,
+            "duplicate": 0,
+            "related_context": 42,
+            "unrelated": 0,
+            "updates": 0
+          },
+          "unrelated": {
+            "corroborates": 0,
+            "duplicate": 0,
+            "related_context": 0,
+            "unrelated": 1020,
+            "updates": 0
+          },
+          "updates": {
+            "corroborates": 7,
+            "duplicate": 0,
+            "related_context": 0,
+            "unrelated": 7,
+            "updates": 36
+          }
+        },
+        "failures": 37,
+        "macro_f1": 0.938812,
+        "micro_f1": 0.985161
+      },
+      "macro_f1": 0.938812,
+      "macro_f1_ci95": {
+        "iterations": 500,
+        "lower": 0.861147,
+        "method": "paired nonparametric bootstrap over target relations",
+        "upper": 0.941839
+      },
+      "operational_failure_rate": 0.148,
+      "operations": {
+        "cache_hits": 0,
+        "estimated_cost_usd": null,
+        "input_units": 78163,
+        "latency_ms_p50": 4774,
+        "latency_ms_p95": 28442,
+        "output_units": 13460,
+        "provider_calls": 200
+      },
+      "pair_reduction": 0.8,
+      "run": 2
+    }
+  ]
+}
