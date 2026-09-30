@@ -14,19 +14,30 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-Fundação, dados sintéticos e o funil auditável de correlação estão implementados. A rodada
-reservada de 30/09/2026 bloqueou a macroentrega 1 porque a macro-F1 de 0,733333 ficou abaixo da
-meta de 0,75. Consulte a [avaliação da correlação](docs/correlation-evaluation.md). Interface web e
-integrações EIOS/GdS ainda não foram implementadas.
+Fundação, dados sintéticos e o funil auditável de correlação estão implementados. A capacidade
+de correlação da Macroentrega 1 foi aprovada com ressalvas na avaliação exploratória reservada de
+30/09/2026; todas as metas previamente definidas foram atendidas. Consulte a [síntese para
+profissionais de saúde](docs/health-stakeholder-validation.md) e o [protocolo
+técnico](docs/correlation-evaluation.md). Interface web e integrações reais com EIOS e Guardiões
+da Saúde ainda não foram implementadas.
 
 ## Início rápido
 
-Com Git, Docker e Docker Compose:
+### Execução básica sem Gemini
+
+Com Git, Docker e Docker Compose v2:
 
 ```bash
 git clone https://github.com/g-f307/vbe-hub.git
 cd vbe-hub
 cp .env.example .env
+docker compose up --build --detach --wait
+```
+
+No PowerShell, substitua a cópia do arquivo por:
+
+```powershell
+Copy-Item .env.example .env
 docker compose up --build --detach --wait
 ```
 
@@ -48,5 +59,12 @@ docker compose --profile tools run --rm synthetic-generate
 docker compose --profile tools run --rm synthetic-validate
 docker compose --profile tools run --rm synthetic-import
 ```
+
+### Avaliação opcional com Gemini
+
+A execução básica, os testes e os dados sintéticos não exigem chave externa. Para repetir a
+avaliação de correlação com o Gemini, configure `GEMINI_API_KEY` somente no `.env` local e siga o
+[guia de execução local](docs/development.md#avaliação-live-da-correlação). Essa etapa consome
+cota do provider e não é necessária para iniciar a aplicação.
 
 Consulte o [guia de execução local](docs/development.md) para desenvolvimento com hot reload, portas, volumes, reconstrução sem cache e reset, e o [guia do dataset sintético](docs/synthetic-data-generation.md) para parâmetros, artefatos e reprodutibilidade. O host não precisa de Python, uv, PostgreSQL ou Redis.
