@@ -103,19 +103,29 @@ e relação sobre fichas predefinidas, não a qualidade da extração nem valida
 
 ## Correção metodológica da issue #40
 
-O dataset `relation-*-v3` usa períodos distintos para calibração (2025) e avaliação (2026), IDs e conteúdo separados, 50 relações por classe no reservado e quatro negativos por alvo. Inclui corroboração sem doença nomeada, divergência de magnitude, campanhas e orientações, atualização posterior, republicação parafraseada, incompatibilidade geográfica, ausência de data/local e conteúdo instrucional adversarial tratado como dado não confiável. Inputs e gold são serializados e hasheados separadamente; gold só é lido após as predições.
+O dataset `relation-*-v3` usa períodos distintos para calibração (2025) e avaliação (2026), IDs e conteúdo separados e quatro negativos por alvo. O gerador mantém capacidade para 50 relações por classe, mas a execução Docker padrão usa temporariamente 10 por classe para respeitar a cota gratuita. Inclui corroboração sem doença nomeada, divergência de magnitude, campanhas e orientações, atualização posterior, republicação parafraseada, incompatibilidade geográfica, ausência de data/local e conteúdo instrucional adversarial tratado como dado não confiável. Inputs e gold são serializados e hasheados separadamente; gold só é lido após as predições.
 
-A execução registra concorrência e tentativas do provider na identidade. O padrão conservador atual é concorrência `1`, até `3` tentativas e timeout de 60 s.
+A identidade registra concorrência, tentativas do provider e quantidade de repetições. O padrão conservador é concorrência `1`, até `3` tentativas e timeout de 60 s.
+
+## Protocolo exploratório com cota gratuita
+
+A avaliação reservada padrão contém 10 casos por classe, totalizando 50 relações gold, 250 pares de entrada e uma repetição. A política de candidatos reduz as chamadas: na calibração anterior, 44 pares chegaram ao Gemini. Esse número é uma estimativa, não uma garantia de consumo, pois depende das decisões determinísticas do seletor.
+
+O resultado deve ser interpretado como evidência técnica **exploratória**. Mesmo que todas as metas sejam atingidas, uma única rodada pequena não mede estabilidade entre repetições nem substitui a avaliação ampliada. Quando houver cota ou orçamento adequado, a capacidade de 50 casos por classe e duas repetições permanece disponível para evidência mais robusta.
 
 ```bash
 EVALUATION_COMMIT=$(git rev-parse --short HEAD) docker compose --profile live run --build --rm relation-calibrate
 EVALUATION_COMMIT=$(git rev-parse --short HEAD) docker compose --profile live run --build --rm relation-live-evaluate-v3
 ```
 
+Além do JSON e do Markdown agregados, cada execução grava `relation-<split>-<identidade>-provider-cases.csv` em `data/reports/`. O CSV contém apenas os pares efetivamente enviados ao provider, com relação gold, previsão, confiança, código de falha, justificativa validada e resumos sintéticos das duas fichas. Não contém chave, resposta bruta do provider ou dados reais e permanece fora do Git.
+
 ## Estado da decisão em 30/09/2026
 
 A rodada v2 (`6164a61a98a12346`) atingiu macro-F1 0,948622 e 0,938812, mas foi bloqueada por falhas operacionais de 7,6% e 14,8%. Ela foi depois considerada metodologicamente superseded porque havia repetição de padrões de conteúdo entre os splits.
 
-O código v3 corrige essa sobreposição e cobre os casos difíceis. A nova calibração não pôde ser concluída: a API retornou `temporarily_unavailable` em 43/44 chamadas no modelo 3.5 e 44/44 no 2.5, com zero ou quase zero tokens, indicando cota do projeto indisponível. Portanto a Macroentrega 1 continua bloqueada; não há avaliação reservada v3 válida até a cota ser restabelecida.
+A calibração v3 com 10 casos por classe atingiu macro-F1 1,0 e teve duas falhas temporárias, dentro da meta operacional. A tentativa ampliada de avaliação, com 50 casos por classe e duas repetições, exigia 220 chamadas ao provider por rodada e foi inviabilizada pela cota gratuita: 56,3% e 69,4% das chamadas falharam. As respostas que chegaram a ser processadas não bastam para uma conclusão válida sobre a amostra inteira.
+
+Por isso, a Macroentrega 1 continua bloqueada até a execução reservada exploratória concluir com taxa de falha aceitável. Um eventual resultado positivo permitirá validar viabilidade inicial com ressalvas; a generalização estatística continuará pendente da avaliação ampliada.
 
 [Voltar ao índice da documentação](README.md)
