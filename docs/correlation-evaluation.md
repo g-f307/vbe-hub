@@ -18,6 +18,7 @@ related_docs:
   - API-006
   - API-007
   - TEST-001
+  - REPORT-001
 ---
 
 # Avaliação da correlação
@@ -128,6 +129,6 @@ A calibração v3 com 10 casos por classe atingiu macro-F1 1,0 e teve duas falha
 
 A avaliação exploratória `ec81883fbb0d8914` realizou 44 chamadas e registrou 28 falhas `temporarily_unavailable`. O relatório original calculou 57,1429% sobre 49 pares selecionados; a interpretação corrigida é 63,6364% sobre 44 chamadas reais. A evidência histórica não foi sobrescrita e continua bloqueada. Os 16 retornos do Gemini foram corretos, mas ficaram concentrados nas primeiras classes por causa da ordem anterior do dataset; por isso não sustentam conclusão geral. A tentativa ampliada de avaliação, com 50 casos por classe e duas repetições, exigia 220 chamadas ao provider por rodada e foi inviabilizada pela cota gratuita: 56,3% e 69,4% das chamadas falharam. As respostas que chegaram a ser processadas não bastam para uma conclusão válida sobre a amostra inteira.
 
-Por isso, a Macroentrega 1 continua bloqueada até a execução reservada exploratória concluir com taxa de falha aceitável. Um eventual resultado positivo permitirá validar viabilidade inicial com ressalvas; a generalização estatística continuará pendente da avaliação ampliada.
+A execução reservada corrigida `ce77f037927356db`, no commit `f5a57cb`, concluiu 44 chamadas sem falhas e classificou corretamente todos os casos, com recall de candidatos 1,0, redução de pares 0,804 e macro-F1 1,0. Todas as metas previamente congeladas foram atendidas. Assim, a capacidade de correlação da Macroentrega 1 foi **aprovada com ressalvas** como evidência técnica exploratória; a generalização estatística, a validade clínica e a validade epidemiológica continuam fora do que esta rodada permite afirmar.
 
-[Voltar ao índice da documentação](README.md)
+[Consultar a síntese para profissionais de saúde](health-stakeholder-validation.md) · [Voltar ao índice da documentação](README.md)

@@ -16,12 +16,13 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 10. [Seleção de pares candidatos](candidate-selection.md)
 11. [Classificação das relações](relation-classification.md)
 12. [Avaliação da correlação](correlation-evaluation.md)
-13. [Geração e importação de dados sintéticos](synthetic-data-generation.md)
-14. [Modelo persistente inicial](data-model.md)
-15. [Plano de implementação](implementation-plan.md)
-16. [Execução e validação local](development.md)
-17. [Integração contínua](continuous-integration.md)
-18. [Decisões arquiteturais](decisions/README.md)
+13. [Validação da correlação para profissionais de saúde](health-stakeholder-validation.md)
+14. [Geração e importação de dados sintéticos](synthetic-data-generation.md)
+15. [Modelo persistente inicial](data-model.md)
+16. [Plano de implementação](implementation-plan.md)
+17. [Execução e validação local](development.md)
+18. [Integração contínua](continuous-integration.md)
+19. [Decisões arquiteturais](decisions/README.md)
 
 ## Situação
 
