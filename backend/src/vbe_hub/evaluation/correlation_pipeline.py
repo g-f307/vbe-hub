@@ -204,6 +204,19 @@ async def predict_relation_pairs(
                 )
             )
             continue
+        except ValueError:
+            predictions.append(
+                CorrelationPrediction(
+                    str(pair.left_id),
+                    str(pair.right_id),
+                    True,
+                    None,
+                    None,
+                    "invalid_relation_semantics",
+                    None,
+                )
+            )
+            continue
         predictions.append(
             CorrelationPrediction(
                 str(pair.left_id),
