@@ -19,7 +19,7 @@ from vbe_hub.evaluation.correlation_report import build_correlation_report
 from vbe_hub.evaluation.relation_dataset import RelationDataset, build_relation_dataset
 from vbe_hub.infrastructure.settings import Settings
 
-PROMPT_VERSION = "relate-v2"
+PROMPT_VERSION = "relate-v2.1"
 _TARGETS = {
     "candidate_recall": 0.90,
     "pair_reduction": 0.80,
@@ -122,10 +122,10 @@ def _serialized_partitions(dataset: RelationDataset) -> tuple[bytes, bytes]:
             for item in dataset.gold
         ],
     }
+
     def canonical(value):
-        return json.dumps(
-            value, ensure_ascii=False, separators=(",", ":"), sort_keys=True
-        ).encode()
+        return json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode()
+
     return canonical(inputs), canonical(gold)
 
 

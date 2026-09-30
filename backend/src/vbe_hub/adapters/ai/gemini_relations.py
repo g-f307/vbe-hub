@@ -31,6 +31,18 @@ _PROMPTS = {
         "related_context means prevention or general information without occurrence evidence; "
         "unrelated means the records do not describe the same event."
     ),
+    "relate-v2.1": (
+        "Classify the relation using only duplicate, corroborates, updates, "
+        "related_context, or unrelated. Apply these constraints strictly: duplicate means the "
+        "same information was copied, republished, or closely paraphrased; updates requires "
+        "distinct event dates and a later record that adds or revises facts about the same "
+        "ongoing event, so records on the same date can never be updates; corroborates means an "
+        "independent source reports occurrence evidence for the same event, including compatible "
+        "symptoms when it does not name the disease and small differences in counts; "
+        "related_context means prevention, guidance, or general information without new "
+        "occurrence evidence; unrelated means the records describe different diseases, "
+        "syndromes, places, dates, or events."
+    ),
 }
 
 

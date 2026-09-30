@@ -100,6 +100,21 @@ async def test_relate_v2_defines_corroboration_boundary() -> None:
     )
 
 
+async def test_relate_v2_1_requires_distinct_dates_for_updates() -> None:
+    client = Client({"relation": "unrelated", "justification": "Datas iguais.", "confidence": 0.8})
+    judge = GeminiRelationJudge(
+        client=client,
+        model="gemini-test",
+        timeout_seconds=10,
+        max_input_chars=4000,
+        now=lambda: NOW,
+    )
+
+    await judge.judge(request("relate-v2.1"))
+
+    assert "records on the same date can never be updates" in client.request.contents
+
+
 async def test_judge_rejects_invalid_relation_without_persistable_result() -> None:
     judge = GeminiRelationJudge(
         client=Client({"relation": "same_outbreak", "justification": "inválida", "confidence": 1}),
