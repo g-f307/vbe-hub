@@ -283,6 +283,7 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash-lite}
       GEMINI_TIMEOUT_SECONDS: 60
+      GEMINI_MAX_ATTEMPTS: 3
       GEMINI_MAX_INPUT_CHARS: ${GEMINI_MAX_INPUT_CHARS:-12000}
     volumes:
       - ./data/reports:/data/reports
@@ -294,7 +295,7 @@ services:
         "--cases-per-relation", "10",
         "--seed", "3040",
         "--repetitions", "1",
-        "--concurrency", "4",
+        "--concurrency", "2",
         "--commit", "${EVALUATION_COMMIT:-working-tree}",
         "--output", "/data/reports",
       ]
@@ -312,6 +313,7 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash-lite}
       GEMINI_TIMEOUT_SECONDS: 60
+      GEMINI_MAX_ATTEMPTS: 3
       GEMINI_MAX_INPUT_CHARS: ${GEMINI_MAX_INPUT_CHARS:-12000}
     volumes:
       - ./data/reports:/data/reports
@@ -323,7 +325,7 @@ services:
         "--cases-per-relation", "50",
         "--seed", "4040",
         "--repetitions", "2",
-        "--concurrency", "4",
+        "--concurrency", "2",
         "--commit", "${EVALUATION_COMMIT:-working-tree}",
         "--output", "/data/reports",
       ]

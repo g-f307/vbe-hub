@@ -23,6 +23,7 @@ class CorrelationExperimentConfig(BaseModel):
     relation_prompt_version: str = Field(min_length=1)
     max_neighbors: int = Field(gt=0)
     provider_concurrency: int = Field(default=1, gt=0, le=8)
+    provider_max_attempts: int = Field(default=1, ge=1, le=4)
     temporal_window_days: int = Field(ge=0)
     geographic_level: Literal["country", "state", "municipality", "district"]
     minimum_semantic_score: float = Field(ge=0, le=1)

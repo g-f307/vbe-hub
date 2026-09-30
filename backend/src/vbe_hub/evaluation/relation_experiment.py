@@ -65,6 +65,7 @@ async def run_relation_experiment(
         relation_prompt_version=PROMPT_VERSION,
         max_neighbors=5,
         provider_concurrency=provider_concurrency,
+        provider_max_attempts=settings.gemini_max_attempts,
         temporal_window_days=policy.max_temporal_gap_days,
         geographic_level=policy.geographic_level.value,
         minimum_semantic_score=policy.minimum_semantic_score,
@@ -75,7 +76,8 @@ async def run_relation_experiment(
     root_client = genai.Client(
         api_key=settings.gemini_api_key.get_secret_value(),
         http_options=types.HttpOptions(
-            api_version="v1", retry_options=types.HttpRetryOptions(attempts=1)
+            api_version="v1",
+            retry_options=types.HttpRetryOptions(attempts=settings.gemini_max_attempts),
         ),
     )
     async with root_client.aio as async_client:
