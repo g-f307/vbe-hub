@@ -54,6 +54,27 @@ async def test_judge_fences_records_and_validates_structured_relation() -> None:
     assert "UNTRUSTED_PAIR_START" in client.request.contents
     assert client.request.tools == ()
 
+async def test_judge_measures_provider_latency() -> None:
+    judge = GeminiRelationJudge(
+        client=Client(
+            {
+                "relation": "corroborates",
+                "justification": "Fontes independentes convergem.",
+                "confidence": 0.87,
+            }
+        ),
+        model="gemini-test",
+        timeout_seconds=10,
+        max_input_chars=4000,
+        now=lambda: NOW,
+        monotonic_values=iter((10.0, 11.25)),
+    )
+
+    result = await judge.judge(request())
+
+    assert result.metadata.duration_ms == 1250
+
+
 
 async def test_judge_rejects_invalid_relation_without_persistable_result() -> None:
     judge = GeminiRelationJudge(
