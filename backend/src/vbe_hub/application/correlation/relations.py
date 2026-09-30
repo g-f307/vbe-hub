@@ -54,8 +54,10 @@ class RelationAssessmentService:
         judge: RelationJudge,
         repository: RelationAssessmentRepository,
         now=lambda: datetime.now(UTC),
+        relation_prompt_version: str = RELATION_PROMPT_VERSION,
     ) -> None:
         self._judge, self._repository, self._now = judge, repository, now
+        self._prompt_version = relation_prompt_version
 
     async def assess(
         self, *, left_id: UUID, right_id: UUID, left: Mapping[str, Any], right: Mapping[str, Any]
@@ -64,7 +66,7 @@ class RelationAssessmentService:
             raise ValueError("relation candidates must be different records")
         if str(right_id) < str(left_id):
             left_id, right_id, left, right = right_id, left_id, right, left
-        cache_key = _cache_key(left_id, right_id)
+        cache_key = _cache_key(left_id, right_id, self._prompt_version)
         if cached := await self._repository.get(cache_key):
             return cached
         if _comparable_sheet(left) == _comparable_sheet(right):
@@ -98,7 +100,7 @@ class RelationAssessmentService:
             right_id=right_id,
             left=left,
             right=right,
-            prompt_version=RELATION_PROMPT_VERSION,
+            prompt_version=self._prompt_version,
             trace_id=cache_key[:16],
         )
         try:
@@ -148,8 +150,8 @@ class RelationAssessmentService:
         return record
 
 
-def _cache_key(left_id: UUID, right_id: UUID) -> str:
-    value = f"{left_id}:{right_id}:{RELATION_RULES_VERSION}:{RELATION_PROMPT_VERSION}"
+def _cache_key(left_id: UUID, right_id: UUID, prompt_version: str) -> str:
+    value = f"{left_id}:{right_id}:{RELATION_RULES_VERSION}:{prompt_version}"
     return hashlib.sha256(value.encode()).hexdigest()
 
 
