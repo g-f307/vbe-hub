@@ -15,12 +15,13 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 9. [Indexação semântica](semantic-indexing.md)
 10. [Seleção de pares candidatos](candidate-selection.md)
 11. [Classificação das relações](relation-classification.md)
-12. [Geração e importação de dados sintéticos](synthetic-data-generation.md)
-13. [Modelo persistente inicial](data-model.md)
-14. [Plano de implementação](implementation-plan.md)
-15. [Execução e validação local](development.md)
-16. [Integração contínua](continuous-integration.md)
-17. [Decisões arquiteturais](decisions/README.md)
+12. [Avaliação da correlação](correlation-evaluation.md)
+13. [Geração e importação de dados sintéticos](synthetic-data-generation.md)
+14. [Modelo persistente inicial](data-model.md)
+15. [Plano de implementação](implementation-plan.md)
+16. [Execução e validação local](development.md)
+17. [Integração contínua](continuous-integration.md)
+18. [Decisões arquiteturais](decisions/README.md)
 
 ## Situação
 

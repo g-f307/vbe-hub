@@ -14,7 +14,7 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-Fundação, dados sintéticos, normalização, extração auditável, indexação semântica e seleção de candidatos estão implementados. A classificação auditável das relações está em implementação. A linha de base reservada do Gemini recomenda peso reduzido ou somente evidência; interface web e integrações EIOS/GdS ainda não foram implementadas.
+Fundação, dados sintéticos e o funil auditável de correlação estão implementados. O protocolo reproduzível de avaliação da correlação está disponível; a rodada reservada da macroentrega 1 deve usar dados congelados e não pode ser ajustada depois de observada. Interface web e integrações EIOS/GdS ainda não foram implementadas.
 
 ## Início rápido
 
