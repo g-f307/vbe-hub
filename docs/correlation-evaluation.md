@@ -58,6 +58,12 @@ mkdir -p data/evaluation data/reports
 docker compose --profile tools run --rm correlation-evaluate
 ```
 
+Para repetir uma nova versão do experimento com o Gemini, informando o commit avaliado:
+
+```bash
+EVALUATION_COMMIT=$(git rev-parse --short HEAD) docker compose --profile live run --rm correlation-live-evaluate
+```
+
 O comando gera JSON e Markdown em `data/reports/`. Esses artefatos locais não devem conter chave,
 payload bruto ou dados reais. Somente um relatório pequeno e sanitizado da rodada aprovada deve
 ser versionado posteriormente.
@@ -67,5 +73,30 @@ ser versionado posteriormente.
 O avaliador, as metas e o caminho Docker estão implementados e testados. A decisão final da
 macroentrega 1 — aprovar, aprovar com ressalvas ou bloquear — depende da execução reservada com o
 arquivo de entrada congelado; não deve ser inferida dos testes unitários perfeitos.
+
+## Rodada reservada de 30/09/2026
+
+A execução `276280372db6ee26`, no commit `fa7d1e3`, usou o dataset
+`correlation-reserved-v1` (SHA-256
+`4bb57293c7bfde7a865d13d306f22e32a40c2fa00297ad47d59a7285eee941b4`),
+`gemini-embedding-001` e `gemini-3.5-flash-lite`.
+
+| Métrica | Meta | Resultado | Situação |
+| --- | ---: | ---: | --- |
+| Recall de candidatos | ≥ 0,90 | 1,000000 | atende |
+| Redução de pares | ≥ 0,80 | 0,911111 | atende |
+| Macro-F1 | ≥ 0,75 | 0,733333 | não atende |
+| Falhas operacionais | ≤ 0,05 | 0,000000 | atende |
+
+Foram selecionados 4 de 45 pares, sem falsos negativos na seleção. O classificador confundiu o
+único caso `corroborates` com `related_context`; por isso, F1 de `corroborates` foi 0 e F1 de
+`related_context` foi 0,666667. Houve três chamadas ao modelo, 1.204 tokens de entrada, 219 de
+saída, latência p50 de 1.125 ms e p95 de 1.327 ms. O custo permanece indisponível porque os preços
+por milhão de tokens não foram configurados.
+
+**Decisão:** bloquear a aprovação da macroentrega 1 nesta versão. O ajuste deve ocorrer sobre uma
+nova calibração e produzir nova versão de prompt/política antes de outra avaliação; esta evidência
+reservada não deve ser sobrescrita. A amostra contém somente 10 fichas sintéticas e avalia seleção
+e relação sobre fichas predefinidas, não a qualidade da extração nem validade clínica.
 
 [Voltar ao índice da documentação](README.md)

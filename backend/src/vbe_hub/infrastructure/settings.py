@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     gemini_model: str = Field(
         default="gemini-3.5-flash-lite", validation_alias="GEMINI_MODEL", min_length=1
     )
+    gemini_embedding_model: str = Field(
+        default="gemini-embedding-001", validation_alias="GEMINI_EMBEDDING_MODEL", min_length=1
+    )
     gemini_timeout_seconds: float = Field(
         default=15, gt=0, le=60, validation_alias="GEMINI_TIMEOUT_SECONDS"
     )

@@ -60,3 +60,14 @@ def test_operational_metrics_exclude_cache_hits_from_calls_and_cost() -> None:
     assert report.operations.latency_ms_p50 == 20
     assert report.operations.latency_ms_p95 == 30
     assert report.operations.estimated_cost_usd == 0.015
+
+
+def test_operational_metrics_keep_unknown_cost_unavailable() -> None:
+    report = evaluate_correlation(
+        [],
+        theoretical_pairs=0,
+        operational_samples=[OperationalSample(10, 100, 20, False, None)],
+    )
+
+    assert report.operations.provider_calls == 1
+    assert report.operations.estimated_cost_usd is None

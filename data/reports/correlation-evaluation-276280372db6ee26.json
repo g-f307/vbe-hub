@@ -1,0 +1,128 @@
+{
+  "candidates": {
+    "false_negatives": [],
+    "pair_reduction": 0.911111,
+    "precision": 1.0,
+    "recall": 1.0,
+    "selected_pairs": 4,
+    "theoretical_pairs": 45
+  },
+  "classification": {
+    "by_class": {
+      "corroborates": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "duplicate": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "related_context": {
+        "f1": 0.666667,
+        "precision": 0.5,
+        "recall": 1.0
+      },
+      "unrelated": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "updates": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    },
+    "confusion": {
+      "corroborates": {
+        "corroborates": 0,
+        "duplicate": 0,
+        "related_context": 1,
+        "unrelated": 0,
+        "updates": 0
+      },
+      "duplicate": {
+        "corroborates": 0,
+        "duplicate": 1,
+        "related_context": 0,
+        "unrelated": 0,
+        "updates": 0
+      },
+      "related_context": {
+        "corroborates": 0,
+        "duplicate": 0,
+        "related_context": 1,
+        "unrelated": 0,
+        "updates": 0
+      },
+      "unrelated": {
+        "corroborates": 0,
+        "duplicate": 0,
+        "related_context": 0,
+        "unrelated": 41,
+        "updates": 0
+      },
+      "updates": {
+        "corroborates": 0,
+        "duplicate": 0,
+        "related_context": 0,
+        "unrelated": 0,
+        "updates": 1
+      }
+    },
+    "failures": 0,
+    "macro_f1": 0.733333,
+    "micro_f1": 0.977778
+  },
+  "decision": {
+    "limitations": [
+      "Reserved set contains 10 synthetic technical sheets and is not clinically representative.",
+      "The run evaluates candidate selection and relation classification, not extraction quality."
+    ],
+    "observed_operational_failure_rate": 0.0,
+    "passed": {
+      "candidate_recall": true,
+      "macro_f1": false,
+      "operational_failure_rate": true,
+      "pair_reduction": true
+    },
+    "status": "block",
+    "targets": {
+      "candidate_recall": 0.9,
+      "macro_f1": 0.75,
+      "operational_failure_rate": 0.05,
+      "pair_reduction": 0.8
+    }
+  },
+  "experiment": {
+    "commit": "fa7d1e3",
+    "dataset_sha256": "4bb57293c7bfde7a865d13d306f22e32a40c2fa00297ad47d59a7285eee941b4",
+    "dataset_version": "correlation-reserved-v1",
+    "embedding_model": "gemini-embedding-001",
+    "extraction_model": "reserved-technical-sheets-v1",
+    "geographic_level": "municipality",
+    "identity": "276280372db6ee26",
+    "max_neighbors": 9,
+    "minimum_semantic_score": 0.65,
+    "minimum_total_score": 0.65,
+    "normalizer_version": "not-applicable-precomputed-sheets",
+    "relation_model": "gemini-3.5-flash-lite",
+    "relation_prompt_version": "relate-v1",
+    "representation_version": "embedding-text-v1",
+    "seed": 1307,
+    "split": "evaluation",
+    "temporal_window_days": 14
+  },
+  "operations": {
+    "cache_hits": 0,
+    "estimated_cost_usd": null,
+    "input_units": 1204,
+    "latency_ms_p50": 1125,
+    "latency_ms_p95": 1327,
+    "output_units": 219,
+    "provider_calls": 3
+  },
+  "report_version": "correlation-evaluation-report-v1"
+}
