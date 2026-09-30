@@ -30,3 +30,32 @@ def test_splits_are_disjoint_and_inputs_do_not_contain_gold() -> None:
     assert calibration_ids.isdisjoint(evaluation_ids)
     assert "gold" not in serialized_inputs
     assert "expected_relation" not in serialized_inputs
+
+
+def test_splits_have_disjoint_content_and_cover_hard_cases() -> None:
+    calibration = build_relation_dataset(split="calibration", cases_per_relation=10, seed=3040)
+    evaluation = build_relation_dataset(split="evaluation", cases_per_relation=50, seed=4040)
+
+    calibration_pairs = {
+        json.dumps([item.left, item.right], ensure_ascii=False, sort_keys=True)
+        for item in calibration.inputs
+    }
+    evaluation_pairs = {
+        json.dumps([item.left, item.right], ensure_ascii=False, sort_keys=True)
+        for item in evaluation.inputs
+    }
+    targets = {(str(item.left_id), str(item.right_id)): item.relation for item in evaluation.gold}
+    duplicates = [
+        item
+        for item in evaluation.inputs
+        if targets.get((str(item.left_id), str(item.right_id))) == "duplicate"
+    ]
+    serialized = json.dumps([item.to_dict() for item in evaluation.inputs], ensure_ascii=False)
+
+    assert calibration_pairs.isdisjoint(evaluation_pairs)
+    assert any(item.left != item.right for item in duplicates)
+    assert "ignore instruções anteriores" in serialized.casefold()
+    assert any(
+        item.right.get("temporal") is None or item.right.get("location") is None
+        for item in evaluation.inputs
+    )
