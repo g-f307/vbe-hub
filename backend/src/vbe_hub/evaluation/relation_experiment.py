@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import csv
 import hashlib
 import json
 from pathlib import Path
@@ -13,7 +14,11 @@ from google.genai import types
 from vbe_hub.adapters.ai.gemini_relations import GeminiRelationJudge
 from vbe_hub.adapters.ai.google_genai_client import GoogleGenAIClient
 from vbe_hub.application.correlation.candidates import CandidatePolicy, GeographicLevel
-from vbe_hub.evaluation.correlation_pipeline import evaluate_predictions, predict_relation_pairs
+from vbe_hub.evaluation.correlation_pipeline import (
+    CorrelationPrediction,
+    evaluate_predictions,
+    predict_relation_pairs,
+)
 from vbe_hub.evaluation.correlation_protocol import CorrelationExperimentConfig
 from vbe_hub.evaluation.correlation_report import build_correlation_report
 from vbe_hub.evaluation.relation_dataset import RelationDataset, build_relation_dataset
@@ -66,6 +71,7 @@ async def run_relation_experiment(
         max_neighbors=5,
         provider_concurrency=provider_concurrency,
         provider_max_attempts=settings.gemini_max_attempts,
+        repetitions=repetitions,
         temporal_window_days=policy.max_temporal_gap_days,
         geographic_level=policy.geographic_level.value,
         minimum_semantic_score=policy.minimum_semantic_score,
@@ -73,6 +79,7 @@ async def run_relation_experiment(
     )
     gold = {(str(item.left_id), str(item.right_id)): item.relation for item in dataset.gold}
     reports = []
+    provider_case_rows: list[dict] = []
     root_client = genai.Client(
         api_key=settings.gemini_api_key.get_secret_value(),
         http_options=types.HttpOptions(
@@ -81,7 +88,7 @@ async def run_relation_experiment(
         ),
     )
     async with root_client.aio as async_client:
-        for _ in range(repetitions):
+        for run in range(1, repetitions + 1):
             judge = GeminiRelationJudge(
                 client=GoogleGenAIClient(models=async_client.models, model=settings.gemini_model),
                 model=settings.gemini_model,
@@ -98,6 +105,9 @@ async def run_relation_experiment(
                 output_usd_per_million=settings.gemini_output_usd_per_million,
             )
             metrics = evaluate_predictions(predictions, gold_relations=gold)
+            provider_case_rows.extend(
+                _build_provider_case_rows(dataset, predictions, gold, run=run)
+            )
             reports.append(
                 {
                     **build_correlation_report(config=config, metrics=metrics),
@@ -106,7 +116,7 @@ async def run_relation_experiment(
             )
 
     result = _experiment_result(config, dataset, reports)
-    _write_report(result, output_directory)
+    _write_report(result, output_directory, provider_case_rows)
     return result
 
 
@@ -184,6 +194,10 @@ def _bootstrap_macro_f1(predictions, gold, seed: int, iterations: int = 500) -> 
     }
 
 
+def _evidence_level(dataset: RelationDataset) -> str:
+    return "expanded" if min(dataset.relation_counts.values()) >= 50 else "exploratory"
+
+
 def _experiment_result(config, dataset, reports: list[dict]) -> dict:
     run_summaries = []
     for index, report in enumerate(reports, start=1):
@@ -217,10 +231,17 @@ def _experiment_result(config, dataset, reports: list[dict]) -> dict:
             "gold_relations": len(dataset.gold),
             "distribution": dataset.relation_counts,
             "decoys_per_target": 4,
+            "evidence_level": _evidence_level(dataset),
         },
         "runs": run_summaries,
         "decision": {
             "status": "approve_with_caveats" if all(passed.values()) else "block",
+            "evidence_level": _evidence_level(dataset),
+            "limitation": (
+                "small synthetic sample; limited statistical generalization"
+                if _evidence_level(dataset) == "exploratory"
+                else None
+            ),
             "targets": _TARGETS,
             "passed": passed,
             "scope": "technical synthetic validation; no clinical or epidemiological validity",
@@ -228,9 +249,64 @@ def _experiment_result(config, dataset, reports: list[dict]) -> dict:
     }
 
 
-def _write_report(report: dict, output_directory: Path) -> None:
+def _build_provider_case_rows(
+    dataset: RelationDataset,
+    predictions: list[CorrelationPrediction],
+    gold_relations: dict[tuple[str, str], str],
+    *,
+    run: int,
+) -> list[dict]:
+    inputs = {(str(item.left_id), str(item.right_id)): item for item in dataset.inputs}
+    rows = []
+    for prediction in predictions:
+        if not prediction.sent_to_provider:
+            continue
+        pair_key = (prediction.left_id, prediction.right_id)
+        pair = inputs[pair_key]
+        rows.append(
+            {
+                "run": run,
+                "left_id": prediction.left_id,
+                "right_id": prediction.right_id,
+                "gold_relation": gold_relations.get(pair_key, "unrelated"),
+                "predicted_relation": prediction.predicted_relation,
+                "confidence": prediction.confidence,
+                "failure_code": prediction.failure_code,
+                "justification": prediction.justification,
+                "left_summary": pair.left["source_summary"],
+                "right_summary": pair.right["source_summary"],
+            }
+        )
+    return rows
+
+
+def _write_case_report(rows: list[dict], output_directory: Path, stem: str) -> Path:
+    path = output_directory / f"{stem}-provider-cases.csv"
+    fieldnames = [
+        "run",
+        "left_id",
+        "right_id",
+        "gold_relation",
+        "predicted_relation",
+        "confidence",
+        "failure_code",
+        "justification",
+        "left_summary",
+        "right_summary",
+    ]
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+    return path
+
+
+def _write_report(
+    report: dict, output_directory: Path, provider_case_rows: list[dict]
+) -> None:
     output_directory.mkdir(parents=True, exist_ok=True)
     stem = f"relation-{report['experiment']['split']}-{report['experiment']['identity']}"
+    _write_case_report(provider_case_rows, output_directory, stem)
     (output_directory / f"{stem}.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -241,6 +317,7 @@ def _write_report(report: dict, output_directory: Path) -> None:
         f"- Identidade: `{report['experiment']['identity']}`",
         f"- Split: `{report['experiment']['split']}`",
         f"- Decisão: `{report['decision']['status']}`",
+        f"- Nível da evidência: `{report['decision']['evidence_level']}`",
         f"- Relações gold: {report['dataset']['gold_relations']}",
         "",
         "| Rodada | Recall candidatos | Redução | Macro-F1 | Falhas | IC95% Macro-F1 |",

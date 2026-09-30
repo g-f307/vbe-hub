@@ -48,6 +48,9 @@ class CorrelationPrediction:
     exclusion_reason: str | None
     failure_code: str | None
     operation: OperationalSample | None
+    sent_to_provider: bool = False
+    confidence: float | None = None
+    justification: str | None = None
 
 
 class _MemoryRelationRepository:
@@ -127,6 +130,7 @@ async def predict_correlations(
                     None,
                     error.code.value,
                     _operation(error.metadata, input_usd_per_million, output_usd_per_million),
+                    sent_to_provider=True,
                 )
             )
             continue
@@ -141,6 +145,9 @@ async def predict_correlations(
                 _operation(assessment.metadata, input_usd_per_million, output_usd_per_million)
                 if assessment.method is RelationMethod.PROVIDER
                 else None,
+                sent_to_provider=assessment.method is RelationMethod.PROVIDER,
+                confidence=assessment.confidence,
+                justification=assessment.justification,
             )
         )
     return predictions
@@ -201,6 +208,7 @@ async def predict_relation_pairs(
                     None,
                     error.code.value,
                     _operation(error.metadata, input_usd_per_million, output_usd_per_million),
+                    sent_to_provider=True,
                 )
             )
             continue
@@ -214,6 +222,7 @@ async def predict_relation_pairs(
                     None,
                     "invalid_relation_semantics",
                     None,
+                    sent_to_provider=True,
                 )
             )
             continue
@@ -228,6 +237,9 @@ async def predict_relation_pairs(
                 _operation(assessment.metadata, input_usd_per_million, output_usd_per_million)
                 if assessment.method is RelationMethod.PROVIDER
                 else None,
+                sent_to_provider=assessment.method is RelationMethod.PROVIDER,
+                confidence=assessment.confidence,
+                justification=assessment.justification,
             )
         )
     return predictions

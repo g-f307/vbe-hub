@@ -4,7 +4,10 @@ from vbe_hub.evaluation.correlation_report import build_correlation_report
 
 
 def config(
-    threshold: float = 0.70, concurrency: int = 1, attempts: int = 1
+    threshold: float = 0.70,
+    concurrency: int = 1,
+    attempts: int = 1,
+    repetitions: int = 1,
 ) -> CorrelationExperimentConfig:
     return CorrelationExperimentConfig(
         dataset_version="synthetic-v1",
@@ -25,6 +28,7 @@ def config(
         minimum_total_score=0.65,
         provider_concurrency=concurrency,
         provider_max_attempts=attempts,
+        repetitions=repetitions,
     )
 
 
@@ -38,6 +42,10 @@ def test_identity_changes_when_concurrency_changes() -> None:
 
 def test_identity_changes_when_retry_attempts_change() -> None:
     assert config(attempts=1).identity != config(attempts=3).identity
+
+
+def test_identity_changes_when_repetition_count_changes() -> None:
+    assert config(repetitions=1).identity != config(repetitions=2).identity
 
 
 def test_report_is_deterministic_and_keeps_false_negative_identifiers() -> None:

@@ -1,4 +1,5 @@
 import asyncio
+import csv
 from datetime import UTC, datetime
 
 from vbe_hub.application.ai import (
@@ -8,8 +9,14 @@ from vbe_hub.application.ai import (
     RelationResult,
 )
 from vbe_hub.application.correlation.candidates import CandidatePolicy, GeographicLevel
+from vbe_hub.evaluation.correlation_pipeline import CorrelationPrediction
 from vbe_hub.evaluation.relation_dataset import build_relation_dataset
-from vbe_hub.evaluation.relation_experiment import _predict_with_concurrency
+from vbe_hub.evaluation.relation_experiment import (
+    _build_provider_case_rows,
+    _evidence_level,
+    _predict_with_concurrency,
+    _write_case_report,
+)
 
 
 class ConcurrentJudge:
@@ -54,3 +61,63 @@ async def test_relation_experiment_limits_and_uses_configured_concurrency() -> N
 
     assert len(predictions) == len(dataset.inputs)
     assert judge.maximum == 2
+
+
+def test_evidence_is_exploratory_below_expanded_sample() -> None:
+    exploratory = build_relation_dataset(split="evaluation", cases_per_relation=10, seed=4040)
+    expanded = build_relation_dataset(split="evaluation", cases_per_relation=50, seed=4040)
+
+    assert _evidence_level(exploratory) == "exploratory"
+    assert _evidence_level(expanded) == "expanded"
+
+
+def test_provider_case_report_is_local_and_auditable(tmp_path) -> None:
+    dataset = build_relation_dataset(split="evaluation", cases_per_relation=1, seed=4040)
+    pair = dataset.inputs[0]
+    gold = {(str(item.left_id), str(item.right_id)): item.relation for item in dataset.gold}
+    predictions = [
+        CorrelationPrediction(
+            left_id=str(pair.left_id),
+            right_id=str(pair.right_id),
+            selected=True,
+            predicted_relation=gold[(str(pair.left_id), str(pair.right_id))],
+            exclusion_reason=None,
+            failure_code=None,
+            operation=None,
+            sent_to_provider=True,
+            confidence=0.91,
+            justification="Os relatos descrevem o mesmo sinal no mesmo período.",
+        ),
+        CorrelationPrediction(
+            left_id=str(dataset.inputs[1].left_id),
+            right_id=str(dataset.inputs[1].right_id),
+            selected=False,
+            predicted_relation=None,
+            exclusion_reason="geographic_mismatch",
+            failure_code=None,
+            operation=None,
+        ),
+    ]
+
+    rows = _build_provider_case_rows(dataset, predictions, gold, run=1)
+
+    assert len(rows) == 1
+    assert rows[0] == {
+        "run": 1,
+        "left_id": str(pair.left_id),
+        "right_id": str(pair.right_id),
+        "gold_relation": gold[(str(pair.left_id), str(pair.right_id))],
+        "predicted_relation": gold[(str(pair.left_id), str(pair.right_id))],
+        "confidence": 0.91,
+        "failure_code": None,
+        "justification": "Os relatos descrevem o mesmo sinal no mesmo período.",
+        "left_summary": pair.left["source_summary"],
+        "right_summary": pair.right["source_summary"],
+    }
+
+    report_path = _write_case_report(rows, tmp_path, "relation-evaluation-test")
+    with report_path.open(encoding="utf-8", newline="") as handle:
+        written = list(csv.DictReader(handle))
+    assert len(written) == 1
+    assert written[0]["confidence"] == "0.91"
+    assert written[0]["justification"] == rows[0]["justification"]
