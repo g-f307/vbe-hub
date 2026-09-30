@@ -105,11 +105,11 @@ e relação sobre fichas predefinidas, não a qualidade da extração nem valida
 
 O dataset `relation-*-v3` usa períodos distintos para calibração (2025) e avaliação (2026), IDs e conteúdo separados e quatro negativos por alvo. O gerador mantém capacidade para 50 relações por classe, mas a execução Docker padrão usa temporariamente 10 por classe para respeitar a cota gratuita. Inclui corroboração sem doença nomeada, divergência de magnitude, campanhas e orientações, atualização posterior, republicação parafraseada, incompatibilidade geográfica, ausência de data/local e conteúdo instrucional adversarial tratado como dado não confiável. Inputs e gold são serializados e hasheados separadamente; gold só é lido após as predições.
 
-A identidade registra concorrência, tentativas do provider e quantidade de repetições. O padrão conservador é concorrência `1`, até `3` tentativas e timeout de 60 s.
+A identidade registra concorrência, tentativas do provider, quantidade de repetições e a política de ordenação. Antes de cada rodada, os pares são embaralhados deterministicamente com a seed registrada; assim, uma interrupção da API não fica concentrada em classes contíguas e a execução continua reprodutível. O padrão conservador é concorrência `1`, até `3` tentativas e timeout de 60 s.
 
 ## Protocolo exploratório com cota gratuita
 
-A avaliação reservada padrão contém 10 casos por classe, totalizando 50 relações gold, 250 pares de entrada e uma repetição. A política de candidatos reduz as chamadas: na calibração anterior, 44 pares chegaram ao Gemini. Esse número é uma estimativa, não uma garantia de consumo, pois depende das decisões determinísticas do seletor.
+A avaliação reservada padrão contém 10 casos por classe, totalizando 50 relações gold, 250 pares de entrada e uma repetição. A taxa de falha operacional usa como denominador somente os pares efetivamente enviados ao provider, incluindo respostas inválidas ou indisponíveis; decisões determinísticas não entram no denominador. A política de candidatos reduz as chamadas: na calibração anterior, 44 pares chegaram ao Gemini. Esse número é uma estimativa, não uma garantia de consumo, pois depende das decisões determinísticas do seletor.
 
 O resultado deve ser interpretado como evidência técnica **exploratória**. Mesmo que todas as metas sejam atingidas, uma única rodada pequena não mede estabilidade entre repetições nem substitui a avaliação ampliada. Quando houver cota ou orçamento adequado, a capacidade de 50 casos por classe e duas repetições permanece disponível para evidência mais robusta.
 
@@ -124,7 +124,9 @@ Além do JSON e do Markdown agregados, cada execução grava `relation-<split>-<
 
 A rodada v2 (`6164a61a98a12346`) atingiu macro-F1 0,948622 e 0,938812, mas foi bloqueada por falhas operacionais de 7,6% e 14,8%. Ela foi depois considerada metodologicamente superseded porque havia repetição de padrões de conteúdo entre os splits.
 
-A calibração v3 com 10 casos por classe atingiu macro-F1 1,0 e teve duas falhas temporárias, dentro da meta operacional. A tentativa ampliada de avaliação, com 50 casos por classe e duas repetições, exigia 220 chamadas ao provider por rodada e foi inviabilizada pela cota gratuita: 56,3% e 69,4% das chamadas falharam. As respostas que chegaram a ser processadas não bastam para uma conclusão válida sobre a amostra inteira.
+A calibração v3 com 10 casos por classe atingiu macro-F1 1,0 e teve duas falhas temporárias, dentro da meta operacional.
+
+A avaliação exploratória `ec81883fbb0d8914` realizou 44 chamadas e registrou 28 falhas `temporarily_unavailable`. O relatório original calculou 57,1429% sobre 49 pares selecionados; a interpretação corrigida é 63,6364% sobre 44 chamadas reais. A evidência histórica não foi sobrescrita e continua bloqueada. Os 16 retornos do Gemini foram corretos, mas ficaram concentrados nas primeiras classes por causa da ordem anterior do dataset; por isso não sustentam conclusão geral. A tentativa ampliada de avaliação, com 50 casos por classe e duas repetições, exigia 220 chamadas ao provider por rodada e foi inviabilizada pela cota gratuita: 56,3% e 69,4% das chamadas falharam. As respostas que chegaram a ser processadas não bastam para uma conclusão válida sobre a amostra inteira.
 
 Por isso, a Macroentrega 1 continua bloqueada até a execução reservada exploratória concluir com taxa de falha aceitável. Um eventual resultado positivo permitirá validar viabilidade inicial com ressalvas; a generalização estatística continuará pendente da avaliação ampliada.
 
