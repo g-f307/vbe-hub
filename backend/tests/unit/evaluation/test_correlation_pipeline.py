@@ -146,11 +146,16 @@ async def test_pair_pipeline_applies_selection_without_exposing_gold() -> None:
     assert predictions[1].selected is False
     assert predictions[1].exclusion_reason == "geographic_conflict:municipality"
 
+
 async def test_pair_pipeline_counts_invalid_update_semantics_as_failure() -> None:
     left, right = record(1, cases=4), record(2, cases=8)
 
     predictions = await predict_relation_pairs(
-        [RelationPairInput(left.record_id, right.record_id, 0.9, left.technical_sheet, right.technical_sheet)],
+        [
+            RelationPairInput(
+                left.record_id, right.record_id, 0.9, left.technical_sheet, right.technical_sheet
+            )
+        ],
         judge=UpdatesJudge(),
         policy=CandidatePolicy(14, GeographicLevel.MUNICIPALITY, 0.7, 0.65),
         relation_prompt_version="relate-v2",
@@ -158,4 +163,3 @@ async def test_pair_pipeline_counts_invalid_update_semantics_as_failure() -> Non
 
     assert predictions[0].predicted_relation is None
     assert predictions[0].failure_code == "invalid_relation_semantics"
-
