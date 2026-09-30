@@ -300,7 +300,7 @@ services:
         "--output", "/data/reports",
       ]
 
-  relation-live-evaluate-v2:
+  relation-live-evaluate-v3:
     profiles: ["live"]
     build:
       context: ./backend

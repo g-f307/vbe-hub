@@ -11,6 +11,8 @@ implemented_code:
   - backend/src/vbe_hub/evaluation/correlation_protocol.py
   - backend/src/vbe_hub/evaluation/correlation_report.py
   - backend/src/vbe_hub/evaluation/correlation_command.py
+  - backend/src/vbe_hub/evaluation/relation_dataset.py
+  - backend/src/vbe_hub/evaluation/relation_experiment.py
 related_docs:
   - API-005
   - API-006
@@ -98,5 +100,22 @@ por milhão de tokens não foram configurados.
 nova calibração e produzir nova versão de prompt/política antes de outra avaliação; esta evidência
 reservada não deve ser sobrescrita. A amostra contém somente 10 fichas sintéticas e avalia seleção
 e relação sobre fichas predefinidas, não a qualidade da extração nem validade clínica.
+
+## Correção metodológica da issue #40
+
+O dataset `relation-*-v3` usa períodos distintos para calibração (2025) e avaliação (2026), IDs e conteúdo separados, 50 relações por classe no reservado e quatro negativos por alvo. Inclui corroboração sem doença nomeada, divergência de magnitude, campanhas e orientações, atualização posterior, republicação parafraseada, incompatibilidade geográfica, ausência de data/local e conteúdo instrucional adversarial tratado como dado não confiável. Inputs e gold são serializados e hasheados separadamente; gold só é lido após as predições.
+
+A execução registra concorrência e tentativas do provider na identidade. O padrão conservador atual é concorrência `1`, até `3` tentativas e timeout de 60 s.
+
+```bash
+EVALUATION_COMMIT=$(git rev-parse --short HEAD) docker compose --profile live run --build --rm relation-calibrate
+EVALUATION_COMMIT=$(git rev-parse --short HEAD) docker compose --profile live run --build --rm relation-live-evaluate-v3
+```
+
+## Estado da decisão em 30/09/2026
+
+A rodada v2 (`6164a61a98a12346`) atingiu macro-F1 0,948622 e 0,938812, mas foi bloqueada por falhas operacionais de 7,6% e 14,8%. Ela foi depois considerada metodologicamente superseded porque havia repetição de padrões de conteúdo entre os splits.
+
+O código v3 corrige essa sobreposição e cobre os casos difíceis. A nova calibração não pôde ser concluída: a API retornou `temporarily_unavailable` em 43/44 chamadas no modelo 3.5 e 44/44 no 2.5, com zero ou quase zero tokens, indicando cota do projeto indisponível. Portanto a Macroentrega 1 continua bloqueada; não há avaliação reservada v3 válida até a cota ser restabelecida.
 
 [Voltar ao índice da documentação](README.md)
