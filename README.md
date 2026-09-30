@@ -14,7 +14,10 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-Fundação, dados sintéticos e o funil auditável de correlação estão implementados. O protocolo reproduzível de avaliação da correlação está disponível; a rodada reservada da macroentrega 1 deve usar dados congelados e não pode ser ajustada depois de observada. Interface web e integrações EIOS/GdS ainda não foram implementadas.
+Fundação, dados sintéticos e o funil auditável de correlação estão implementados. A rodada
+reservada de 30/09/2026 bloqueou a macroentrega 1 porque a macro-F1 de 0,733333 ficou abaixo da
+meta de 0,75. Consulte a [avaliação da correlação](docs/correlation-evaluation.md). Interface web e
+integrações EIOS/GdS ainda não foram implementadas.
 
 ## Início rápido
 
