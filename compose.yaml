@@ -226,6 +226,25 @@ services:
         "/data/reports/synthetic-validation.json",
       ]
 
+  correlation-evaluate:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+      target: runtime
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    environment:
+      UV_CACHE_DIR: /tmp/uv-cache
+    volumes:
+      - ./data/evaluation:/data/evaluation:ro
+      - ./data/reports:/data/reports
+    command:
+      [
+        "uv", "run", "--no-sync", "python", "-m",
+        "vbe_hub.evaluation.correlation_command",
+        "--input", "/data/evaluation/correlation-input.json",
+        "--output", "/data/reports",
+      ]
+
   gemini-live:
     profiles: ["live"]
     build:
