@@ -13,7 +13,9 @@ from vbe_hub.evaluation.correlation_pipeline import (
     CorrelationEvaluationRecord,
     evaluate_predictions,
     predict_correlations,
+    predict_relation_pairs,
 )
+from vbe_hub.evaluation.relation_dataset import RelationPairInput
 
 
 class Embeddings:
@@ -78,9 +80,7 @@ async def test_pipeline_predicts_without_gold_and_evaluator_applies_it_afterward
     )
     metrics = evaluate_predictions(
         predictions,
-        gold_relations={
-            (str(records[0].record_id), str(records[1].record_id)): "corroborates"
-        },
+        gold_relations={(str(records[0].record_id), str(records[1].record_id)): "corroborates"},
     )
 
     assert predictions[0].predicted_relation == "corroborates"
@@ -106,3 +106,32 @@ async def test_pipeline_uses_duplicate_rule_without_counting_a_provider_call() -
 
     assert predictions[0].predicted_relation == "duplicate"
     assert metrics.operations.provider_calls == 0
+
+
+async def test_pair_pipeline_applies_selection_without_exposing_gold() -> None:
+    left, right = record(1, cases=4), record(2, cases=8)
+    excluded = record(3, cases=8)
+    excluded.technical_sheet["location"]["municipality"] = "Tefé"
+    pairs = [
+        RelationPairInput(
+            left.record_id, right.record_id, 0.9, left.technical_sheet, right.technical_sheet
+        ),
+        RelationPairInput(
+            left.record_id,
+            excluded.record_id,
+            0.95,
+            left.technical_sheet,
+            excluded.technical_sheet,
+        ),
+    ]
+
+    predictions = await predict_relation_pairs(
+        pairs,
+        judge=Judge(),
+        policy=CandidatePolicy(14, GeographicLevel.MUNICIPALITY, 0.7, 0.65),
+        relation_prompt_version="relate-v2",
+    )
+
+    assert predictions[0].predicted_relation == "corroborates"
+    assert predictions[1].selected is False
+    assert predictions[1].exclusion_reason == "geographic_conflict:municipality"

@@ -30,6 +30,7 @@ from vbe_hub.evaluation.correlation_metrics import (
     OperationalSample,
     evaluate_correlation,
 )
+from vbe_hub.evaluation.relation_dataset import RelationPairInput
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,6 +134,80 @@ async def predict_correlations(
             CorrelationPrediction(
                 str(left.record_id),
                 str(right.record_id),
+                True,
+                assessment.relation.value if assessment.relation else None,
+                None,
+                None,
+                _operation(assessment.metadata, input_usd_per_million, output_usd_per_million)
+                if assessment.method is RelationMethod.PROVIDER
+                else None,
+            )
+        )
+    return predictions
+
+
+async def predict_relation_pairs(
+    pairs: list[RelationPairInput] | tuple[RelationPairInput, ...],
+    *,
+    judge: RelationJudge,
+    policy: CandidatePolicy,
+    relation_prompt_version: str,
+    input_usd_per_million: float | None = None,
+    output_usd_per_million: float | None = None,
+) -> list[CorrelationPrediction]:
+    service = RelationAssessmentService(
+        judge=judge,
+        repository=_MemoryRelationRepository(),
+        relation_prompt_version=relation_prompt_version,
+    )
+    selector = CandidateSelector(policy)
+    predictions: list[CorrelationPrediction] = []
+    for pair in pairs:
+        decision = selector.select(
+            anchor_id=pair.left_id,
+            anchor_sheet=pair.left,
+            neighbors=[CandidateInput(pair.right_id, pair.semantic_score, pair.right)],
+        ).decisions[0]
+        if not decision.included:
+            predictions.append(
+                CorrelationPrediction(
+                    str(pair.left_id),
+                    str(pair.right_id),
+                    False,
+                    None,
+                    next(
+                        (reason for reason in decision.reasons if reason != "candidate_selected"),
+                        "unknown",
+                    ),
+                    None,
+                    None,
+                )
+            )
+            continue
+        try:
+            assessment = await service.assess(
+                left_id=pair.left_id,
+                right_id=pair.right_id,
+                left=pair.left,
+                right=pair.right,
+            )
+        except ProviderError as error:
+            predictions.append(
+                CorrelationPrediction(
+                    str(pair.left_id),
+                    str(pair.right_id),
+                    True,
+                    None,
+                    None,
+                    error.code.value,
+                    _operation(error.metadata, input_usd_per_million, output_usd_per_million),
+                )
+            )
+            continue
+        predictions.append(
+            CorrelationPrediction(
+                str(pair.left_id),
+                str(pair.right_id),
                 True,
                 assessment.relation.value if assessment.relation else None,
                 None,
