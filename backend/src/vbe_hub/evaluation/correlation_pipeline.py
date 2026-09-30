@@ -186,7 +186,7 @@ def _operation(metadata, input_price, output_price) -> OperationalSample | None:
     if metadata is None:
         return None
     input_units, output_units = metadata.input_units or 0, metadata.output_units or 0
-    cost = 0.0
+    cost = None
     if input_price is not None and output_price is not None:
         cost = (input_units * input_price + output_units * output_price) / 1_000_000
     return OperationalSample(

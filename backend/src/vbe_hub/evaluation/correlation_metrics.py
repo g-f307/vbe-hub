@@ -21,7 +21,7 @@ class OperationalSample:
     input_units: int
     output_units: int
     cache_hit: bool
-    estimated_cost_usd: float
+    estimated_cost_usd: float | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,7 +51,7 @@ class OperationalMetrics:
     latency_ms_p95: int | None
     input_units: int
     output_units: int
-    estimated_cost_usd: float
+    estimated_cost_usd: float | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -135,7 +135,7 @@ def evaluate_correlation(
         latency_ms_p95=_percentile(durations, 0.95),
         input_units=sum(sample.input_units for sample in paid),
         output_units=sum(sample.output_units for sample in paid),
-        estimated_cost_usd=round(sum(sample.estimated_cost_usd for sample in paid), 8),
+        estimated_cost_usd=_total_cost(paid),
     )
     return CorrelationMetrics(candidate_metrics, classification, operations)
 
@@ -146,3 +146,11 @@ def _ratio(numerator: int, denominator: int) -> float | None:
 
 def _percentile(values: list[int], percentile: float) -> int | None:
     return None if not values else values[max(0, ceil(len(values) * percentile) - 1)]
+
+
+def _total_cost(samples: list[OperationalSample]) -> float | None:
+    if not samples:
+        return 0.0
+    if any(sample.estimated_cost_usd is None for sample in samples):
+        return None
+    return round(sum(sample.estimated_cost_usd or 0.0 for sample in samples), 8)
