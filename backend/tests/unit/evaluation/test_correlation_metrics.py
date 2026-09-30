@@ -43,6 +43,7 @@ def test_failure_is_not_silently_counted_as_unrelated() -> None:
     )
 
     assert report.classification.failures == 1
+    assert report.classification.failures_by_code == {"timeout": 1}
     assert report.classification.confusion["unrelated"]["unrelated"] == 0
 
 

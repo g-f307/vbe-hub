@@ -295,7 +295,7 @@ services:
         "--cases-per-relation", "10",
         "--seed", "3040",
         "--repetitions", "1",
-        "--concurrency", "2",
+        "--concurrency", "1",
         "--commit", "${EVALUATION_COMMIT:-working-tree}",
         "--output", "/data/reports",
       ]
@@ -325,7 +325,7 @@ services:
         "--cases-per-relation", "50",
         "--seed", "4040",
         "--repetitions", "2",
-        "--concurrency", "2",
+        "--concurrency", "1",
         "--commit", "${EVALUATION_COMMIT:-working-tree}",
         "--output", "/data/reports",
       ]
