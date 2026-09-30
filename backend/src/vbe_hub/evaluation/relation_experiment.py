@@ -35,6 +35,7 @@ async def run_relation_experiment(
     cases_per_relation: int,
     seed: int,
     repetitions: int,
+    provider_concurrency: int,
     commit: str,
     output_directory: Path,
 ) -> dict:
@@ -42,6 +43,8 @@ async def run_relation_experiment(
         raise ValueError("split must be calibration or evaluation")
     if repetitions < 1:
         raise ValueError("repetitions must be positive")
+    if not 1 <= provider_concurrency <= 8:
+        raise ValueError("provider_concurrency must be between 1 and 8")
     if settings.gemini_api_key is None or not settings.gemini_api_key.get_secret_value().strip():
         raise SystemExit("GEMINI_API_KEY is required for the relation experiment.")
 
@@ -49,18 +52,19 @@ async def run_relation_experiment(
     input_bytes, gold_bytes = _serialized_partitions(dataset)
     policy = CandidatePolicy(14, GeographicLevel.MUNICIPALITY, 0.65, 0.65)
     config = CorrelationExperimentConfig(
-        dataset_version=f"relation-{split}-v2",
+        dataset_version=f"relation-{split}-v3",
         dataset_sha256=hashlib.sha256(input_bytes + gold_bytes).hexdigest(),
         split=split,
         seed=seed,
         commit=commit,
         normalizer_version="not-applicable-precomputed-sheets",
-        extraction_model="synthetic-technical-sheets-v2",
-        embedding_model="synthetic-frozen-semantic-scores-v2",
-        representation_version="relation-pair-v2",
+        extraction_model="synthetic-technical-sheets-v3",
+        embedding_model="synthetic-frozen-semantic-scores-v3",
+        representation_version="relation-pair-v3",
         relation_model=settings.gemini_model,
         relation_prompt_version=PROMPT_VERSION,
         max_neighbors=5,
+        provider_concurrency=provider_concurrency,
         temporal_window_days=policy.max_temporal_gap_days,
         geographic_level=policy.geographic_level.value,
         minimum_semantic_score=policy.minimum_semantic_score,
@@ -76,17 +80,17 @@ async def run_relation_experiment(
     )
     async with root_client.aio as async_client:
         for _ in range(repetitions):
-            predictions = await predict_relation_pairs(
-                dataset.inputs,
-                judge=GeminiRelationJudge(
-                    client=GoogleGenAIClient(
-                        models=async_client.models, model=settings.gemini_model
-                    ),
-                    model=settings.gemini_model,
-                    timeout_seconds=settings.gemini_timeout_seconds,
-                    max_input_chars=settings.gemini_max_input_chars,
-                ),
+            judge = GeminiRelationJudge(
+                client=GoogleGenAIClient(models=async_client.models, model=settings.gemini_model),
+                model=settings.gemini_model,
+                timeout_seconds=settings.gemini_timeout_seconds,
+                max_input_chars=settings.gemini_max_input_chars,
+            )
+            predictions = await _predict_with_concurrency(
+                dataset,
+                judge=judge,
                 policy=policy,
+                concurrency=provider_concurrency,
                 relation_prompt_version=PROMPT_VERSION,
                 input_usd_per_million=settings.gemini_input_usd_per_million,
                 output_usd_per_million=settings.gemini_output_usd_per_million,
@@ -104,15 +108,42 @@ async def run_relation_experiment(
     return result
 
 
+async def _predict_with_concurrency(
+    dataset,
+    *,
+    judge,
+    policy,
+    concurrency,
+    relation_prompt_version,
+    input_usd_per_million,
+    output_usd_per_million,
+):
+    semaphore = asyncio.Semaphore(concurrency)
+
+    async def predict_one(pair):
+        async with semaphore:
+            predictions = await predict_relation_pairs(
+                (pair,),
+                judge=judge,
+                policy=policy,
+                relation_prompt_version=relation_prompt_version,
+                input_usd_per_million=input_usd_per_million,
+                output_usd_per_million=output_usd_per_million,
+            )
+            return predictions[0]
+
+    return list(await asyncio.gather(*(predict_one(pair) for pair in dataset.inputs)))
+
+
 def _serialized_partitions(dataset: RelationDataset) -> tuple[bytes, bytes]:
     inputs = {
-        "dataset_version": f"relation-{dataset.split}-v2",
+        "dataset_version": f"relation-{dataset.split}-v3",
         "split": dataset.split,
         "seed": dataset.seed,
         "pairs": [item.to_dict() for item in dataset.inputs],
     }
     gold = {
-        "dataset_version": f"relation-{dataset.split}-v2-gold",
+        "dataset_version": f"relation-{dataset.split}-v3-gold",
         "relations": [
             {
                 "left_id": str(item.left_id),
@@ -177,7 +208,7 @@ def _experiment_result(config, dataset, reports: list[dict]) -> dict:
         for name, target in _TARGETS.items()
     }
     return {
-        "report_version": "relation-experiment-report-v2",
+        "report_version": "relation-experiment-report-v3",
         "experiment": {**config.model_dump(), "identity": config.identity},
         "dataset": {
             "input_pairs": len(dataset.inputs),
@@ -203,7 +234,7 @@ def _write_report(report: dict, output_directory: Path) -> None:
         encoding="utf-8",
     )
     lines = [
-        "# Experimento de relações v2",
+        "# Experimento de relações v3",
         "",
         f"- Identidade: `{report['experiment']['identity']}`",
         f"- Split: `{report['experiment']['split']}`",
@@ -230,6 +261,7 @@ async def _main() -> None:
     parser.add_argument("--cases-per-relation", type=int, required=True)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--repetitions", type=int, default=1)
+    parser.add_argument("--concurrency", type=int, default=1)
     parser.add_argument("--commit", required=True)
     parser.add_argument("--output", type=Path, default=Path("/data/reports"))
     args = parser.parse_args()
@@ -239,6 +271,7 @@ async def _main() -> None:
         cases_per_relation=args.cases_per_relation,
         seed=args.seed,
         repetitions=args.repetitions,
+        provider_concurrency=args.concurrency,
         commit=args.commit,
         output_directory=args.output,
     )

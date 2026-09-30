@@ -3,7 +3,7 @@ from vbe_hub.evaluation.correlation_protocol import CorrelationExperimentConfig
 from vbe_hub.evaluation.correlation_report import build_correlation_report
 
 
-def config(threshold: float = 0.70) -> CorrelationExperimentConfig:
+def config(threshold: float = 0.70, concurrency: int = 1) -> CorrelationExperimentConfig:
     return CorrelationExperimentConfig(
         dataset_version="synthetic-v1",
         dataset_sha256="a" * 64,
@@ -21,11 +21,16 @@ def config(threshold: float = 0.70) -> CorrelationExperimentConfig:
         geographic_level="municipality",
         minimum_semantic_score=threshold,
         minimum_total_score=0.65,
+        provider_concurrency=concurrency,
     )
 
 
 def test_identity_changes_when_threshold_changes() -> None:
     assert config().identity != config(0.75).identity
+
+
+def test_identity_changes_when_concurrency_changes() -> None:
+    assert config(concurrency=1).identity != config(concurrency=4).identity
 
 
 def test_report_is_deterministic_and_keeps_false_negative_identifiers() -> None:
