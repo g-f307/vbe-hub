@@ -22,4 +22,5 @@ O VBE Hub é uma prova de conceito de Vigilância Baseada em Eventos (VBE) para 
 - Tratar resultados de IA como sugestão auditável, nunca como confirmação de evento ou prioridade definitiva.
 - Preservar o vínculo entre todo sinal consolidado e seus registros de origem.
 - Tratar Docker Compose como interface oficial de execução, teste e demonstração da PoC; a validação em outro dispositivo não pode depender de Python, Node.js, PostgreSQL ou Redis instalados no host.
+- Atualizar o README e a documentação pertinente no mesmo trabalho sempre que comandos, pré-requisitos, comportamento público, estado da entrega ou evidência oficial forem alterados.
 - Atualizar a documentação afetada ao mudar o contrato de dados ou uma decisão arquitetural.

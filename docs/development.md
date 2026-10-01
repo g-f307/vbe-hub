@@ -4,7 +4,7 @@ type: operations
 status: active
 title: Execução e validação local
 created: 2026-09-28
-updated: 2026-09-29
+updated: 2026-09-30
 owner: VBE Hub
 related_docs:
   - DES-001
@@ -160,6 +160,32 @@ docker compose --profile live run --rm \
 
 Consulte o [contrato da ficha técnica](technical-sheet-contract.md) para schema, segurança,
 cache e fontes oficiais de modelo, limites e preços.
+
+## Avaliação live da correlação
+
+Essa avaliação é opcional e não faz parte do início básico. Ela utiliza somente dados sintéticos,
+consome cota do provider e exige `GEMINI_API_KEY` no `.env` local. A configuração de avaliação
+reservada está congelada no serviço `relation-live-evaluate-v3`.
+
+No Linux, macOS ou Git Bash:
+
+```bash
+EVALUATION_COMMIT=$(git rev-parse --short HEAD) docker compose --profile live run --build --rm relation-live-evaluate-v3
+```
+
+No PowerShell:
+
+```powershell
+$env:EVALUATION_COMMIT = git rev-parse --short HEAD
+docker compose --profile live run --build --rm relation-live-evaluate-v3
+```
+
+Os relatórios JSON e Markdown e o CSV por caso são gravados em `data/reports/` e ignorados pelo Git por padrão. Somente evidências pequenas e sanitizadas, selecionadas explicitamente, podem ser versionadas.
+Consulte a [síntese para profissionais de saúde](health-stakeholder-validation.md) e o [protocolo
+técnico da correlação](correlation-evaluation.md). A calibração somente deve ser repetida quando
+houver uma nova versão de prompt, política ou dataset; nesse caso, execute primeiro o serviço
+`relation-calibrate` e documente a nova identidade experimental.
+
 ## Avaliação live da ficha técnica
 
 Com `GEMINI_API_KEY` apenas no `.env`, execute primeiro `EVALUATION_SPLIT=calibration docker compose --profile live run --rm --build technical-sheet-evaluate` e, sem ajustar o prompt pela amostra reservada, repita com `EVALUATION_SPLIT=evaluation`. Os relatórios sanitizados são gravados em `data/reports/`, fora do Git. Consulte o [protocolo de avaliação](technical-sheet-evaluation.md).

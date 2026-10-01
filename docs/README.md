@@ -26,4 +26,4 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 
 ## Situação
 
-Fundação reproduzível, normalização, extração, linha de base reservada da ficha técnica e indexação semântica implementadas, com validação da solução prevista para o fim de outubro/início de novembro de 2026. As integrações EIOS e Guardiões da Saúde são futuras; a etapa atual simula contratos de entrada sem afirmar que eles reproduzem endpoints oficiais.
+Fundação reproduzível, normalização, extração, indexação semântica e funil de correlação implementados. A capacidade de correlação da Macroentrega 1 foi aprovada com ressalvas em avaliação exploratória reservada. Interface web, agrupamento completo e integrações reais com EIOS e Guardiões da Saúde permanecem nas etapas seguintes; os contratos atuais simulam as entradas sem afirmar equivalência com endpoints oficiais.
