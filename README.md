@@ -14,12 +14,13 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-Fundação, dados sintéticos e o funil auditável de correlação estão implementados. A capacidade
+Fundação, dados sintéticos, funil auditável de correlação e consolidação versionada de sinais estão implementados. A capacidade
 de correlação da Macroentrega 1 foi aprovada com ressalvas na avaliação exploratória reservada de
 30/09/2026; todas as metas previamente definidas foram atendidas. Consulte a [síntese para
 profissionais de saúde](docs/health-stakeholder-validation.md) e o [protocolo
 técnico](docs/correlation-evaluation.md). Interface web e integrações reais com EIOS e Guardiões
-da Saúde ainda não foram implementadas.
+da Saúde ainda não foram implementadas. A consolidação organiza evidências rastreáveis, mas não
+confirma ocorrências nem substitui a triagem de um profissional de saúde.
 
 ## Início rápido
 

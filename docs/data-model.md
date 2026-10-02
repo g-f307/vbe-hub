@@ -4,7 +4,7 @@ type: data
 status: active
 title: Modelo persistente inicial
 created: 2026-09-28
-updated: 2026-09-29
+updated: 2026-10-02
 owner: VBE Hub
 implemented_code:
   - backend/migrations/
@@ -15,6 +15,8 @@ related_docs:
   - ADR-003
   - ADR-005
   - API-004
+  - API-005
+  - ADR-006
 ---
 
 # Modelo persistente inicial
@@ -33,6 +35,10 @@ As entidades em `vbe_hub.domain` não dependem do banco. Interfaces de repositó
 | `normalized_records` | Resultado versionado ou falha estruturada da normalização. | FK indexada; unicidade por registro e versão do normalizador. |
 | `evaluation_labels` | Gabarito sintético reservado à avaliação. | Relação 1:1 com registro bruto; nunca consultada pelo repositório do pipeline. |
 | `technical_sheet_extractions` | Ficha validada ou última falha por configuração de extração. | FK indexada para normalização; chave de cache única; hashes e consumo validados. |
+| `consolidated_signals` | Sinal derivado e versionado, com campos agregados e proveniência. | Identidade única por política e origens; estado controlado. |
+| `signal_members` | Registros centrais ou contextuais que compõem o sinal. | Unicidade por sinal e registro; FKs indexadas e papel controlado. |
+| `signal_relation_links` | Avaliações de relação aceitas como suporte ou contexto. | Unicidade por sinal e avaliação; FKs indexadas. |
+| `signal_grouping_conflicts` | Uniões rejeitadas pela política de agrupamento. | Unicidade por política, avaliação e código; origens e detalhes preservados. |
 
 Todos os identificadores de tabela e coluna usam `snake_case`. Datas são `timestamptz`; payloads e erros estruturados usam `jsonb`. FKs usadas em consulta possuem índices explícitos.
 
@@ -50,10 +56,17 @@ O hash é SHA-256 de uma representação canônica do conteúdo, com chaves JSON
 A extração usa chave SHA-256 própria sobre entrada, provedor, modelo e versões de prompt/schema.
 O upsert por essa chave permite substituir falha por sucesso sem criar fichas duplicadas.
 
+A identidade do sinal usa a versão da política e a lista canônica de membros centrais e
+contextuais. A mesma política e as mesmas origens atualizam o mesmo sinal; uma nova versão da
+política cria outro sinal e preserva o anterior. Membros, avaliações aceitas e conflitos apontam
+para os registros e avaliações originais, sem cópias que rompam a rastreabilidade.
+
 ## Isolamento do gabarito
 
 `gold_event_id` existe somente em `EvaluationLabel` e `evaluation_labels`. `RawRecord`, `StoredRawRecord` e o repositório entregue ao pipeline não possuem esse atributo. Acesso ao gabarito exige o adapter de avaliação separado.
 
 ## Limites atuais
 
-Embeddings, candidatos, sinais consolidados, usuários e retenção de dados reais não pertencem a este schema. Backup também não está previsto nesta etapa; volumes Docker são persistência de desenvolvimento, não estratégia de recuperação.
+Usuários, decisões humanas de triagem e retenção de dados reais não pertencem a este schema.
+Backup também não está previsto nesta etapa; volumes Docker são persistência de desenvolvimento,
+não estratégia de recuperação.
