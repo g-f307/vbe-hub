@@ -7,6 +7,12 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from vbe_hub.adapters.persistence.embedding_models import EmbeddingModel  # noqa: F401
 from vbe_hub.adapters.persistence.models import Base
 from vbe_hub.adapters.persistence.relation_models import RelationAssessmentModel  # noqa: F401
+from vbe_hub.adapters.persistence.signal_models import (  # noqa: F401
+    ConsolidatedSignalModel,
+    SignalGroupingConflictModel,
+    SignalMemberModel,
+    SignalRelationLinkModel,
+)
 from vbe_hub.infrastructure.settings import get_settings
 
 config = context.config
