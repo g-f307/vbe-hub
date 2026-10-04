@@ -4,7 +4,7 @@ type: data
 status: active
 title: Modelo persistente inicial
 created: 2026-09-28
-updated: 2026-10-02
+updated: 2026-10-03
 owner: VBE Hub
 implemented_code:
   - backend/migrations/
@@ -17,6 +17,8 @@ related_docs:
   - API-004
   - API-005
   - ADR-006
+  - API-006
+  - ADR-007
 ---
 
 # Modelo persistente inicial
@@ -39,6 +41,7 @@ As entidades em `vbe_hub.domain` não dependem do banco. Interfaces de repositó
 | `signal_members` | Registros centrais ou contextuais que compõem o sinal. | Unicidade por sinal e registro; FKs indexadas e papel controlado. |
 | `signal_relation_links` | Avaliações de relação aceitas como suporte ou contexto. | Unicidade por sinal e avaliação; FKs indexadas. |
 | `signal_grouping_conflicts` | Uniões rejeitadas pela política de agrupamento. | Unicidade por política, avaliação e código; origens e detalhes preservados. |
+| `suggested_priorities` | Cálculo explicável e versionado para ordenar a triagem. | FK para o sinal; identidade única; score, confiança e faixa controlados; componentes e lacunas em JSONB. |
 
 Todos os identificadores de tabela e coluna usam `snake_case`. Datas são `timestamptz`; payloads e erros estruturados usam `jsonb`. FKs usadas em consulta possuem índices explícitos.
 
@@ -60,6 +63,11 @@ A identidade do sinal usa a versão da política e a lista canônica de membros 
 contextuais. A mesma política e as mesmas origens atualizam o mesmo sinal; uma nova versão da
 política cria outro sinal e preserva o anterior. Membros, avaliações aceitas e conflitos apontam
 para os registros e avaliações originais, sem cópias que rompam a rastreabilidade.
+
+A prioridade referencia o sinal persistido e também registra sua identidade e versão como snapshot.
+A identidade do cálculo inclui a configuração completa e o instante de referência. Repetições são
+idempotentes; novas políticas ou recálculos coexistem. A justificativa contém apenas fatos
+estruturados, IDs de origem e relações, sem payload bruto.
 
 ## Isolamento do gabarito
 

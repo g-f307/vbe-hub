@@ -83,9 +83,11 @@ async def stored_relation(
     left_id: UUID,
     right_id: UUID,
     kind: RelationKind,
+    *,
+    assessment_id: UUID | None = None,
 ) -> RelationAssessmentRecord:
     item = RelationAssessmentRecord(
-        id=uuid4(),
+        id=assessment_id or uuid4(),
         cache_key=uuid4().hex + uuid4().hex,
         left_id=min(left_id, right_id, key=str),
         right_id=max(left_id, right_id, key=str),
@@ -186,10 +188,18 @@ async def test_signal_repository_persists_explained_grouping_conflict(
     bridge = await normalized(db_session, 6)
     conflicting = await normalized(db_session, 7)
     accepted = await stored_relation(
-        db_session, first.id, bridge.id, RelationKind.CORROBORATES
+        db_session,
+        first.id,
+        bridge.id,
+        RelationKind.CORROBORATES,
+        assessment_id=UUID(int=101),
     )
     blocked = await stored_relation(
-        db_session, bridge.id, conflicting.id, RelationKind.CORROBORATES
+        db_session,
+        bridge.id,
+        conflicting.id,
+        RelationKind.CORROBORATES,
+        assessment_id=UUID(int=102),
     )
     result = SignalConsolidationService(
         ConsolidationPolicy(version="signal-policy-v1")

@@ -4,7 +4,7 @@ type: design
 status: active
 title: Arquitetura
 created: 2026-09-28
-updated: 2026-10-02
+updated: 2026-10-03
 owner: VBE Hub
 planned_code:
   - backend/
@@ -18,6 +18,7 @@ related_docs:
   - ADR-003
   - ADR-004
   - ADR-006
+  - ADR-007
 ---
 
 # Arquitetura
@@ -112,6 +113,12 @@ temporal; relações contextuais são anexadas sem unir componentes independente
 consolidados mantêm proveniência e divergências, e a política versionada torna o reprocessamento
 idempotente sem apagar resultados anteriores. Consulte o [contrato de
 consolidação](signal-consolidation.md) e a [ADR-006](decisions/ADR-006-versioned-signal-consolidation.md).
+
+A prioridade sugerida é calculada depois da consolidação, sem LLM, por pesos e faixas versionados.
+Score, confiança dos dados e futura avaliação humana são conceitos e contratos diferentes. Cada
+componente aponta para evidências de origem e campos desconhecidos permanecem explícitos. Consulte
+o [contrato de prioridade](suggested-priority.md) e a
+[ADR-007](decisions/ADR-007-rules-based-suggested-priority.md).
 
 ## Fluxo de estado
 

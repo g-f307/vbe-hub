@@ -18,13 +18,18 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 12. [Avaliação da correlação](correlation-evaluation.md)
 13. [Validação da correlação para profissionais de saúde](health-stakeholder-validation.md)
 14. [Consolidação de sinais de alerta](signal-consolidation.md)
-15. [Geração e importação de dados sintéticos](synthetic-data-generation.md)
-16. [Modelo persistente inicial](data-model.md)
-17. [Plano de implementação](implementation-plan.md)
-18. [Execução e validação local](development.md)
-19. [Integração contínua](continuous-integration.md)
-20. [Decisões arquiteturais](decisions/README.md)
+15. [Prioridade sugerida e explicável](suggested-priority.md)
+16. [Geração e importação de dados sintéticos](synthetic-data-generation.md)
+17. [Modelo persistente inicial](data-model.md)
+18. [Plano de implementação](implementation-plan.md)
+19. [Execução e validação local](development.md)
+20. [Integração contínua](continuous-integration.md)
+21. [Decisões arquiteturais](decisions/README.md)
 
 ## Situação
 
-Fundação reproduzível, normalização, extração, indexação semântica, funil de correlação e consolidação auditável de sinais implementados. A capacidade de correlação da Macroentrega 1 foi aprovada com ressalvas em avaliação exploratória reservada. Interface web, fluxo de triagem humana e integrações reais com EIOS e Guardiões da Saúde permanecem nas etapas seguintes; os contratos atuais simulam as entradas sem afirmar equivalência com endpoints oficiais.
+Fundação reproduzível, normalização, extração, indexação semântica, funil de correlação,
+consolidação auditável e prioridade sugerida por regras implementados. A capacidade de correlação da
+Macroentrega 1 foi aprovada com ressalvas em avaliação exploratória reservada. Interface web, fluxo
+de decisão humana e integrações reais com EIOS e Guardiões da Saúde permanecem nas etapas seguintes;
+os contratos atuais simulam as entradas sem afirmar equivalência com endpoints oficiais.
