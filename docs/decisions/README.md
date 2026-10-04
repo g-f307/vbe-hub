@@ -10,3 +10,4 @@ Voltar à [documentação](../README.md).
 | [ADR-004](ADR-004-docker-reproducibility.md) | Aceita | Docker Compose como interface oficial de reprodução e validação. |
 | [ADR-005](ADR-005-sqlalchemy-alembic.md) | Aceita | SQLAlchemy e Alembic isolados do domínio. |
 | [ADR-006](ADR-006-versioned-signal-consolidation.md) | Aceita | Consolidação determinística, auditável e versionada. |
+| [ADR-007](ADR-007-rules-based-suggested-priority.md) | Aceita | Prioridade sugerida por regras explicáveis e versionadas. |
