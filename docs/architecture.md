@@ -4,7 +4,7 @@ type: design
 status: active
 title: Arquitetura
 created: 2026-09-28
-updated: 2026-09-29
+updated: 2026-10-02
 owner: VBE Hub
 planned_code:
   - backend/
@@ -17,6 +17,7 @@ related_docs:
   - ADR-002
   - ADR-003
   - ADR-004
+  - ADR-006
 ---
 
 # Arquitetura
@@ -102,6 +103,15 @@ A camada de aplicação depende das portas `StructuredExtractor`, `EmbeddingProv
 - Toda resposta de IA deve registrar modelo, versão do prompt, entrada resumida, saída validada, tempo, erro e decisão humana posterior.
 
 Uma GTX 1650 de 4 GB suporta experimentação com modelos pequenos quantizados e embeddings, mas não deve ser a única estratégia para a extração clínica multilíngue em grande lote. A qualidade será medida, não presumida.
+
+## Consolidação auditável
+
+O módulo de consolidação consome fichas e relações já classificadas, sem nova chamada ao modelo de
+IA. Relações fortes formam componentes apenas quando não há conflitos geográfico, clínico ou
+temporal; relações contextuais são anexadas sem unir componentes independentes. Os campos
+consolidados mantêm proveniência e divergências, e a política versionada torna o reprocessamento
+idempotente sem apagar resultados anteriores. Consulte o [contrato de
+consolidação](signal-consolidation.md) e a [ADR-006](decisions/ADR-006-versioned-signal-consolidation.md).
 
 ## Fluxo de estado
 

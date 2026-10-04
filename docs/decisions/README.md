@@ -9,3 +9,4 @@ Voltar à [documentação](../README.md).
 | [ADR-003](ADR-003-synthetic-data.md) | Aceita | Dados sintéticos rotulados até a validação. |
 | [ADR-004](ADR-004-docker-reproducibility.md) | Aceita | Docker Compose como interface oficial de reprodução e validação. |
 | [ADR-005](ADR-005-sqlalchemy-alembic.md) | Aceita | SQLAlchemy e Alembic isolados do domínio. |
+| [ADR-006](ADR-006-versioned-signal-consolidation.md) | Aceita | Consolidação determinística, auditável e versionada. |
