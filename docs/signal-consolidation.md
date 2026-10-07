@@ -4,7 +4,7 @@ type: api
 status: active
 title: Consolidação de sinais de alerta
 created: 2026-10-02
-updated: 2026-10-02
+updated: 2026-10-07
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/application/correlation/signals.py
@@ -13,6 +13,7 @@ related_docs:
   - API-004
   - DATA-001
   - ADR-006
+  - TEST-004
 ---
 
 # Consolidação de sinais de alerta
@@ -88,3 +89,7 @@ Os identificadores são fictícios e o exemplo não representa pessoas ou ocorr�
 Os testes unitários cobrem agrupamento forte, atualização de magnitude, contexto sem transitividade,
 conflitos, falhas e identidade versionada. Os testes de integração usam PostgreSQL real para validar
 migration, idempotência, coexistência entre versões, vínculos com origens e recuperação de conflitos.
+
+A rodada reservada sintética `grouping-evaluation-v2` avaliou 60 eventos e 270 registros, incluindo
+um merge controlado e sua correção humana. Consulte a [avaliação de
+agrupamentos](grouping-evaluation.md) para protocolo, resultados e limitações.

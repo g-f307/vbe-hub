@@ -59,6 +59,16 @@ O serviço `unit-test` não inicia dependências. O serviço `integration-test` 
 pgvector, Redis e migrations. Consulte [integração contínua](continuous-integration.md) para a
 relação completa entre comandos e checks.
 
+A avaliação determinística dos agrupamentos não usa chave externa nem consome cota:
+
+```bash
+EVALUATION_COMMIT=$(git rev-parse --short HEAD) \
+  docker compose --profile tools run --build --rm grouping-evaluate
+```
+
+Ela gera relatórios sanitizados em `data/reports/`. O protocolo e a rodada oficial estão em
+[avaliação de agrupamentos](grouping-evaluation.md).
+
 O gerador, o validador e o importador sintéticos também são ferramentas da composição:
 
 ```bash
