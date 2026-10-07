@@ -4,6 +4,7 @@ import argparse
 import csv
 import hashlib
 import json
+from collections import Counter
 from dataclasses import asdict
 from pathlib import Path
 from random import Random
@@ -102,6 +103,12 @@ def run_grouping_experiment(
             "records": len(dataset.inputs.records),
             "automatic_relations": len(dataset.inputs.automatic_relations),
             "reviewed_relations": len(dataset.inputs.reviewed_relations),
+            "automatic_relation_distribution": _relation_distribution(
+                dataset.inputs.automatic_relations
+            ),
+            "reviewed_relation_distribution": _relation_distribution(
+                dataset.inputs.reviewed_relations
+            ),
             "scenario_distribution": dataset.inputs.scenario_counts,
             "splits_disjoint_by_design": True,
         },
@@ -318,6 +325,17 @@ def _canonical(value: dict) -> bytes:
     return json.dumps(
         value, ensure_ascii=False, separators=(",", ":"), sort_keys=True
     ).encode()
+
+
+def _relation_distribution(relations) -> dict[str, int]:
+    return dict(
+        sorted(
+            Counter(
+                item.relation.value if item.relation is not None else "failure"
+                for item in relations
+            ).items()
+        )
+    )
 
 
 def _markdown(report: dict) -> str:

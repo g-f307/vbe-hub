@@ -45,6 +45,18 @@ def test_grouping_experiment_evaluates_automatic_and_reviewed_results_separately
 
     assert report["report_version"] == "grouping-experiment-report-v1"
     assert report["dataset"]["events"] == 60
+    assert report["dataset"]["automatic_relation_distribution"] == {
+        "corroborates": 92,
+        "duplicate": 60,
+        "related_context": 1,
+        "updates": 60,
+    }
+    assert report["dataset"]["reviewed_relation_distribution"] == {
+        "corroborates": 91,
+        "duplicate": 60,
+        "related_context": 1,
+        "updates": 60,
+    }
     assert report["automatic"]["merges"]["count"] == 1
     assert report["reviewed"]["merges"]["count"] == 0
     assert report["reviewed"]["pairwise"]["f1"] == 1.0
