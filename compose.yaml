@@ -79,6 +79,33 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  frontend:
+    build:
+      context: ./frontend
+      target: runtime
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/api/health').then((response) => { if (!response.ok) process.exit(1) })",
+        ]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
   test:
     profiles: ["tools"]
     build:
@@ -131,6 +158,20 @@ services:
       context: ./backend
       target: development
     command: ["uv", "run", "--no-sync", "ruff", "check", "--no-cache", "."]
+
+  frontend-lint:
+    profiles: ["tools"]
+    build:
+      context: ./frontend
+      target: development
+    command: ["npm", "run", "lint"]
+
+  frontend-test:
+    profiles: ["tools"]
+    build:
+      context: ./frontend
+      target: development
+    command: ["npm", "test"]
 
   docs-check:
     profiles: ["tools"]
