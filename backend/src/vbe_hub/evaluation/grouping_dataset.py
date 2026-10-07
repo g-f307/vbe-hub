@@ -99,7 +99,7 @@ def build_grouping_dataset(*, split: Split, event_count: int, seed: int) -> Grou
         event_id = f"{split}-event-{event_index:03d}"
         scenario = _SCENARIOS[event_index % len(_SCENARIOS)]
         scenario_by_event[event_id] = scenario
-        member_count = 2 + event_index % 4
+        member_count = 4 + event_index % 2
         member_ids: list[UUID] = []
         for member_index in range(member_count):
             record_id = _identifier(split, seed, event_index, member_index, "record")

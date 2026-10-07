@@ -1,4 +1,5 @@
 import json
+from collections import Counter
 
 from vbe_hub.evaluation.grouping_dataset import build_grouping_dataset
 from vbe_hub.evaluation.grouping_experiment import run_grouping_experiment
@@ -11,10 +12,18 @@ def test_grouping_splits_are_disjoint_and_gold_is_physically_separate() -> None:
     calibration_ids = {str(item.record_id) for item in calibration.inputs.records}
     evaluation_ids = {str(item.record_id) for item in evaluation.inputs.records}
     serialized_inputs = json.dumps(calibration.inputs.to_dict(), sort_keys=True)
+    relation_counts = Counter(
+        item.relation.value
+        for item in evaluation.inputs.reviewed_relations
+        if item.relation is not None and item.relation.value != "related_context"
+    )
 
     assert calibration_ids.isdisjoint(evaluation_ids)
     assert "gold_event" not in serialized_inputs
-    assert len(evaluation.gold.event_by_record) >= 180
+    assert len(evaluation.gold.event_by_record) >= 240
+    assert relation_counts["duplicate"] >= 50
+    assert relation_counts["corroborates"] >= 50
+    assert relation_counts["updates"] >= 50
     assert set(evaluation.inputs.scenario_counts) == {
         "complete",
         "conflicting_bridge",
