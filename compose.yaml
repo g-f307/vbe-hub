@@ -331,6 +331,28 @@ services:
         "--output", "/data/reports",
       ]
 
+  grouping-evaluate:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+      target: runtime
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    environment:
+      UV_CACHE_DIR: /tmp/uv-cache
+    volumes:
+      - ./data/reports:/data/reports
+    command:
+      [
+        "uv", "run", "--no-sync", "python", "-m",
+        "vbe_hub.evaluation.grouping_experiment",
+        "--split", "evaluation",
+        "--event-count", "60",
+        "--seed", "5170",
+        "--commit", "${EVALUATION_COMMIT:-working-tree}",
+        "--bootstrap-iterations", "500",
+        "--output", "/data/reports",
+      ]
+
   gemini-live:
     profiles: ["live"]
     build:
