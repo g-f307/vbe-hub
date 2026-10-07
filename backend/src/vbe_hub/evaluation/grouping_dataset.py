@@ -155,7 +155,7 @@ def build_grouping_dataset(*, split: Split, event_count: int, seed: int) -> Grou
     automatic_relations = tuple(relations + [erroneous, weak_bridge, conflicting_bridge])
     reviewed_relations = tuple(relations + [weak_bridge, conflicting_bridge])
     inputs = GroupingInputs(
-        dataset_version=f"grouping-{split}-v1",
+        dataset_version=f"grouping-{split}-v2",
         split=split,
         seed=seed,
         records=tuple(records),
@@ -165,7 +165,7 @@ def build_grouping_dataset(*, split: Split, event_count: int, seed: int) -> Grou
         scenario_counts=dict(sorted(Counter(scenario_by_event.values()).items())),
     )
     gold = GroupingGold(
-        dataset_version=f"grouping-{split}-v1-gold",
+        dataset_version=f"grouping-{split}-v2-gold",
         event_by_record=event_by_record,
         scenario_by_event=scenario_by_event,
     )

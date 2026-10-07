@@ -44,6 +44,7 @@ def test_grouping_experiment_evaluates_automatic_and_reviewed_results_separately
     )
 
     assert report["report_version"] == "grouping-experiment-report-v1"
+    assert report["experiment"]["dataset_version"] == "grouping-evaluation-v2"
     assert report["dataset"]["events"] == 60
     assert report["dataset"]["automatic_relation_distribution"] == {
         "corroborates": 92,
