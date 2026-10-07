@@ -29,6 +29,45 @@ Meta: demonstração validável até **7 de novembro de 2026**, com janela prefe
 | 26 out - 1 nov | Painel e métricas | Painel mínimo e relatório automático de precisão, revocação, F1 e tempo. |
 | 2 - 7 nov | Validação e apresentação | Experimento reproduzível, correções e roteiro de demonstração. |
 
+## Etapa 5: painel do analista e integração do frontend
+
+O mockup exploratório definiu a direção visual, os componentes de evidência e os percursos de
+triagem, investigação e panorama. A fundação resultante já está em `frontend/`, executa por Docker
+Compose e preserva o mockup original como artefato local ignorado. Ela ainda não possui vínculo de
+leitura com o backend nem exibe dados reais ou sintéticos.
+
+### Ordem de implementação
+
+1. **Concluída em 7 de outubro:** criar a aplicação Next.js/React em `frontend/`, sua imagem Docker
+   e os comandos Compose de desenvolvimento, demonstração, testes e build. A entrega contém rotas
+   sem dados para validar a fundação; não substitui a integração de leitura.
+2. Transformar o modelo visual em componentes versionados e acessíveis, começando pela fila de
+   triagem e seus estados de carregamento, vazio e falha.
+3. Implementar endpoints de leitura e integrar a fila e o detalhe do sinal com dados sintéticos
+   persistidos, mantendo vínculo com evidências de origem.
+4. Integrar a decisão humana auditável: aceitar, corrigir e rejeitar agrupamento, com controle de
+   versão e comunicação clara de sucesso, conflito ou erro.
+5. Integrar o panorama operacional e a visualização geoespacial agregada por área, sem localização
+   individual ou dependência de tile externo para a demonstração.
+6. Acrescentar Kanban como visão complementar de acompanhamento do fluxo, sem transição de estado
+   por arrastar e soltar fora do fluxo de revisão.
+7. Validar responsividade, acessibilidade, dados sintéticos, limites da IA e reprodução completa
+   em outro dispositivo via Docker Compose.
+
+### Critérios de aceite do painel integrado
+
+- Triagem apresenta paginação, filtros e cartões/linhas com hierarquia de informação para lotes
+  volumosos; detalhe preserva fontes, fichas, divergências e justificativa.
+- Todo estado exibido vem da API ou é explicitamente uma simulação de demonstração; a interface não
+  confirma doença, surto ou prioridade final.
+- Revisão humana respeita transições válidas, concorrência otimista e trilha append-only.
+- Mapa mostra somente agregados aprovados de área e direciona a uma fila filtrada; funciona em
+  modo de demonstração sem Internet.
+- Kanban e tabela representam o mesmo estado canônico e apresentam transições como ações
+  auditáveis, não como automação sanitária.
+- Clone limpo inicia backend e frontend pelo Docker Compose documentado, sem Node.js instalado no
+  host.
+
 ## Etapa 1: fundação reproduzível
 
 A primeira etapa termina somente quando um clone limpo puder ser validado via Docker. A entrega não é apenas a existência de Dockerfiles.
