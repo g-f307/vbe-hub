@@ -92,8 +92,8 @@ por um comando documentado e oferecer dois modos:
 ## Painel do analista: plano de integração
 
 O protótipo exploratório da interface estabeleceu a linguagem visual e os três percursos da fundação
-agora versionada em `frontend/`. A fundação ainda não substitui os contratos da API nem consulta
-dados persistidos:
+agora versionada em `frontend/`. A fundação usa seus dados mockados para demonstração visual, mas
+ainda não substitui os contratos da API nem consulta dados persistidos:
 
 1. **Triagem**: fila filtrável e paginada de sinais, ordenada por prioridade sugerida e atualizada
    por leitura da API.

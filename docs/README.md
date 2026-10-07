@@ -34,7 +34,7 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 Fundação reproduzível, normalização, extração, indexação semântica, funil de correlação,
 consolidação auditável, prioridade sugerida por regras e fluxo de revisão humana implementados e
 avaliados com dados sintéticos. Correlação e agrupamento foram aprovados com ressalvas. O frontend
-versionado possui uma fundação executável e três rotas de demonstração, sem leitura da API ainda.
-Autenticação institucional, dados exibidos no painel e integrações reais com EIOS e Guardiões da
-Saúde permanecem nas etapas seguintes; os contratos atuais simulam as entradas sem afirmar
-equivalência com endpoints oficiais.
+versionado reutiliza a interface exportada do v0, é executável e possui três rotas com dados
+mockados de demonstração, sem leitura da API ainda. Autenticação institucional, integração dos
+dados persistidos no painel e integrações reais com EIOS e Guardiões da Saúde permanecem nas etapas
+seguintes; os contratos atuais simulam as entradas sem afirmar equivalência com endpoints oficiais.

@@ -33,8 +33,9 @@ Meta: demonstração validável até **7 de novembro de 2026**, com janela prefe
 
 O mockup exploratório definiu a direção visual, os componentes de evidência e os percursos de
 triagem, investigação e panorama. A fundação resultante já está em `frontend/`, executa por Docker
-Compose e preserva o mockup original como artefato local ignorado. Ela ainda não possui vínculo de
-leitura com o backend nem exibe dados reais ou sintéticos.
+Compose e preserva a exportação original como artefato local ignorado. Ela exibe os dados mockados
+do protótipo para demonstração visual, mas ainda não possui vínculo de leitura com o backend nem
+exibe dados sintéticos persistidos.
 
 ### Ordem de implementação
 

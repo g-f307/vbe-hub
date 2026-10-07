@@ -31,13 +31,14 @@ docker compose ps
 
 A API fica disponível em `http://localhost:8000` e o painel em `http://localhost:3000`. As portas
 podem ser alteradas por `API_PORT` e `FRONTEND_PORT` no arquivo `.env`. PostgreSQL e Redis
-permanecem acessíveis apenas na rede interna da composição. `NEXT_PUBLIC_API_BASE_URL` é a única
+permanecem acessíveis apenas na rede interna da composição. `NEXT_PUBLIC_VBE_API_URL` é a única
 configuração pública do painel e deve conter apenas uma URL HTTP(S) sem credenciais; não inclua
 segredos em variáveis iniciadas por `NEXT_PUBLIC_`.
 
-Nesta fundação, as rotas `/triagem`, `/sinais/exemplo` e `/panorama` validam estrutura visual,
-responsividade e estados de carregamento, vazio e indisponibilidade. Elas não consultam a API nem
-exibem dados sintéticos até a integração de leitura ser implementada.
+Nesta fundação, as rotas `/triagem`, `/sinais/[slug]` e `/panorama` reutilizam o protótipo v0 e
+validam estrutura visual, responsividade e hierarquia de informação. Elas exibem dados mockados
+versionados exclusivamente para demonstração; não consultam a API nem exibem dados sintéticos
+persistidos até a integração de leitura ser implementada.
 
 Para a demonstração do fluxo de revisão, `REVIEW_ACTOR_ID` define o ator sintético registrado na
 auditoria e usa `synthetic-analyst` por padrão. Essa configuração não substitui autenticação nem

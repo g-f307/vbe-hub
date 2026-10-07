@@ -23,8 +23,9 @@ de correlação da Macroentrega 1 foi aprovada com ressalvas na avaliação expl
 profissionais de saúde](docs/health-stakeholder-validation.md), o [protocolo de revisão
 humana](docs/human-review-workflow.md) e a [avaliação dos
 agrupamentos](docs/grouping-evaluation.md). A fundação do painel web também está disponível, com
-rotas demonstráveis de triagem, ficha técnica e panorama; ela ainda não consulta a API nem
-apresenta dados de sinais. Autenticação institucional e integrações reais com EIOS e Guardiões da
+rotas de triagem, ficha técnica e panorama. Ela reutiliza a exportação visual do v0 e exibe dados
+mockados, claramente restritos à demonstração; ainda não consulta a API nem apresenta os dados
+sintéticos persistidos. Autenticação institucional e integrações reais com EIOS e Guardiões da
 Saúde permanecem fora desta etapa. A consolidação organiza evidências rastreáveis, mas não confirma
 ocorrências nem substitui a triagem de um profissional de saúde.
 
@@ -49,8 +50,9 @@ docker compose up --build --detach --wait
 ```
 
 A API estará em `http://localhost:8000` e o painel em `http://localhost:3000`. Nesta fundação, o
-painel deixa explícito que está em demonstração: suas telas validam navegação, responsividade e
-estados de interface, mas não inventam sinais nem decisões. Verifique:
+painel deixa explícito que está em demonstração: suas telas usam mocks do protótipo v0 para validar
+navegação, responsividade e hierarquia de informação; não representam resultados da API nem
+decisões sanitárias. Verifique:
 
 ```bash
 docker compose ps

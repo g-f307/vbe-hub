@@ -17,27 +17,28 @@ related_docs:
 
 ## Propósito e limite atual
 
-`frontend/` contém o painel versionado do VBE Hub, construído em Next.js/React. A fundação torna a
-interface reproduzível por Docker Compose e valida a linguagem visual, navegação responsiva,
-acessibilidade básica e estados operacionais antes de acoplar dados persistidos.
+`frontend/` contém o painel versionado do VBE Hub, construído em Next.js/React a partir da
+exportação do protótipo v0. A fundação torna a interface reproduzível por Docker Compose e preserva
+a linguagem visual, navegação responsiva e componentes de evidência antes de acoplar dados
+persistidos.
 
 As rotas atuais são deliberadamente demonstrativas:
 
 | Rota | Papel na fundação | Estado de dados |
 | --- | --- | --- |
-| `/triagem` | entrada para a futura fila de sinais | não consulta a API |
-| `/sinais/[signalId]` | estrutura da futura ficha técnica | não consulta a API |
-| `/panorama` | base para o futuro contexto territorial agregado | não consulta a API |
+| `/triagem` | fila, filtros e indicadores do protótipo | usa mocks versionados; não consulta a API |
+| `/sinais/[slug]` | ficha técnica, fontes e auditoria do protótipo | usa mocks versionados; não consulta a API |
+| `/panorama` | contexto territorial e indicadores do protótipo | usa mocks versionados; não consulta a API |
 | `/api/health` | health check do contêiner do painel | retorna somente o estado do serviço |
 
-Os parâmetros `?estado=carregando`, `?estado=vazio` e `?estado=indisponivel` tornam verificáveis os
-estados de interface. Eles são apenas recursos de demonstração: não representam situação
-epidemiológica, não são enviados ao backend e não implicam decisão humana.
+Os dados de `lib/mock-data.ts` são exclusivos de demonstração e foram mantidos para preservar a
+experiência gerada pelo v0. Eles não representam situação epidemiológica, não são enviados ao
+backend e não implicam decisão humana.
 
 ## Princípios de apresentação
 
-- O painel usa a marcação visível de ambiente de demonstração e não inventa sinais, doenças,
-  prioridades ou decisões quando não há integração de dados.
+- O painel usa a marcação visível de ambiente de demonstração. Os sinais, doenças, prioridades e
+  decisões exibidos nesta fase são mocks explícitos, não resultados da API.
 - A IA continuará sendo apresentada como sugestão auditável. A revisão, justificativa e decisão
   pertencem ao profissional de vigilância.
 - A futura fila usa divulgação progressiva: código, estado, condição, local/período e composição de
@@ -47,8 +48,8 @@ epidemiológica, não são enviados ao backend e não implicam decisão humana.
 
 ## Fronteira com a API
 
-O cliente HTTP começa em `src/lib/api.ts`. Nesta etapa ele somente resolve
-`NEXT_PUBLIC_API_BASE_URL`; aceita HTTP(S), remove a barra final e rejeita URL com credenciais,
+O cliente HTTP começa em `lib/api-client.ts`. Nesta etapa ele somente resolve
+`NEXT_PUBLIC_VBE_API_URL`; aceita HTTP(S), remove a barra final e rejeita URL com credenciais,
 parâmetros ou fragmentos. A variável é pública por definição, portanto nunca pode receber chave,
 token ou qualquer segredo.
 
