@@ -2,8 +2,18 @@ import asyncio
 from collections.abc import Callable
 
 from fastapi import FastAPI, Response, status
+from fastapi.responses import JSONResponse
 
+from vbe_hub.api.workflow import get_review_actor_id, get_workflow_service, router
 from vbe_hub.application.health import HealthService
+from vbe_hub.application.workflow import (
+    ConcurrencyConflict,
+    InvalidTransition,
+    WorkflowError,
+    WorkflowNotFound,
+    WorkflowService,
+    WorkflowValidationError,
+)
 from vbe_hub.infrastructure.health import InfrastructureHealthService
 from vbe_hub.infrastructure.settings import get_settings
 
@@ -12,11 +22,40 @@ def _default_health_service() -> HealthService:
     return InfrastructureHealthService(get_settings())
 
 
-def create_app(health_service: HealthService | None = None) -> FastAPI:
+def create_app(
+    health_service: HealthService | None = None,
+    workflow_service: WorkflowService | None = None,
+    review_actor_id: str | None = None,
+) -> FastAPI:
     app = FastAPI(title="VBE Hub API", version="0.1.0")
+    app.include_router(router)
+    if workflow_service is not None:
+        app.dependency_overrides[get_workflow_service] = lambda: workflow_service
+    if review_actor_id is not None:
+        app.dependency_overrides[get_review_actor_id] = lambda: review_actor_id
     service_factory: Callable[[], HealthService] = (
         (lambda: health_service) if health_service is not None else _default_health_service
     )
+
+    @app.exception_handler(WorkflowError)
+    async def workflow_error_handler(_request, error: WorkflowError) -> JSONResponse:
+        detail: dict[str, object] = {"code": error.code}
+        response_status = status.HTTP_422_UNPROCESSABLE_ENTITY
+        if isinstance(error, WorkflowNotFound):
+            response_status = status.HTTP_404_NOT_FOUND
+        elif isinstance(error, ConcurrencyConflict):
+            response_status = status.HTTP_409_CONFLICT
+            detail.update(
+                expected_version=error.expected_version,
+                current_version=error.current_version,
+            )
+        elif isinstance(error, InvalidTransition):
+            response_status = status.HTTP_409_CONFLICT
+            detail.update(current_state=error.current.value, requested_state=error.requested.value)
+        elif not isinstance(error, WorkflowValidationError):
+            response_status = status.HTTP_500_INTERNAL_SERVER_ERROR
+            detail = {"code": "workflow_internal_error"}
+        return JSONResponse(status_code=response_status, content={"detail": detail})
 
     @app.get("/health/live", tags=["health"])
     async def liveness() -> dict[str, str]:
