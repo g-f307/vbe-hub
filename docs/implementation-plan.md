@@ -4,7 +4,7 @@ type: release
 status: active
 title: Plano de implementação
 created: 2026-09-28
-updated: 2026-09-28
+updated: 2026-10-07
 owner: VBE Hub
 review_after: 2026-11-07
 related_docs:
@@ -63,6 +63,10 @@ A primeira etapa termina somente quando um clone limpo puder ser validado via Do
 - Confirmação de que nenhum runtime da aplicação foi usado diretamente no host.
 
 ## Ordem de construção
+
+A etapa de agrupamento e revisão foi concluída antecipadamente em 7 de outubro de 2026 com uma
+avaliação sintética ampliada. A aprovação possui ressalvas e não antecipa a validação integrada da
+Etapa 6 nem a interface da Etapa 5.
 
 1. Criar o dataset de referência antes de calibrar prompts ou limiares.
 2. Construir o domínio e os testes com um provedor de IA simulado.

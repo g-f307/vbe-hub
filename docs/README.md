@@ -20,17 +20,19 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 14. [Consolidação de sinais de alerta](signal-consolidation.md)
 15. [Prioridade sugerida e explicável](suggested-priority.md)
 16. [Revisão humana e trilha de auditoria](human-review-workflow.md)
-17. [Geração e importação de dados sintéticos](synthetic-data-generation.md)
-18. [Modelo persistente inicial](data-model.md)
-19. [Plano de implementação](implementation-plan.md)
-20. [Execução e validação local](development.md)
-21. [Integração contínua](continuous-integration.md)
-22. [Decisões arquiteturais](decisions/README.md)
+17. [Avaliação dos agrupamentos e da revisão](grouping-evaluation.md)
+18. [Geração e importação de dados sintéticos](synthetic-data-generation.md)
+19. [Modelo persistente inicial](data-model.md)
+20. [Plano de implementação](implementation-plan.md)
+21. [Execução e validação local](development.md)
+22. [Integração contínua](continuous-integration.md)
+23. [Decisões arquiteturais](decisions/README.md)
 
 ## Situação
 
 Fundação reproduzível, normalização, extração, indexação semântica, funil de correlação,
-consolidação auditável, prioridade sugerida por regras e fluxo de revisão humana implementados. A capacidade de correlação da
-Macroentrega 1 foi aprovada com ressalvas em avaliação exploratória reservada. Interface web,
-autenticação institucional e integrações reais com EIOS e Guardiões da Saúde permanecem nas etapas seguintes;
-os contratos atuais simulam as entradas sem afirmar equivalência com endpoints oficiais.
+consolidação auditável, prioridade sugerida por regras e fluxo de revisão humana implementados e
+avaliados com dados sintéticos. Correlação e agrupamento foram aprovados com ressalvas. Interface
+web, autenticação institucional e integrações reais com EIOS e Guardiões da Saúde permanecem nas
+etapas seguintes; os contratos atuais simulam as entradas sem afirmar equivalência com endpoints
+oficiais.
