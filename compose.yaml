@@ -84,9 +84,9 @@ services:
       context: ./frontend
       target: runtime
       args:
-        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+        NEXT_PUBLIC_VBE_API_URL: ${NEXT_PUBLIC_VBE_API_URL:-http://localhost:8000}
     environment:
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+      NEXT_PUBLIC_VBE_API_URL: ${NEXT_PUBLIC_VBE_API_URL:-http://localhost:8000}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
@@ -164,14 +164,14 @@ services:
     build:
       context: ./frontend
       target: development
-    command: ["npm", "run", "lint"]
+    command: ["pnpm", "lint"]
 
   frontend-test:
     profiles: ["tools"]
     build:
       context: ./frontend
       target: development
-    command: ["npm", "test"]
+    command: ["pnpm", "test"]
 
   docs-check:
     profiles: ["tools"]

@@ -2,17 +2,20 @@
 
 FROM node:20.19.4-bookworm-slim AS base
 
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    PNPM_HOME=/pnpm \
+    PATH=/pnpm:$PATH
 
-RUN groupadd --gid 10002 app \
+RUN npm install --global pnpm@10.8.1 \
+    && groupadd --gid 10002 app \
     && useradd --uid 10002 --gid app --create-home app
 
 WORKDIR /app
 
 FROM base AS dependencies
 
-COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 
 FROM dependencies AS development
 
@@ -24,15 +27,15 @@ USER app
 
 EXPOSE 3000
 
-CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0", "--port", "3000"]
+CMD ["pnpm", "dev", "--hostname", "0.0.0.0", "--port", "3000"]
 
 FROM dependencies AS build
 
-ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
-ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+ARG NEXT_PUBLIC_VBE_API_URL=http://localhost:8000
+ENV NEXT_PUBLIC_VBE_API_URL=$NEXT_PUBLIC_VBE_API_URL
 
 COPY . ./
-RUN npm run build
+RUN pnpm build
 
 FROM base AS runtime
 

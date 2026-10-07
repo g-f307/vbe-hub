@@ -1,8 +1,10 @@
+# Exportações e artefatos locais do Next.js.
 node_modules/
 .next/
 coverage/
 *.tsbuildinfo
-npm-debug.log*
 .env
 .env.*
 !.env.example
+npm-debug.log*
+pnpm-debug.log*
