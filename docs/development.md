@@ -4,7 +4,7 @@ type: operations
 status: active
 title: Execução e validação local
 created: 2026-09-28
-updated: 2026-09-30
+updated: 2026-10-06
 owner: VBE Hub
 related_docs:
   - DES-001
@@ -30,6 +30,10 @@ docker compose ps
 ```
 
 A API fica disponível em `http://localhost:8000`. A porta pode ser alterada por `API_PORT` no arquivo `.env`. PostgreSQL e Redis permanecem acessíveis apenas na rede interna da composição.
+
+Para a demonstração do fluxo de revisão, `REVIEW_ACTOR_ID` define o ator sintético registrado na
+auditoria e usa `synthetic-analyst` por padrão. Essa configuração não substitui autenticação nem
+deve representar uma identidade real. Consulte o [fluxo de revisão](human-review-workflow.md).
 
 Endpoints operacionais:
 

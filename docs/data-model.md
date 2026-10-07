@@ -4,7 +4,7 @@ type: data
 status: active
 title: Modelo persistente inicial
 created: 2026-09-28
-updated: 2026-10-03
+updated: 2026-10-06
 owner: VBE Hub
 implemented_code:
   - backend/migrations/
@@ -19,6 +19,8 @@ related_docs:
   - ADR-006
   - API-006
   - ADR-007
+  - API-007
+  - ADR-008
 ---
 
 # Modelo persistente inicial
@@ -42,6 +44,8 @@ As entidades em `vbe_hub.domain` não dependem do banco. Interfaces de repositó
 | `signal_relation_links` | Avaliações de relação aceitas como suporte ou contexto. | Unicidade por sinal e avaliação; FKs indexadas. |
 | `signal_grouping_conflicts` | Uniões rejeitadas pela política de agrupamento. | Unicidade por política, avaliação e código; origens e detalhes preservados. |
 | `suggested_priorities` | Cálculo explicável e versionado para ordenar a triagem. | FK para o sinal; identidade única; score, confiança e faixa controlados; componentes e lacunas em JSONB. |
+| `signal_workflows` | Estado e versão concorrente da triagem de cada sinal. | FK 1:1 para o sinal; estado e versão controlados. |
+| `review_events` | Transições e decisões humanas auditáveis. | FK para o fluxo; sequência e chave de operação únicas; eventos protegidos contra alteração e exclusão. |
 
 Todos os identificadores de tabela e coluna usam `snake_case`. Datas são `timestamptz`; payloads e erros estruturados usam `jsonb`. FKs usadas em consulta possuem índices explícitos.
 
@@ -69,12 +73,16 @@ A identidade do cálculo inclui a configuração completa e o instante de refer�
 idempotentes; novas políticas ou recálculos coexistem. A justificativa contém apenas fatos
 estruturados, IDs de origem e relações, sem payload bruto.
 
+O fluxo usa versão otimista para impedir sobrescritas concorrentes. Cada evento de revisão registra
+uma impressão SHA-256 do comando associado à chave idempotente, os valores anterior e novo e a
+identidade da sugestão. Correções são novos eventos; o histórico existente não é atualizado.
+
 ## Isolamento do gabarito
 
 `gold_event_id` existe somente em `EvaluationLabel` e `evaluation_labels`. `RawRecord`, `StoredRawRecord` e o repositório entregue ao pipeline não possuem esse atributo. Acesso ao gabarito exige o adapter de avaliação separado.
 
 ## Limites atuais
 
-Usuários, decisões humanas de triagem e retenção de dados reais não pertencem a este schema.
+Usuários reais, autenticação, autorização e retenção de dados reais não pertencem a este schema.
 Backup também não está previsto nesta etapa; volumes Docker são persistência de desenvolvimento,
 não estratégia de recuperação.
