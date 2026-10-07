@@ -14,6 +14,10 @@ from vbe_hub.adapters.persistence.signal_models import (  # noqa: F401
     SignalMemberModel,
     SignalRelationLinkModel,
 )
+from vbe_hub.adapters.persistence.workflow_models import (  # noqa: F401
+    ReviewEventModel,
+    SignalWorkflowModel,
+)
 from vbe_hub.infrastructure.settings import get_settings
 
 config = context.config

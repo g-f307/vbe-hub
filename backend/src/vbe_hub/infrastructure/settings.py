@@ -22,6 +22,13 @@ class Settings(BaseSettings):
         le=30,
         validation_alias="DEPENDENCY_TIMEOUT_SECONDS",
     )
+    review_actor_id: str = Field(
+        default="synthetic-analyst",
+        validation_alias="REVIEW_ACTOR_ID",
+        min_length=1,
+        max_length=100,
+        pattern=r"^[A-Za-z0-9._@:-]+$",
+    )
     gemini_api_key: SecretStr | None = Field(default=None, validation_alias="GEMINI_API_KEY")
     gemini_model: str = Field(
         default="gemini-3.5-flash-lite", validation_alias="GEMINI_MODEL", min_length=1

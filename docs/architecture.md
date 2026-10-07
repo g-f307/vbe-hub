@@ -4,7 +4,7 @@ type: design
 status: active
 title: Arquitetura
 created: 2026-09-28
-updated: 2026-10-03
+updated: 2026-10-06
 owner: VBE Hub
 planned_code:
   - backend/
@@ -19,6 +19,7 @@ related_docs:
   - ADR-004
   - ADR-006
   - ADR-007
+  - ADR-008
 ---
 
 # Arquitetura
@@ -122,9 +123,14 @@ o [contrato de prioridade](suggested-priority.md) e a
 
 ## Fluxo de estado
 
-`detectado → em_triagem → em_verificacao → avaliacao_de_risco → encerrado`
+`detected → triage → verification → risk_assessment → closed`
 
-Um sinal pode ser descartado durante a triagem ou verificação, com motivo e autor da decisão. A prioridade da IA é apenas uma sugestão, distinta do resultado da avaliação de risco.
+O fluxo é uma máquina `workflow-v1` com transições explícitas, versão otimista e eventos
+imutáveis. Um sinal pode ser encerrado durante triagem, verificação ou avaliação de risco, sempre
+com motivo e ator. Aceitação, correção e rejeição de sugestões preservam valor anterior, novo valor
+e vínculo com a origem. A prioridade automática continua sendo sugestão, distinta do resultado da
+avaliação de risco. Consulte o [contrato de revisão humana](human-review-workflow.md) e a
+[ADR-008](decisions/ADR-008-append-only-human-review.md).
 
 ## Fontes futuras e dados sintéticos
 
