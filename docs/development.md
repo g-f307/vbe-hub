@@ -49,6 +49,14 @@ Endpoints operacionais:
 - `GET /health/live`: confirma que o processo HTTP está ativo;
 - `GET /health/ready`: confirma PostgreSQL, extensão pgvector e Redis; retorna HTTP 503 se qualquer dependência estiver indisponível.
 
+Endpoints de leitura já disponíveis para a próxima integração do painel:
+
+- `GET /signals`: fila sintética paginada e filtrável;
+- `GET /signals/{signal_id}`: investigação com proveniência, fichas técnicas disponíveis, relações e auditoria.
+
+Consulte o [contrato de leitura canônica](signal-read-api.md). As telas do frontend ainda mostram
+mocks nesta etapa; esses endpoints não são acessados pelo navegador até a entrega de integração.
+
 ## Verificações oficiais
 
 ```bash

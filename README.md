@@ -25,8 +25,9 @@ humana](docs/human-review-workflow.md) e a [avaliação dos
 agrupamentos](docs/grouping-evaluation.md). A fundação do painel web também está disponível, com
 rotas de triagem, ficha técnica e panorama. Ela reutiliza a exportação visual do v0 e exibe dados
 mockados, claramente restritos à demonstração; ainda não consulta a API nem apresenta os dados
-sintéticos persistidos. Autenticação institucional e integrações reais com EIOS e Guardiões da
-Saúde permanecem fora desta etapa. A consolidação organiza evidências rastreáveis, mas não confirma
+sintéticos persistidos. A API já possui consulta canônica de fila e investigação para preparar essa
+integração; consulte o [contrato de leitura](docs/signal-read-api.md). Autenticação institucional e
+integrações reais com EIOS e Guardiões da Saúde permanecem fora desta etapa. A consolidação organiza evidências rastreáveis, mas não confirma
 ocorrências nem substitui a triagem de um profissional de saúde.
 
 ## Início rápido

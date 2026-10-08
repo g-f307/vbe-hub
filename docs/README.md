@@ -21,20 +21,22 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 15. [Prioridade sugerida e explicável](suggested-priority.md)
 16. [Revisão humana e trilha de auditoria](human-review-workflow.md)
 17. [Avaliação dos agrupamentos e da revisão](grouping-evaluation.md)
-18. [Geração e importação de dados sintéticos](synthetic-data-generation.md)
-19. [Modelo persistente inicial](data-model.md)
-20. [Fundação do frontend](frontend.md)
-21. [Plano de implementação](implementation-plan.md)
-22. [Execução e validação local](development.md)
-23. [Integração contínua](continuous-integration.md)
-24. [Decisões arquiteturais](decisions/README.md)
+18. [Consulta canônica de sinais para o painel](signal-read-api.md)
+19. [Geração e importação de dados sintéticos](synthetic-data-generation.md)
+20. [Modelo persistente inicial](data-model.md)
+21. [Fundação do frontend](frontend.md)
+22. [Plano de implementação](implementation-plan.md)
+23. [Execução e validação local](development.md)
+24. [Integração contínua](continuous-integration.md)
+25. [Decisões arquiteturais](decisions/README.md)
 
 ## Situação
 
 Fundação reproduzível, normalização, extração, indexação semântica, funil de correlação,
 consolidação auditável, prioridade sugerida por regras e fluxo de revisão humana implementados e
-avaliados com dados sintéticos. Correlação e agrupamento foram aprovados com ressalvas. O frontend
-versionado reutiliza a interface exportada do v0, é executável e possui três rotas com dados
-mockados de demonstração, sem leitura da API ainda. Autenticação institucional, integração dos
-dados persistidos no painel e integrações reais com EIOS e Guardiões da Saúde permanecem nas etapas
-seguintes; os contratos atuais simulam as entradas sem afirmar equivalência com endpoints oficiais.
+avaliados com dados sintéticos. Correlação e agrupamento foram aprovados com ressalvas. A API já
+oferece leitura canônica de fila e investigação; o frontend versionado reutiliza a interface
+exportada do v0, mas suas três rotas ainda usam dados mockados de demonstração até a integração de
+leitura. Autenticação institucional e integrações reais com EIOS e Guardiões da Saúde permanecem
+nas etapas seguintes; os contratos atuais simulam as entradas sem afirmar equivalência com
+endpoints oficiais.

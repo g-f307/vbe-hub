@@ -40,12 +40,14 @@ exibe dados sintéticos persistidos.
 ### Ordem de implementação
 
 1. **Concluída em 7 de outubro:** criar a aplicação Next.js/React em `frontend/`, sua imagem Docker
-   e os comandos Compose de desenvolvimento, demonstração, testes e build. A entrega contém rotas
-   sem dados para validar a fundação; não substitui a integração de leitura.
-2. Transformar o modelo visual em componentes versionados e acessíveis, começando pela fila de
-   triagem e seus estados de carregamento, vazio e falha.
-3. Implementar endpoints de leitura e integrar a fila e o detalhe do sinal com dados sintéticos
-   persistidos, mantendo vínculo com evidências de origem.
+   e os comandos Compose de desenvolvimento, demonstração, testes e build. A entrega incorporou os
+   componentes e rotas do export v0 com dados mockados, sem recriar uma interface paralela.
+2. Expor contrato de leitura de fila e detalhe a partir de dados sintéticos persistidos, preservando
+   fontes, ficha, relações, divergências, prioridade e auditoria. O contrato não materializa
+   workflow durante uma leitura.
+3. Conectar as rotas v0 de triagem e investigação a esse contrato, mantendo o desenho, a
+   responsividade e os estados de carregamento, vazio e falha; os mocks deixam de alimentar essas
+   duas rotas, mas podem permanecer em páginas ainda não integradas ou testes de componente.
 4. Integrar a decisão humana auditável: aceitar, corrigir e rejeitar agrupamento, com controle de
    versão e comunicação clara de sucesso, conflito ou erro.
 5. Integrar o panorama operacional e a visualização geoespacial agregada por área, sem localização
