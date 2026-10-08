@@ -19,21 +19,20 @@ related_docs:
 
 `frontend/` contém o painel versionado do VBE Hub, construído em Next.js/React a partir da
 exportação do protótipo v0. A fundação torna a interface reproduzível por Docker Compose e preserva
-a linguagem visual, navegação responsiva e componentes de evidência antes de acoplar dados
-persistidos.
+a linguagem visual, navegação responsiva e componentes de evidência enquanto lê dados persistidos.
 
 As rotas atuais são deliberadamente demonstrativas:
 
 | Rota | Papel na fundação | Estado de dados |
 | --- | --- | --- |
-| `/triagem` | fila, filtros e indicadores do protótipo | usa mocks versionados; não consulta a API |
-| `/sinais/[slug]` | ficha técnica, fontes e auditoria do protótipo | usa mocks versionados; não consulta a API |
+| `/triagem` | fila, filtros, indicadores e paginação | consulta `GET /signals` no servidor Next |
+| `/sinais/[slug]` | ficha técnica, fontes, relações e auditoria | consulta `GET /signals/{id}` no servidor Next; o segmento é o UUID canônico |
 | `/panorama` | contexto territorial e indicadores do protótipo | usa mocks versionados; não consulta a API |
 | `/api/health` | health check do contêiner do painel | retorna somente o estado do serviço |
 
-Os dados de `lib/mock-data.ts` são exclusivos de demonstração e foram mantidos para preservar a
-experiência gerada pelo v0. Eles não representam situação epidemiológica, não são enviados ao
-backend e não implicam decisão humana.
+Os dados de `lib/mock-data.ts` permanecem exclusivos do panorama, ainda não integrado. Eles não
+alimentam triagem ou investigação, não representam situação epidemiológica e não implicam decisão
+humana.
 
 ## Princípios de apresentação
 
@@ -48,16 +47,16 @@ backend e não implicam decisão humana.
 
 ## Fronteira com a API
 
-O cliente HTTP começa em `lib/api-client.ts`. Nesta etapa ele somente resolve
-`NEXT_PUBLIC_VBE_API_URL`; aceita HTTP(S), remove a barra final e rejeita URL com credenciais,
-parâmetros ou fragmentos. A variável é pública por definição, portanto nunca pode receber chave,
-token ou qualquer segredo.
+`lib/signal-read.ts` é a fronteira única de leitura. Ela separa tipos de transporte e apresentação,
+valida a resposta mínima, aplica timeout e distingue indisponibilidade, resposta inválida e sinal
+inexistente. `VBE_API_INTERNAL_URL` é lida somente no servidor Next e usa `http://api:8000` no
+Compose; não há URL interna ou segredo em variável `NEXT_PUBLIC`.
 
 O frontend não acessa PostgreSQL, Redis, provedores de IA ou conectores diretamente. A API já
 oferece `GET /signals` e `GET /signals/{signal_id}` para fila e investigação, conforme o [contrato
-de leitura](signal-read-api.md). A integração dessas respostas nas telas v0 é uma entrega posterior:
-até lá, as rotas continuam usando somente os mocks versionados. Revisão e agregados territoriais
-continuam previstos na [arquitetura](architecture.md#contratos-de-integração-previstos).
+de leitura](signal-read-api.md). Filtros e paginação são serializados nos parâmetros canônicos da
+URL compartilhável. Carregamento, vazio, falha e 404 não usam mocks como fallback. Revisão e
+agregados territoriais continuam previstos na [arquitetura](architecture.md#contratos-de-integração-previstos).
 
 ## Execução e verificação
 
