@@ -4,7 +4,7 @@ type: design
 status: active
 title: Arquitetura
 created: 2026-09-28
-updated: 2026-10-06
+updated: 2026-10-07
 owner: VBE Hub
 planned_code:
   - backend/
@@ -59,31 +59,89 @@ flowchart LR
 - Backend: Python e FastAPI.
 - Processamento em lote: Celery e Redis; o uso pode começar síncrono para o primeiro experimento pequeno e migrar antes do lote massivo.
 - Persistência: PostgreSQL com extensão `pgvector`, SQLAlchemy 2.x nos adapters e Alembic para migrations.
-- Frontend: Next.js/React e Leaflet para mapa, após o núcleo analítico estar demonstrado.
+- Frontend: Next.js/React em `frontend/`; a fundação visual já é executável. Leaflet será adicionado
+  pelo adaptador de mapa quando a visualização territorial agregada for integrada.
 - Execução local: Docker Compose.
 
 ## Docker como fronteira operacional
 
 Docker Compose é o contrato oficial entre a aplicação e o dispositivo de validação. O fluxo suportado não pressupõe runtimes ou bancos instalados diretamente no host.
 
-Na etapa 1, a composição contém:
+Na composição atual, os serviços de aplicação são:
 
 ```text
-api ───────────────► postgres + pgvector
- │                         ▲
- └──────────────────► redis
-generator/importer ────────┘
+frontend ────────► api ────────► postgres + pgvector
+                       │                 ▲
+                       └────────► redis
+generator/importer ──────────────────────┘
 ```
 
 - `api`: imagem do backend FastAPI, também usada para comandos de migrations, testes e utilitários quando adequado;
+- `frontend`: imagem Next.js não privilegiada, com health check próprio e configuração pública da
+  URL da API sem segredos;
 - `postgres`: banco com versão fixada e extensão pgvector habilitada;
 - `redis`: infraestrutura preparada para filas e cache posteriores;
 - `generator/importer`: comando ou serviço de execução finita que gera e importa dados sintéticos sem exigir Python no host.
 
-Frontend e worker serão incorporados à mesma composição em seus milestones. A composição final deve ser inicializada por um comando documentado e oferecer dois modos:
+O worker será incorporado à mesma composição em seu milestone. A composição deve ser inicializada
+por um comando documentado e oferecer dois modos:
 
 - desenvolvimento: volumes de código e recarga automática, sem comprometer o caminho reproduzível;
 - validação/demonstração: imagens construídas, dataset e semente identificados, sem dependência do ambiente do desenvolvedor.
+
+## Painel do analista: plano de integração
+
+O protótipo exploratório da interface estabeleceu a linguagem visual e os três percursos da fundação
+agora versionada em `frontend/`. A fundação usa seus dados mockados para demonstração visual, mas
+ainda não substitui os contratos da API nem consulta dados persistidos:
+
+1. **Triagem**: fila filtrável e paginada de sinais, ordenada por prioridade sugerida e atualizada
+   por leitura da API.
+2. **Investigação**: detalhe de um sinal com resumo consolidado, evidências de origem, fichas
+   técnicas, critérios de agrupamento, trilha de auditoria e painel de decisão humana.
+3. **Panorama**: leitura operacional e territorial agregada, com ligação para a fila filtrada.
+
+Os componentes devem preservar divulgação progressiva de informação. O item compacto da fila
+mostra código, prioridade sugerida, estado, condição/sintomas-chave, local/período e composição de
+fontes. Justificativa, divergências, campos ausentes, fichas técnicas e texto de origem pertencem
+ao detalhe ou à expansão explícita; a fila não deve esconder a origem nem apresentar todo o volume
+de evidências de uma vez.
+
+### Visualizações de fluxo
+
+A tabela/fila é a visão principal porque permite comparar prioridade, filtros e evidências de
+forma densa. Uma visão Kanban é complementar: organiza os mesmos sinais por `triagem`,
+`verificação`, `avaliação de risco` e `encerrado` para revelar volume e gargalos. Ela não confirma
+eventos e não pode permitir arrastar um cartão para alterar estado sem abrir a decisão humana,
+validar a transição no backend e registrar o evento de auditoria.
+
+### Visualização geoespacial
+
+O mapa exibirá somente localização consolidada e agregada por bairro ou outra unidade
+administrativa aprovada para a demonstração. Não exibirá coordenada de relato individual,
+endereço, identificação da pessoa ou inferência de localização precisa. Marcadores ou polígonos
+apresentarão contagem de sinais, estado predominante, prioridade sugerida e composição de fontes;
+selecionar uma área filtrará ou encaminhará para a fila correspondente.
+
+Leaflet será encapsulado em um adaptador de mapa. Para manter a demonstração reproduzível sem
+Internet, a primeira versão usará geometria e dados de demonstração versionados/localmente
+servidos; tiles externos serão opcionais e nunca requisito de validação. Estados de mapa sem dados,
+geometria indisponível e filtro sem resultado devem ser compreensíveis sem depender do mapa-base.
+
+### Contratos de integração previstos
+
+O frontend não acessa tabelas do banco diretamente. A API deverá expor, com paginação, filtros e
+versões explícitas quando aplicável:
+
+- fila de sinais com campos de leitura rápida e contagem de fontes por tipo;
+- detalhe do sinal, evidências vinculadas, fichas técnicas, justificativa, divergências e auditoria;
+- resumo geoespacial agregado por área, sem registros individualizados;
+- resumo operacional para indicadores e panorama;
+- comando de revisão humana que aplica a máquina de estados e retorna o evento de auditoria.
+
+A interface tratará indisponibilidade, carregamento, resposta vazia e conflito de versão sem
+inventar dados ou concluir decisão sanitária. Dados sintéticos permanecem visualmente marcados em
+todas as telas da PoC.
 
 ### Invariantes operacionais
 

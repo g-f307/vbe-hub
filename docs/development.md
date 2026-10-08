@@ -4,7 +4,7 @@ type: operations
 status: active
 title: Execução e validação local
 created: 2026-09-28
-updated: 2026-10-06
+updated: 2026-10-07
 owner: VBE Hub
 related_docs:
   - DES-001
@@ -19,7 +19,7 @@ related_docs:
 - Docker Engine ou Docker Desktop;
 - Docker Compose v2.
 
-Python, uv, PostgreSQL e Redis não precisam ser instalados no host.
+Python, uv, Node.js, PostgreSQL e Redis não precisam ser instalados no host.
 
 ## Primeira execução
 
@@ -29,7 +29,16 @@ docker compose up --build --detach --wait
 docker compose ps
 ```
 
-A API fica disponível em `http://localhost:8000`. A porta pode ser alterada por `API_PORT` no arquivo `.env`. PostgreSQL e Redis permanecem acessíveis apenas na rede interna da composição.
+A API fica disponível em `http://localhost:8000` e o painel em `http://localhost:3000`. As portas
+podem ser alteradas por `API_PORT` e `FRONTEND_PORT` no arquivo `.env`. PostgreSQL e Redis
+permanecem acessíveis apenas na rede interna da composição. `NEXT_PUBLIC_VBE_API_URL` é a única
+configuração pública do painel e deve conter apenas uma URL HTTP(S) sem credenciais; não inclua
+segredos em variáveis iniciadas por `NEXT_PUBLIC_`.
+
+Nesta fundação, as rotas `/triagem`, `/sinais/[slug]` e `/panorama` reutilizam o protótipo v0 e
+validam estrutura visual, responsividade e hierarquia de informação. Elas exibem dados mockados
+versionados exclusivamente para demonstração; não consultam a API nem exibem dados sintéticos
+persistidos até a integração de leitura ser implementada.
 
 Para a demonstração do fluxo de revisão, `REVIEW_ACTOR_ID` define o ator sintético registrado na
 auditoria e usa `synthetic-analyst` por padrão. Essa configuração não substitui autenticação nem
@@ -45,6 +54,8 @@ Endpoints operacionais:
 ```bash
 docker compose --profile tools run --rm test
 docker compose --profile tools run --rm lint
+docker compose --profile tools run --rm frontend-test
+docker compose --profile tools run --rm frontend-lint
 ```
 
 Para reproduzir separadamente os checks da CI:
@@ -108,9 +119,10 @@ docker compose run --rm migrate uv run --no-sync alembic upgrade head
 Em uma cópia sem dados locais, o percurso validado pela CI é:
 
 ```bash
-docker compose build --pull migrate api synthetic-generate synthetic-validate synthetic-import
-docker compose up --detach --wait --no-build postgres redis migrate api
+docker compose build --pull migrate api frontend synthetic-generate synthetic-validate synthetic-import
+docker compose up --detach --wait --no-build postgres redis migrate api frontend
 docker compose exec -T api python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"
+docker compose exec -T frontend node -e "fetch('http://localhost:3000/api/health').then((response) => { if (!response.ok) process.exit(1) })"
 docker compose run --rm migrate uv run --no-sync alembic check
 docker compose --profile tools run --rm synthetic-generate
 docker compose --profile tools run --rm synthetic-validate
@@ -127,7 +139,10 @@ antes de empregar essa contagem como evidência de banco vazio.
 docker compose -f compose.yaml -f compose.dev.yaml up --build
 ```
 
-Esse modo monta somente `backend/src` e `backend/tests`. O fluxo de validação e a CI usam a imagem construída sem esses volumes.
+Esse modo monta `backend/src`, `backend/tests` e `frontend/`; o frontend tem recarga automática e
+usa volumes nomeados para dependências e artefatos de build. O fluxo de validação e a CI usam as
+imagens construídas sem esses volumes. Não execute `npm install` no host: se uma dependência do
+frontend precisar mudar, reconstrua a imagem após alterar os arquivos versionados de dependência.
 
 ## Persistência e encerramento
 

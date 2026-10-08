@@ -10,3 +10,7 @@ data/generated/*
 !data/generated/.gitkeep
 data/reports/*
 !data/reports/.gitkeep
+
+# Artefatos locais de prototipação visual exportados do v0.
+vbe-hub-frontend.zip
+vbe-hub-frontend/

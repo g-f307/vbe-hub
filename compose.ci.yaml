@@ -4,6 +4,12 @@ x-backend-cache: &backend-cache
   cache_to:
     - type=gha,scope=${CI_CACHE_SCOPE:-backend},mode=max
 
+x-frontend-cache: &frontend-cache
+  cache_from:
+    - type=gha,scope=${CI_CACHE_SCOPE:-frontend}
+  cache_to:
+    - type=gha,scope=${CI_CACHE_SCOPE:-frontend},mode=max
+
 services:
   migrate:
     build:
@@ -29,3 +35,12 @@ services:
   synthetic-import:
     build:
       <<: *backend-cache
+  frontend:
+    build:
+      <<: *frontend-cache
+  frontend-lint:
+    build:
+      <<: *frontend-cache
+  frontend-test:
+    build:
+      <<: *frontend-cache
