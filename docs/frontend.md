@@ -53,9 +53,11 @@ O cliente HTTP começa em `lib/api-client.ts`. Nesta etapa ele somente resolve
 parâmetros ou fragmentos. A variável é pública por definição, portanto nunca pode receber chave,
 token ou qualquer segredo.
 
-O frontend não acessa PostgreSQL, Redis, provedores de IA ou conectores diretamente. As próximas
-entregas fornecerão endpoints versionados para fila, ficha, evidências, revisão e agregados
-territoriais, conforme a [arquitetura](architecture.md#contratos-de-integração-previstos).
+O frontend não acessa PostgreSQL, Redis, provedores de IA ou conectores diretamente. A API já
+oferece `GET /signals` e `GET /signals/{signal_id}` para fila e investigação, conforme o [contrato
+de leitura](signal-read-api.md). A integração dessas respostas nas telas v0 é uma entrega posterior:
+até lá, as rotas continuam usando somente os mocks versionados. Revisão e agregados territoriais
+continuam previstos na [arquitetura](architecture.md#contratos-de-integração-previstos).
 
 ## Execução e verificação
 

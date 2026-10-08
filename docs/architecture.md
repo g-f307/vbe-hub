@@ -130,11 +130,13 @@ geometria indisponível e filtro sem resultado devem ser compreensíveis sem dep
 
 ### Contratos de integração previstos
 
-O frontend não acessa tabelas do banco diretamente. A API deverá expor, com paginação, filtros e
+O frontend não acessa tabelas do banco diretamente. A API expõe, com paginação, filtros e
 versões explícitas quando aplicável:
 
-- fila de sinais com campos de leitura rápida e contagem de fontes por tipo;
-- detalhe do sinal, evidências vinculadas, fichas técnicas, justificativa, divergências e auditoria;
+- fila de sinais com campos de leitura rápida e contagem de fontes por tipo, disponível em
+  `GET /signals`;
+- detalhe do sinal, evidências vinculadas, fichas técnicas, justificativa, divergências e auditoria,
+  disponível em `GET /signals/{signal_id}`; consulte o [contrato de leitura](signal-read-api.md);
 - resumo geoespacial agregado por área, sem registros individualizados;
 - resumo operacional para indicadores e panorama;
 - comando de revisão humana que aplica a máquina de estados e retorna o evento de auditoria.
