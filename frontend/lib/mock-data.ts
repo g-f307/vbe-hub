@@ -705,7 +705,7 @@ export function countSourcesByType(signal: Signal) {
 }
 
 export function buildAuditTrail(signal: Signal): AuditEvent[] {
-  const created = new Date(signal.createdAt).getTime()
+  const created = new Date(signal.createdAt ?? 0).getTime()
   const at = (minutes: number) => new Date(created + minutes * 60000).toISOString()
   const sourceCount = signal.sourceIds.length
   return [
@@ -736,7 +736,7 @@ export function buildAuditTrail(signal: Signal): AuditEvent[] {
     {
       id: `${signal.id}-evt-4`,
       signalId: signal.id,
-      at: signal.updatedAt,
+      at: signal.updatedAt ?? at(3),
       actor: 'sistema',
       title: 'Aguardando revisão',
       description: 'Sinal disponível na fila de triagem para decisão da vigilância.',

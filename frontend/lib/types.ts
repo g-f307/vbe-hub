@@ -28,7 +28,7 @@ export interface TechnicalSheet {
   magnitude: string | null
   missingFields: string[]
   extractionVersion: string
-  extractedAt: string
+  extractedAt: string | null
 }
 
 export interface SourceRecord {
@@ -44,8 +44,8 @@ export interface SourceRecord {
   municipality: string
   neighborhood: string
   isContext: boolean
-  relation: RelationSuggestion
-  sheet: TechnicalSheet
+  relation?: RelationSuggestion
+  sheet: TechnicalSheet | null
 }
 
 export interface GroupingCriterion {
@@ -64,15 +64,16 @@ export interface Signal {
   symptoms: string[]
   municipality: string
   neighborhood: string
-  periodStart: string
-  periodEnd: string
+  periodStart: string | null
+  periodEnd: string | null
   magnitude: string | null
-  priority: SuggestedPriority
+  priority: SuggestedPriority | null
   priorityRationale: string
   state: WorkflowState
-  createdAt: string
-  updatedAt: string
+  createdAt: string | null
+  updatedAt: string | null
   sourceIds: UUID[]
+  sourceCounts?: { midia: number; comunidade: number; total: number }
   criteria: GroupingCriterion[]
   divergences: string[]
   flag?: 'conflito_geografico' | 'condicao_desconhecida' | 'contexto'

@@ -98,7 +98,7 @@ export function EvidenceThread({
             ) : (
               <>
                 <p className="text-xs font-medium tracking-wide text-ardosia uppercase">Decisão do analista</p>
-                <p className="mt-0.5 text-sm text-grafite">Pendente. Use o painel de decisão para revisar o agrupamento.</p>
+                <p className="mt-0.5 text-sm text-grafite">Nenhuma decisão humana está registrada nesta leitura.</p>
               </>
             )}
           </div>
@@ -118,8 +118,8 @@ function EvidenceNode({
   onOpenSheet: () => void
 }) {
   const Icon = source.isContext ? Megaphone : source.type === 'midia' ? Newspaper : MessagesSquare
-  const relation = RELATION_STYLE[source.relation.kind]
-  const confidence = Math.round(source.relation.confidence * 100)
+  const relation = source.relation ? RELATION_STYLE[source.relation.kind] : null
+  const confidence = source.relation ? Math.round(source.relation.confidence * 100) : null
 
   return (
     <li className="relative flex gap-3">
@@ -168,16 +168,16 @@ function EvidenceNode({
 
         <div className="mt-2.5 flex flex-col gap-2 border-t border-agua pt-2.5 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className={cn('text-xs font-semibold', relation.text)}>
-              {RELATION_LABEL[source.relation.kind]}
-              <span className="font-normal text-ardosia"> · confiança {confidence}%</span>
-            </p>
-            <div className="mt-1 flex items-center gap-2">
-              <span className="h-1 w-24 overflow-hidden rounded-full bg-agua" aria-hidden>
-                <span className={cn('block h-full rounded-full', relation.bar)} style={{ width: `${confidence}%` }} />
-              </span>
-              <span className="truncate text-xs text-ardosia">{source.relation.rationale}</span>
-            </div>
+            {source.relation && relation && confidence !== null ? <>
+              <p className={cn('text-xs font-semibold', relation.text)}>
+                {RELATION_LABEL[source.relation.kind]}
+                <span className="font-normal text-ardosia"> · confiança {confidence}%</span>
+              </p>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="h-1 w-24 overflow-hidden rounded-full bg-agua" aria-hidden><span className={cn('block h-full rounded-full', relation.bar)} style={{ width: `${confidence}%` }} /></span>
+                <span className="truncate text-xs text-ardosia">{source.relation.rationale}</span>
+              </div>
+            </> : <p className="text-xs text-ardosia">Relação disponível nos critérios de agrupamento.</p>}
           </div>
           <button
             type="button"

@@ -22,10 +22,8 @@ services:
   frontend:
     build:
       target: development
-      args:
-        NEXT_PUBLIC_VBE_API_URL: ${NEXT_PUBLIC_VBE_API_URL:-http://localhost:8000}
     environment:
-      NEXT_PUBLIC_VBE_API_URL: ${NEXT_PUBLIC_VBE_API_URL:-http://localhost:8000}
+      VBE_API_INTERNAL_URL: ${VBE_API_INTERNAL_URL:-http://api:8000}
     command: ["pnpm", "dev", "--hostname", "0.0.0.0", "--port", "3000"]
     volumes:
       - ./frontend:/app

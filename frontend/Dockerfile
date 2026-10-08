@@ -31,9 +31,6 @@ CMD ["pnpm", "dev", "--hostname", "0.0.0.0", "--port", "3000"]
 
 FROM dependencies AS build
 
-ARG NEXT_PUBLIC_VBE_API_URL=http://localhost:8000
-ENV NEXT_PUBLIC_VBE_API_URL=$NEXT_PUBLIC_VBE_API_URL
-
 COPY . ./
 RUN pnpm build
 

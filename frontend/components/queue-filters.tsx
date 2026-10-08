@@ -5,7 +5,6 @@ import { FilterSelect, type FilterOption } from '@/components/filter-select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PRIORITY_LABEL, WORKFLOW_QUEUE_LABEL } from '@/lib/labels'
-import { NEIGHBORHOOD_NAMES } from '@/lib/mock-data'
 import type { SuggestedPriority, WorkflowState } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -13,7 +12,7 @@ export interface QueueFilterState {
   search: string
   state: string
   priority: string
-  period: string
+  period: '24h' | '7d' | '14d' | 'todos'
   neighborhood: string
   sourceType: string
 }
@@ -22,14 +21,14 @@ export const DEFAULT_FILTERS: QueueFilterState = {
   search: '',
   state: 'todos',
   priority: 'todas',
-  period: '14d',
+  period: 'todos',
   neighborhood: 'todos',
   sourceType: 'todas',
 }
 
 const STATE_OPTIONS: FilterOption[] = [
   { value: 'todos', label: 'Todos os estados' },
-  ...(['triagem', 'verificacao', 'avaliacao_risco', 'encerrado'] as WorkflowState[]).map((s) => ({
+  ...(['detectado', 'triagem', 'verificacao', 'avaliacao_risco', 'encerrado'] as WorkflowState[]).map((s) => ({
     value: s,
     label: WORKFLOW_QUEUE_LABEL[s],
   })),
@@ -37,35 +36,29 @@ const STATE_OPTIONS: FilterOption[] = [
 
 const PRIORITY_OPTIONS: FilterOption[] = [
   { value: 'todas', label: 'Todas as prioridades' },
-  ...(['urgente', 'atencao', 'monitorar', 'contexto'] as SuggestedPriority[]).map((p) => ({
+  ...(['urgente', 'atencao', 'monitorar'] as SuggestedPriority[]).map((p) => ({
     value: p,
     label: PRIORITY_LABEL[p],
   })),
 ]
 
 const PERIOD_OPTIONS: FilterOption[] = [
+  { value: 'todos', label: 'Qualquer período' },
   { value: '24h', label: 'Últimas 24 horas' },
   { value: '7d', label: 'Últimos 7 dias' },
   { value: '14d', label: 'Últimos 14 dias' },
-]
-
-const NEIGHBORHOOD_OPTIONS: FilterOption[] = [
-  { value: 'todos', label: 'Todos os bairros' },
-  ...NEIGHBORHOOD_NAMES.map((n) => ({ value: n, label: n })),
 ]
 
 const SOURCE_OPTIONS: FilterOption[] = [
   { value: 'todas', label: 'Todas as fontes' },
   { value: 'midia', label: 'Com mídia' },
   { value: 'comunidade', label: 'Com comunidade' },
-  { value: 'ambas', label: 'Mídia e comunidade' },
 ]
 
-const OPTION_SETS: Record<keyof Omit<QueueFilterState, 'search'>, FilterOption[]> = {
+const OPTION_SETS: Record<Exclude<keyof QueueFilterState, 'search' | 'neighborhood'>, FilterOption[]> = {
   state: STATE_OPTIONS,
   priority: PRIORITY_OPTIONS,
   period: PERIOD_OPTIONS,
-  neighborhood: NEIGHBORHOOD_OPTIONS,
   sourceType: SOURCE_OPTIONS,
 }
 
@@ -92,10 +85,12 @@ export function SearchField({ value, onChange }: { value: string; onChange: (val
 
 export function FilterControls({
   filters,
+  neighborhoods,
   onChange,
   layout = 'row',
 }: {
   filters: QueueFilterState
+  neighborhoods: string[]
   onChange: (next: QueueFilterState) => void
   layout?: 'row' | 'stack'
 }) {
@@ -109,7 +104,7 @@ export function FilterControls({
       <FilterSelect label="Estado" value={filters.state} onChange={set('state')} options={STATE_OPTIONS} />
       <FilterSelect label="Prioridade" value={filters.priority} onChange={set('priority')} options={PRIORITY_OPTIONS} />
       <FilterSelect label="Período" value={filters.period} onChange={set('period')} options={PERIOD_OPTIONS} />
-      <FilterSelect label="Bairro" value={filters.neighborhood} onChange={set('neighborhood')} options={NEIGHBORHOOD_OPTIONS} />
+      <FilterSelect label="Bairro" value={filters.neighborhood} onChange={set('neighborhood')} options={[{ value: 'todos', label: 'Todos os bairros' }, ...neighborhoods.map((name) => ({ value: name, label: name }))]} />
       <FilterSelect label="Tipo de fonte" value={filters.sourceType} onChange={set('sourceType')} options={SOURCE_OPTIONS} />
     </div>
   )
@@ -124,6 +119,7 @@ export function activeFilterChips(filters: QueueFilterState) {
       if (option) chips.push({ key, label: option.label })
     }
   })
+  if (filters.neighborhood !== DEFAULT_FILTERS.neighborhood) chips.push({ key: 'neighborhood', label: filters.neighborhood })
   return chips
 }
 

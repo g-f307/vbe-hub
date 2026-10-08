@@ -1,12 +1,15 @@
 import { notFound } from 'next/navigation'
 import { SignalInvestigation } from '@/components/signal-investigation'
-import { getSignalBySlug } from '@/lib/mock-data'
+import { SignalReadError, getSignalDetail } from '@/lib/signal-read'
 
 export default async function SignalPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const signal = getSignalBySlug(slug)
-
-  if (!signal) notFound()
-
-  return <SignalInvestigation signal={signal} />
+  let detail
+  try {
+    detail = await getSignalDetail(slug)
+  } catch (error) {
+    if (error instanceof SignalReadError && error.kind === 'not-found') notFound()
+    throw error
+  }
+  return <SignalInvestigation signal={detail.signal} sources={detail.sources} criteria={detail.criteria} audit={detail.audit} />
 }
