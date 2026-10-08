@@ -4,7 +4,14 @@ from collections.abc import Callable
 from fastapi import FastAPI, Response, status
 from fastapi.responses import JSONResponse
 
-from vbe_hub.api.workflow import get_review_actor_id, get_workflow_service, router
+from vbe_hub.api.signals import router as signals_router
+from vbe_hub.api.workflow import (
+    get_review_actor_id,
+    get_workflow_service,
+)
+from vbe_hub.api.workflow import (
+    router as workflow_router,
+)
 from vbe_hub.application.health import HealthService
 from vbe_hub.application.workflow import (
     ConcurrencyConflict,
@@ -28,7 +35,8 @@ def create_app(
     review_actor_id: str | None = None,
 ) -> FastAPI:
     app = FastAPI(title="VBE Hub API", version="0.1.0")
-    app.include_router(router)
+    app.include_router(signals_router)
+    app.include_router(workflow_router)
     if workflow_service is not None:
         app.dependency_overrides[get_workflow_service] = lambda: workflow_service
     if review_actor_id is not None:
