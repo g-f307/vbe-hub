@@ -32,7 +32,7 @@ export function AuditTimeline({ events }: { events: AuditEvent[] }) {
                 <p className="text-sm font-medium text-grafite">
                   {event.title}
                   <span className="ml-2 text-xs font-normal text-ardosia">
-                    {event.actor === 'sistema' ? 'Sistema' : 'Analista'}
+                    {event.actor === 'sistema' ? 'Sistema' : event.actorLabel ?? 'Analista'}
                   </span>
                 </p>
                 <p className="text-sm text-pretty text-ardosia">{event.description}</p>

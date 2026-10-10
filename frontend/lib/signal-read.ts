@@ -49,7 +49,11 @@ type ApiQueueSignal = {
     policy_version: string
     identity_key: string
   } | null
-  workflow: { state: 'detected' | 'triage' | 'verification' | 'risk_assessment' | 'closed'; version: number }
+  workflow: {
+    state: 'detected' | 'triage' | 'verification' | 'risk_assessment' | 'closed'
+    version: number
+    updated_at: string | null
+  }
 }
 
 type ApiSource = {
@@ -107,6 +111,15 @@ export type SignalDetailView = {
   sources: SourceRecord[]
   criteria: GroupingCriterion[]
   audit: AuditEvent[]
+  workflow: { state: WorkflowState; version: number; updatedAt: string | null }
+  reviewTargets: ReviewTarget[]
+}
+
+export type ReviewTarget = {
+  type: 'grouping' | 'priority'
+  id: string
+  suggestionIdentityKey: string
+  label: string
 }
 
 export type SignalQueueView = {
@@ -191,6 +204,27 @@ export function mapSignalDetail(detail: ApiSignalDetail): SignalDetailView {
     sources,
     criteria: mapGroupingCriteria(detail.grouping, relations),
     audit: (detail.audit_events ?? []).map(mapAuditEvent),
+    workflow: {
+      state: API_TO_UI_STATE[detail.signal.workflow.state],
+      version: detail.signal.workflow.version,
+      updatedAt: detail.signal.workflow.updated_at,
+    },
+    reviewTargets: [
+      {
+        type: 'grouping',
+        id: detail.signal.id,
+        suggestionIdentityKey: detail.grouping.identity_key,
+        label: 'Agrupamento sugerido',
+      },
+      ...(detail.signal.priority
+        ? [{
+            type: 'priority' as const,
+            id: detail.signal.priority.id,
+            suggestionIdentityKey: detail.signal.priority.identity_key,
+            label: 'Prioridade sugerida',
+          }]
+        : []),
+    ],
   }
 }
 
@@ -215,7 +249,7 @@ function mapQueueSignal(item: ApiQueueSignal): Signal {
       : 'Não há sugestão de prioridade disponível para este sinal.',
     state: API_TO_UI_STATE[item.workflow.state],
     createdAt: null,
-    updatedAt: null,
+    updatedAt: item.workflow.updated_at,
     sourceIds: [],
     sourceCounts: {
       midia: item.source_counts.media,
@@ -298,9 +332,20 @@ function mapAuditEvent(event: ApiAuditEvent): AuditEvent {
     signalId: event.target_id,
     at: event.occurred_at,
     actor: 'analista',
-    title: `Ação registrada: ${event.action}`,
+    actorLabel: event.actor_id,
+    title: auditTitle(event.action),
     description: compact([event.reason_code, event.comment]).join(' · ') || `Estado do fluxo: ${event.workflow_state}.`,
   }
+}
+
+function auditTitle(action: string): string {
+  const titles: Record<string, string> = {
+    accept: 'Sugestão aceita',
+    correct: 'Sugestão corrigida',
+    reject: 'Sugestão rejeitada',
+    transition: 'Fluxo atualizado',
+  }
+  return titles[action] ?? `Ação registrada: ${action}`
 }
 
 async function requestJson(path: string): Promise<unknown> {
