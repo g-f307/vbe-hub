@@ -34,7 +34,10 @@ export function formatTime(iso: string) {
   return `${d.hours}:${d.minutes}`
 }
 
-export function formatPeriod(startIso: string, endIso: string) {
+export function formatPeriod(startIso: string | null, endIso: string | null) {
+  if (!startIso && !endIso) return 'Não informado'
+  if (!startIso) return `Até ${formatDate(endIso!)}`
+  if (!endIso) return `A partir de ${formatDate(startIso)}`
   const s = toManaus(startIso)
   const e = toManaus(endIso)
   if (s.month === e.month && s.year === e.year) {

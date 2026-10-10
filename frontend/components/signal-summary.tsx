@@ -22,13 +22,15 @@ export function SignalSummary({
       <dl className="grid grid-cols-1 gap-x-6 gap-y-4 px-4 py-4 sm:grid-cols-2 md:px-5 lg:grid-cols-3">
         <SummaryItem term="Condição mencionada">{signal.condition}</SummaryItem>
         <SummaryItem term="Sintomas">
-          <ul className="mt-0.5 flex flex-wrap gap-1.5">
-            {signal.symptoms.map((symptom) => (
-              <li key={symptom} className="rounded-sm bg-vitoria-soft px-1.5 py-0.5 text-xs font-medium text-igarape-ink">
-                {symptom}
-              </li>
-            ))}
-          </ul>
+          {signal.symptoms.length > 0 ? (
+            <ul className="mt-0.5 flex flex-wrap gap-1.5">
+              {signal.symptoms.map((symptom) => (
+                <li key={symptom} className="rounded-sm bg-vitoria-soft px-1.5 py-0.5 text-xs font-medium text-igarape-ink">
+                  {symptom}
+                </li>
+              ))}
+            </ul>
+          ) : 'Não informados'}
         </SummaryItem>
         <SummaryItem term="Localização">
           {signal.municipality}, {signal.neighborhood}

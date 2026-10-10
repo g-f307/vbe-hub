@@ -83,10 +83,8 @@ services:
     build:
       context: ./frontend
       target: runtime
-      args:
-        NEXT_PUBLIC_VBE_API_URL: ${NEXT_PUBLIC_VBE_API_URL:-http://localhost:8000}
     environment:
-      NEXT_PUBLIC_VBE_API_URL: ${NEXT_PUBLIC_VBE_API_URL:-http://localhost:8000}
+      VBE_API_INTERNAL_URL: ${VBE_API_INTERNAL_URL:-http://api:8000}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:

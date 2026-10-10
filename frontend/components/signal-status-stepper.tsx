@@ -31,7 +31,7 @@ export function SignalStatusStepper({
   onSelectTransition,
 }: {
   current: WorkflowState
-  onSelectTransition: (target: WorkflowState) => void
+  onSelectTransition?: (target: WorkflowState) => void
 }) {
   const currentIndex = WORKFLOW_ORDER.indexOf(current)
 
@@ -46,7 +46,7 @@ export function SignalStatusStepper({
       <ol className="flex items-center gap-1 md:gap-0">
         {WORKFLOW_ORDER.map((step, index) => {
           const status = stepStatus(step, current)
-          const interactive = status === 'available'
+          const interactive = status === 'available' && onSelectTransition !== undefined
           return (
             <li key={step} className="flex min-w-0 flex-1 items-center">
               <Tooltip>
@@ -56,7 +56,7 @@ export function SignalStatusStepper({
                       type="button"
                       aria-current={status === 'current' ? 'step' : undefined}
                       aria-disabled={!interactive}
-                      onClick={() => interactive && onSelectTransition(step)}
+                      onClick={() => interactive && onSelectTransition?.(step)}
                       className={cn(
                         'group flex min-h-11 w-full min-w-0 flex-col items-stretch gap-1.5 rounded-sm px-1 py-1 text-left md:flex-row md:items-center md:gap-2 md:px-2',
                         interactive ? 'cursor-pointer hover:bg-vitoria-soft' : 'cursor-default',

@@ -22,11 +22,10 @@ de correlação da Macroentrega 1 foi aprovada com ressalvas na avaliação expl
 30/09/2026; todas as metas previamente definidas foram atendidas. Consulte a [síntese para
 profissionais de saúde](docs/health-stakeholder-validation.md), o [protocolo de revisão
 humana](docs/human-review-workflow.md) e a [avaliação dos
-agrupamentos](docs/grouping-evaluation.md). A fundação do painel web também está disponível, com
-rotas de triagem, ficha técnica e panorama. Ela reutiliza a exportação visual do v0 e exibe dados
-mockados, claramente restritos à demonstração; ainda não consulta a API nem apresenta os dados
-sintéticos persistidos. A API já possui consulta canônica de fila e investigação para preparar essa
-integração; consulte o [contrato de leitura](docs/signal-read-api.md). Autenticação institucional e
+agrupamentos](docs/grouping-evaluation.md). O painel reutiliza a exportação visual do v0: as rotas
+de triagem e ficha técnica consultam os dados sintéticos persistidos pela API canônica, sem usar
+mocks como fallback. O panorama permanece uma demonstração mockada até sua integração planejada.
+Consulte o [contrato de leitura](docs/signal-read-api.md). Autenticação institucional e
 integrações reais com EIOS e Guardiões da Saúde permanecem fora desta etapa. A consolidação organiza evidências rastreáveis, mas não confirma
 ocorrências nem substitui a triagem de um profissional de saúde.
 
@@ -50,10 +49,10 @@ Copy-Item .env.example .env
 docker compose up --build --detach --wait
 ```
 
-A API estará em `http://localhost:8000` e o painel em `http://localhost:3000`. Nesta fundação, o
-painel deixa explícito que está em demonstração: suas telas usam mocks do protótipo v0 para validar
-navegação, responsividade e hierarquia de informação; não representam resultados da API nem
-decisões sanitárias. Verifique:
+A API estará em `http://localhost:8000` e o painel em `http://localhost:3000`. Triagem e ficha
+técnica usam leitura servidor-a-servidor pela rede interna do Compose; o navegador não recebe URL
+interna, credenciais ou acesso direto ao banco. Se ainda não houver sinais consolidados, a fila
+mostrará o estado vazio canônico. Verifique:
 
 ```bash
 docker compose ps

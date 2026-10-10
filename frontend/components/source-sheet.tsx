@@ -123,6 +123,7 @@ function SourceCard({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="border-t border-agua px-3 py-3">
+            {sheet ? <>
             <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
               <Field term="Condição">{sheet.condition}</Field>
               <Field term="Sintomas">{sheet.symptoms.length ? sheet.symptoms.join(', ') : null}</Field>
@@ -145,8 +146,9 @@ function SourceCard({
               <Field term="Versão da extração">
                 <span className="font-mono text-xs">{sheet.extractionVersion}</span>
               </Field>
-              <Field term="Data de extração">{formatDateTime(sheet.extractedAt)}</Field>
+              <Field term="Data de extração">{sheet.extractedAt ? formatDateTime(sheet.extractedAt) : null}</Field>
             </dl>
+            </> : <p className="rounded-sm border border-dashed border-agua-strong bg-nevoa px-3 py-2.5 text-sm text-ardosia">Nenhuma ficha técnica bem-sucedida está disponível para este registro.</p>}
             <div className="mt-3 flex justify-end border-t border-agua pt-3">
               <Button variant="outline" size="sm" onClick={onOpenOrigin}>
                 <ExternalLink aria-hidden />
@@ -203,8 +205,7 @@ function OriginRecordDialog({ source, onClose }: { source: SourceRecord | null; 
               </div>
             </dl>
             <p className="rounded-sm border border-dashed border-agua-strong px-3 py-2 text-xs text-pretty text-ardosia">
-              Registro sintético para demonstração. Em produção, este painel exibe o conteúdo original armazenado pelo pipeline,
-              sem dados pessoais.
+              Registro sintético para demonstração. O painel preserva o vínculo com a evidência armazenada pelo pipeline e não exibe dados pessoais.
             </p>
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>Fechar</DialogClose>

@@ -26,11 +26,18 @@ export function PriorityBadge({
   withTooltip = true,
   className,
 }: {
-  priority: SuggestedPriority
+  priority: SuggestedPriority | null
   showSuggested?: boolean
   withTooltip?: boolean
   className?: string
 }) {
+  if (priority === null) {
+    return (
+      <span className={cn('inline-flex h-6 items-center rounded-sm border border-agua-strong px-1.5 text-xs text-ardosia', className)}>
+        Sem sugestão
+      </span>
+    )
+  }
   const Icon = PRIORITY_ICON[priority]
   const content = (
     <>

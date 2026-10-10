@@ -33,9 +33,9 @@ Meta: demonstração validável até **7 de novembro de 2026**, com janela prefe
 
 O mockup exploratório definiu a direção visual, os componentes de evidência e os percursos de
 triagem, investigação e panorama. A fundação resultante já está em `frontend/`, executa por Docker
-Compose e preserva a exportação original como artefato local ignorado. Ela exibe os dados mockados
-do protótipo para demonstração visual, mas ainda não possui vínculo de leitura com o backend nem
-exibe dados sintéticos persistidos.
+Compose e preserva a exportação original como artefato local ignorado. Triagem e investigação
+possuem vínculo de leitura com o backend e exibem dados sintéticos persistidos; o panorama ainda
+aguarda integração própria.
 
 ### Ordem de implementação
 
@@ -45,9 +45,9 @@ exibe dados sintéticos persistidos.
 2. Expor contrato de leitura de fila e detalhe a partir de dados sintéticos persistidos, preservando
    fontes, ficha, relações, divergências, prioridade e auditoria. O contrato não materializa
    workflow durante uma leitura.
-3. Conectar as rotas v0 de triagem e investigação a esse contrato, mantendo o desenho, a
-   responsividade e os estados de carregamento, vazio e falha; os mocks deixam de alimentar essas
-   duas rotas, mas podem permanecer em páginas ainda não integradas ou testes de componente.
+3. **Concluída:** conectar as rotas v0 de triagem e investigação a esse contrato, mantendo o
+   desenho, a responsividade e os estados de carregamento, vazio, falha e 404; os mocks não
+   alimentam essas duas rotas, mas podem permanecer em páginas ainda não integradas ou testes de componente.
 4. Integrar a decisão humana auditável: aceitar, corrigir e rejeitar agrupamento, com controle de
    versão e comunicação clara de sucesso, conflito ou erro.
 5. Integrar o panorama operacional e a visualização geoespacial agregada por área, sem localização

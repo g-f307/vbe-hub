@@ -11,7 +11,7 @@ export function SignalHeader({
 }: {
   signal: Signal
   state: WorkflowState
-  updatedAt: string
+  updatedAt: string | null
 }) {
   return (
     <header className="flex flex-col gap-3">
@@ -40,9 +40,13 @@ export function SignalHeader({
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <PriorityBadge priority={signal.priority} />
           <StateLabel state={state} />
-          <span className="text-sm text-ardosia">
-            Atualizado <time dateTime={updatedAt}>{formatRelative(updatedAt)}</time>
-          </span>
+          {updatedAt ? (
+            <span className="text-sm text-ardosia">
+              Atualizado <time dateTime={updatedAt}>{formatRelative(updatedAt)}</time>
+            </span>
+          ) : (
+            <span className="text-sm text-ardosia">Horário de atualização não disponível</span>
+          )}
         </div>
       </div>
     </header>
