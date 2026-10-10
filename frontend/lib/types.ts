@@ -105,6 +105,7 @@ export interface AuditEvent {
   signalId: UUID
   at: string
   actor: AuditActor
+  actorLabel?: string
   title: string
   description: string
   pending?: boolean

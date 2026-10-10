@@ -54,6 +54,7 @@ class PriorityResponse(BaseModel):
 class WorkflowSummaryResponse(BaseModel):
     state: WorkflowState
     version: int
+    updated_at: datetime | None
 
 
 class SignalQueueItemResponse(BaseModel):
@@ -335,6 +336,7 @@ def _queue_item(
         workflow=WorkflowSummaryResponse(
             state=WorkflowState(workflow.state) if workflow else WorkflowState.DETECTED,
             version=workflow.version if workflow else 0,
+            updated_at=workflow.updated_at if workflow else None,
         ),
     )
 
