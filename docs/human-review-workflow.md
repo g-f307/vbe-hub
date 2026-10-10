@@ -4,7 +4,7 @@ type: api
 status: active
 title: Revisão humana e trilha de auditoria
 created: 2026-10-06
-updated: 2026-10-06
+updated: 2026-10-10
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/application/workflow.py
@@ -115,6 +115,18 @@ O ator não é aceito no corpo da requisição. Configure `REVIEW_ACTOR_ID` no `
 é `synthetic-analyst`. Isso facilita a demonstração reproduzível, mas não identifica uma pessoa
 real. A API não deve ser exposta fora do ambiente local até autenticação e autorização serem
 implementadas.
+
+## Uso no painel demonstrativo
+
+Na ficha do sinal, o analista escolhe explicitamente a sugestão de agrupamento ou prioridade e a
+ação de aceitar, corrigir ou rejeitar. Correção e rejeição exigem motivo estruturado; correção
+também exige campo e valor propostos. A mudança de etapa usa as transições declaradas acima e o
+encerramento exige motivo. Antes da submissão, o painel pede confirmação.
+
+Cada submissão gera uma `operation_key` e desabilita novos envios enquanto estiver pendente. A
+resposta bem-sucedida atualiza imediatamente estado, versão, data e histórico exibidos. Em `409`,
+o painel explica a concorrência e permite recarregar os dados canônicos sem apagar o formulário.
+O navegador fala apenas com rotas do Next; elas não aceitam nem encaminham a identidade do ator.
 
 ## Erros esperados
 

@@ -36,9 +36,10 @@ pelo servidor Next e usa `http://api:8000` por padrão; não inclua segredos em 
 `NEXT_PUBLIC_`.
 
 As rotas `/triagem` e `/sinais/[slug]` reutilizam o protótipo v0 e leem dados sintéticos
-persistidos pela API. O segmento da rota é o UUID canônico. A comunicação ocorre somente no servidor
-Next pela rede interna do Compose, sem CORS ou URL interna no navegador. `/panorama` permanece
-mockado até sua própria integração.
+persistidos pela API. O segmento da rota é o UUID canônico. A investigação também registra revisão
+humana e transição por rotas internas do Next, que encaminham somente campos permitidos à API. A
+comunicação com a API ocorre somente no servidor Next pela rede interna do Compose, sem CORS ou URL
+interna no navegador. `/panorama` permanece mockado até sua própria integração.
 
 Para a demonstração do fluxo de revisão, `REVIEW_ACTOR_ID` define o ator sintético registrado na
 auditoria e usa `synthetic-analyst` por padrão. Essa configuração não substitui autenticação nem

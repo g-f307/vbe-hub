@@ -35,7 +35,8 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 Fundação reproduzível, normalização, extração, indexação semântica, funil de correlação,
 consolidação auditável, prioridade sugerida por regras e fluxo de revisão humana implementados e
 avaliados com dados sintéticos. Correlação e agrupamento foram aprovados com ressalvas. A API e as
-rotas de triagem e investigação do frontend usam leitura canônica; somente o panorama permanece
-mockado até sua integração específica. Autenticação institucional e integrações reais com EIOS e Guardiões da Saúde permanecem
+rotas de triagem e investigação do frontend usam leitura canônica; a investigação também registra
+decisões auditáveis por rotas internas do painel. Somente o panorama permanece mockado até sua
+integração específica. Autenticação institucional e integrações reais com EIOS e Guardiões da Saúde permanecem
 nas etapas seguintes; os contratos atuais simulam as entradas sem afirmar equivalência com
 endpoints oficiais.
