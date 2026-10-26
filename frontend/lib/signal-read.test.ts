@@ -43,6 +43,10 @@ describe('buildQueueSearch', () => {
   it('omite os filtros não selecionados', () => {
     expect(buildQueueSearch({ page: 1 }, new Date('2026-10-08T12:00:00-04:00')).toString()).toBe('page=1&page_size=6')
   })
+
+  it('permite uma leitura ampla e limitada para o quadro de fluxo', () => {
+    expect(buildQueueSearch({ page: 1, pageSize: 100 }, new Date('2026-10-08T12:00:00-04:00')).toString()).toBe('page=1&page_size=100')
+  })
 })
 
 describe('filtersFromSearchParams', () => {

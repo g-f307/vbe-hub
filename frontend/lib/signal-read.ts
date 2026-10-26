@@ -21,6 +21,7 @@ export type QueueFilters = {
   sourceType?: string
   period?: '24h' | '7d' | '14d' | 'todos'
   page?: number
+  pageSize?: number
 }
 
 type ApiLocation = {
@@ -140,9 +141,10 @@ export class SignalReadError extends Error {
 }
 
 export function buildQueueSearch(filters: QueueFilters, now = new Date()): URLSearchParams {
+  const pageSize = Math.min(100, Math.max(1, Math.trunc(filters.pageSize ?? PAGE_SIZE)))
   const search = new URLSearchParams({
     page: String(Math.max(1, filters.page ?? 1)),
-    page_size: String(PAGE_SIZE),
+    page_size: String(pageSize),
   })
   const query = filters.query?.trim()
   const district = filters.district?.trim()
