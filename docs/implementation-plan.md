@@ -4,7 +4,7 @@ type: release
 status: active
 title: Plano de implementação
 created: 2026-09-28
-updated: 2026-10-07
+updated: 2026-10-26
 owner: VBE Hub
 review_after: 2026-11-07
 related_docs:
@@ -55,8 +55,9 @@ territorial também usa agregados canônicos e geometria local.
    com sinais sintéticos completos para validar triagem e investigação sem chamadas a IA externa.
 6. **Concluída:** integrar o panorama territorial e a visualização geoespacial agregada por área,
    com lista acessível equivalente, sem localização individual ou dependência de tile externo.
-7. Acrescentar Kanban como visão complementar de acompanhamento do fluxo, sem transição de estado
-   por arrastar e soltar fora do fluxo de revisão.
+7. **Concluída:** acrescentar Kanban como visão complementar dos cinco estados canônicos, com os
+   mesmos filtros da fila, tabela acessível, limite explícito de 100 sinais e encaminhamento para a
+   investigação; nenhuma transição ocorre por arrastar e soltar.
 8. Validar responsividade, acessibilidade, dados sintéticos, limites da IA e reprodução completa
    em outro dispositivo via Docker Compose.
 
