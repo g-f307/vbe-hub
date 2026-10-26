@@ -18,6 +18,7 @@ from vbe_hub.api.signals import get_signal_read_session
 from vbe_hub.application.ai import ExecutionStatus, ProviderErrorCode
 from vbe_hub.application.correlation.priority import PriorityCalculator, PriorityPolicy
 from vbe_hub.application.workflow import TransitionCommand, WorkflowService, WorkflowState
+from vbe_hub.synthetic.demo import load_demo_scenario
 
 
 @pytest.mark.integration
@@ -35,6 +36,77 @@ async def test_signal_read_api_lists_an_empty_canonical_queue() -> None:
         "page_size": 25,
         "total": 0,
     }
+
+
+@pytest.mark.integration
+async def test_geographic_summary_returns_an_empty_synthetic_dataset() -> None:
+    app = create_app()
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/signals/geographic-summary")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "dataset_kind": "synthetic",
+        "dataset_identity": "vbe-hub-synthetic-poc",
+        "window": {"start": None, "end": None},
+        "updated_at": None,
+        "totals": {
+            "signals": 0,
+            "mapped_signals": 0,
+            "unmapped_signals": 0,
+            "areas": 0,
+        },
+        "areas": [],
+    }
+
+
+@pytest.mark.integration
+async def test_geographic_summary_exposes_only_aggregated_approved_areas(
+    db_session: AsyncSession,
+) -> None:
+    await load_demo_scenario(db_session)
+    await db_session.commit()
+
+    async def session_override():
+        yield db_session
+
+    app = create_app()
+    app.dependency_overrides[get_signal_read_session] = session_override
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/signals/geographic-summary")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["dataset_kind"] == "synthetic"
+    assert payload["dataset_identity"] == "vbe-hub-synthetic-poc"
+    assert payload["window"] == {"start": "2026-08-01", "end": "2026-10-10"}
+    assert payload["totals"] == {
+        "signals": 3,
+        "mapped_signals": 1,
+        "unmapped_signals": 2,
+        "areas": 1,
+    }
+    assert payload["areas"] == [
+        {
+            "key": "manaus--compensa",
+            "municipality": "Manaus",
+            "district": "Compensa",
+            "signals": 1,
+            "source_counts": {"media": 1, "community": 1, "total": 2},
+            "workflow_states": {"detected": 1},
+            "priority_bands": {"prompt": 1},
+            "top_condition": {"label": "Dengue", "count": 1},
+        }
+    ]
+    serialized = response.text.casefold()
+    assert "normalized_record_id" not in serialized
+    assert "excerpt" not in serialized
+    assert "latitude" not in serialized
+    assert "longitude" not in serialized
 
 
 @pytest.mark.integration
