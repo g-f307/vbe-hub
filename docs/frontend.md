@@ -4,7 +4,7 @@ type: design
 status: active
 title: Fundação do frontend
 created: 2026-10-07
-updated: 2026-10-10
+updated: 2026-10-26
 owner: VBE Hub
 related_docs:
   - DES-001
@@ -27,17 +27,17 @@ As rotas atuais são deliberadamente demonstrativas:
 | --- | --- | --- |
 | `/triagem` | fila, filtros, indicadores e paginação | consulta `GET /signals` no servidor Next |
 | `/sinais/[slug]` | ficha técnica, fontes, relações, auditoria e revisão | consulta `GET /signals/{id}` no servidor Next; submete decisões confirmadas por rotas internas; o segmento é o UUID canônico |
-| `/panorama` | contexto territorial e indicadores do protótipo | usa mocks versionados; não consulta a API |
+| `/panorama` | leitura territorial agregada, mapa local e lista acessível | consulta `GET /signals/geographic-summary` no servidor Next |
 | `/api/health` | health check do contêiner do painel | retorna somente o estado do serviço |
 
-Os dados de `lib/mock-data.ts` permanecem exclusivos do panorama, ainda não integrado. Eles não
-alimentam triagem ou investigação, não representam situação epidemiológica e não implicam decisão
-humana.
+Os dados de `lib/mock-data.ts` não alimentam triagem, investigação nem panorama. Permanecem apenas
+como legado do protótipo enquanto outros componentes deixam de depender deles; não representam
+situação epidemiológica e não implicam decisão humana.
 
 ## Princípios de apresentação
 
-- O painel usa a marcação visível de ambiente de demonstração. Em triagem e investigação, sinais,
-  prioridades e decisões vêm da API e continuam sintéticos; somente o panorama usa mocks explícitos.
+- O painel usa a marcação visível de ambiente de demonstração. Em triagem, investigação e panorama,
+  sinais, prioridades, decisões e agregados vêm da API e continuam sintéticos.
 - A IA continuará sendo apresentada como sugestão auditável. A revisão, justificativa e decisão
   pertencem ao profissional de vigilância.
 - A futura fila usa divulgação progressiva: código, estado, condição, local/período e composição de
@@ -63,7 +63,10 @@ O frontend não acessa PostgreSQL, Redis, provedores de IA ou conectores diretam
 oferece leitura e revisão descritas nos [contratos de leitura](signal-read-api.md) e de [revisão
 humana](human-review-workflow.md). Filtros e paginação são serializados nos parâmetros canônicos da
 URL compartilhável. Carregamento, vazio, falha e 404 não usam mocks como fallback. Agregados
-territoriais e Kanban continuam previstos na [arquitetura](architecture.md#contratos-de-integração-previstos).
+territoriais são lidos no servidor Next e o mapa Leaflet é carregado sob demanda, sem tile externo.
+A geometria esquemática `demo-areas-v1` fica versionada no frontend; áreas desconhecidas continuam
+disponíveis na lista e na fila, marcadas como sem geometria. O Kanban continua previsto na
+[arquitetura](architecture.md#contratos-de-integração-previstos).
 
 ## Execução e verificação
 

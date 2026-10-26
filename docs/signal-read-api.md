@@ -4,7 +4,7 @@ type: api
 status: active
 title: Consulta canônica de sinais para o painel
 created: 2026-10-08
-updated: 2026-10-10
+updated: 2026-10-26
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/api/signals.py
@@ -27,14 +27,15 @@ IA ou montar dados a partir de mocks no navegador.
 As respostas organizam evidências sintéticas para revisão. Condição, correlação e prioridade são
 sugestões rastreáveis; nenhuma resposta confirma ocorrência, surto, risco ou decisão sanitária.
 
-As telas v0 de triagem e investigação já consomem este contrato, preservando sua aparência e seus
-componentes. O panorama ainda é uma demonstração separada com mocks explicitamente identificados.
+As telas v0 de triagem, investigação e panorama já consomem este contrato, preservando sua aparência
+e seus componentes sem usar mocks como fallback.
 
 ## Endpoints
 
 | Método e caminho | Finalidade |
 | --- | --- |
 | `GET /signals` | Retorna página de sinais para a fila de triagem. |
+| `GET /signals/geographic-summary` | Retorna somente agregados territoriais sintéticos para o panorama. |
 | `GET /signals/{signal_id}` | Retorna investigação, fontes, ficha disponível, relações e auditoria de um sinal. |
 
 `signal_id` é o UUID persistido. Ele é a identidade usada nos links e ações futuras; um código
@@ -85,6 +86,23 @@ A API não expõe o payload original completo, o gabarito reservado de avaliaç�
 qualquer campo de configuração sensível. Uma falha mais recente de extração não esconde uma ficha
 técnica bem-sucedida já disponível. Quando não há ficha bem-sucedida, o campo retorna `null`.
 
+## Resumo territorial
+
+`GET /signals/geographic-summary` agrega apenas sinais com município e bairro consolidados. A
+resposta identifica explicitamente o dataset como `synthetic`, informa identidade, janela temporal,
+última atualização e totais de sinais mapeáveis, não mapeáveis e áreas. Para cada área, retorna:
+
+- município, bairro e uma chave determinística sem identidade de registro;
+- número de sinais e composição das fontes de mídia e comunidade;
+- contagens por estado de workflow e faixa de prioridade sugerida;
+- condição ou síndrome mais frequente, com contagem.
+
+Sinais sem município ou bairro permanecem contabilizados em `unmapped_signals` e continuam
+consultáveis na fila; não são descartados. O endpoint não retorna UUID de sinal ou registro,
+trecho textual, endereço, coordenada, payload de origem ou localização individual. A API também não
+fornece geometria: somente áreas presentes na geometria local versionada do painel são desenhadas;
+as demais permanecem acessíveis na alternativa textual e podem abrir `/triagem?district=...`.
+
 ## Workflow e ausência de efeitos colaterais
 
 Consultas de leitura nunca criam workflow, evento de auditoria ou outra escrita. Se ainda não houver
@@ -100,7 +118,9 @@ ou fora dos limites recebem `422` pela validação HTTP; intervalo temporal inve
 
 Os testes de integração exercitam fila vazia, serialização de dados persistidos, proveniência da
 fonte, estado inicial sem escrita, filtros por workflow/prioridade/fonte/condição/período e a
-preservação da última ficha técnica válida. Execute-os sem runtime instalado no host:
+preservação da última ficha técnica válida. Também verificam agregação territorial, sinais não
+mapeáveis e ausência de dados individualizados na resposta geográfica. Execute-os sem runtime
+instalado no host:
 
 ```bash
 docker compose --profile tools run --rm integration-test \
