@@ -16,6 +16,9 @@ from vbe_hub.adapters.persistence.repositories import (
     SqlAlchemyRawRecordRepository,
 )
 from vbe_hub.domain.records import EvaluationLabel, Provenance, RawRecord, SourceKind
+from vbe_hub.synthetic.demo import DemoLoadResult, load_demo_scenario
+
+__all__ = ["DemoLoadResult", "ImportResult", "import_dataset", "load_demo_scenario"]
 
 
 @dataclass(frozen=True, slots=True)
