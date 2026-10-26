@@ -4,6 +4,7 @@ from collections.abc import Callable
 from fastapi import FastAPI, Response, status
 from fastapi.responses import JSONResponse
 
+from vbe_hub.api.metrics import router as metrics_router
 from vbe_hub.api.signals import router as signals_router
 from vbe_hub.api.workflow import (
     get_review_actor_id,
@@ -36,6 +37,7 @@ def create_app(
 ) -> FastAPI:
     app = FastAPI(title="VBE Hub API", version="0.1.0")
     app.include_router(signals_router)
+    app.include_router(metrics_router)
     app.include_router(workflow_router)
     if workflow_service is not None:
         app.dependency_overrides[get_workflow_service] = lambda: workflow_service

@@ -22,21 +22,23 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 16. [Revisão humana e trilha de auditoria](human-review-workflow.md)
 17. [Avaliação dos agrupamentos e da revisão](grouping-evaluation.md)
 18. [Consulta canônica de sinais para o painel](signal-read-api.md)
-19. [Geração e importação de dados sintéticos](synthetic-data-generation.md)
-20. [Modelo persistente inicial](data-model.md)
-21. [Fundação do frontend](frontend.md)
-22. [Plano de implementação](implementation-plan.md)
-23. [Execução e validação local](development.md)
-24. [Integração contínua](continuous-integration.md)
-25. [Decisões arquiteturais](decisions/README.md)
+19. [Métricas operacionais e evidências sintéticas](operational-metrics-api.md)
+20. [Geração e importação de dados sintéticos](synthetic-data-generation.md)
+21. [Modelo persistente inicial](data-model.md)
+22. [Fundação do frontend](frontend.md)
+23. [Plano de implementação](implementation-plan.md)
+24. [Execução e validação local](development.md)
+25. [Integração contínua](continuous-integration.md)
+26. [Decisões arquiteturais](decisions/README.md)
 
 ## Situação
 
 Fundação reproduzível, normalização, extração, indexação semântica, funil de correlação,
 consolidação auditável, prioridade sugerida por regras e fluxo de revisão humana implementados e
 avaliados com dados sintéticos. Correlação e agrupamento foram aprovados com ressalvas. A API e as
-rotas de triagem e investigação do frontend usam leitura canônica; a investigação também registra
-decisões auditáveis por rotas internas do painel. Somente o panorama permanece mockado até sua
-integração específica. Autenticação institucional e integrações reais com EIOS e Guardiões da Saúde permanecem
+rotas de triagem, investigação e panorama usam leitura canônica; a investigação também registra
+decisões auditáveis por rotas internas do painel. O backend expõe métricas operacionais
+reconciliáveis separadas das avaliações sintéticas. Autenticação institucional e integrações reais
+com EIOS e Guardiões da Saúde permanecem
 nas etapas seguintes; os contratos atuais simulam as entradas sem afirmar equivalência com
 endpoints oficiais.

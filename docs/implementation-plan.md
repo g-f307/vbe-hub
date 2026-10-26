@@ -113,6 +113,11 @@ A etapa de agrupamento e revisão foi concluída antecipadamente em 7 de outubro
 avaliação sintética ampliada. A aprovação possui ressalvas e não antecipa a validação integrada da
 Etapa 6 nem a interface da Etapa 5.
 
+Na Etapa 5, triagem, investigação e panorama já consomem a API. O resumo operacional
+`GET /metrics/summary` reconcilia o funil persistido e referencia as avaliações sintéticas
+versionadas; sua composição visual pode reutilizar os componentes do v0 sem recalcular métricas no
+navegador.
+
 1. Criar o dataset de referência antes de calibrar prompts ou limiares.
 2. Construir o domínio e os testes com um provedor de IA simulado.
 3. Adicionar Gemini e registrar custo, latência e qualidade.
