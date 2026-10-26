@@ -88,7 +88,7 @@ async def test_signal_read_api_serializes_persisted_signal_without_materializing
                 "policy_version": priority.policy_version,
                 "identity_key": priority.identity_key,
             },
-            "workflow": {"state": "detected", "version": 0},
+            "workflow": {"state": "detected", "version": 0, "updated_at": None},
         }
     ]
     workflows = list(
@@ -132,7 +132,7 @@ async def test_signal_read_api_returns_investigation_with_source_provenance(
         },
         "source_counts": {"media": 1, "community": 0, "total": 1},
         "priority": None,
-        "workflow": {"state": "detected", "version": 0},
+        "workflow": {"state": "detected", "version": 0, "updated_at": None},
     }
     assert payload["grouping"] == {
         "identity_key": signal.identity_key,
@@ -198,6 +198,9 @@ async def test_signal_read_api_filters_queue_by_canonical_state_priority_and_sou
         later_period = await client.get("/signals?period_start=2026-11-01")
 
     assert [item["id"] for item in triage.json()["items"]] == [str(triaged_signal.id)]
+    assert triage.json()["items"][0]["workflow"]["updated_at"] == NOW.isoformat().replace(
+        "+00:00", "Z"
+    )
     assert [item["id"] for item in detected.json()["items"]] == [str(detected_signal.id)]
     assert [item["id"] for item in attention.json()["items"]] == [str(triaged_signal.id)]
     assert community.json()["items"] == []

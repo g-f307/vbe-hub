@@ -13,7 +13,7 @@ const signal = {
   location: { country: 'Brasil', state: 'Amazonas', municipality: 'Manaus', district: 'Flores', precision: 'district' },
   source_counts: { media: 1, community: 1, total: 2 },
   priority: { id: '8b2c3d4e-8f90-4ba1-9c2d-3e4f5a6b0041', band: 'attention' as const, score: 63, confidence: 78, policy_version: 'priority-v1', identity_key: 'priority-key' },
-  workflow: { state: 'triage' as const, version: 2 },
+  workflow: { state: 'triage' as const, version: 2, updated_at: '2026-10-07T12:00:00Z' },
 }
 
 describe('buildQueueSearch', () => {
@@ -107,6 +107,21 @@ describe('mapSignalDetail', () => {
     expect(detail.signal.slug).toBe(signal.id)
     expect(detail.signal.priority).toBe('atencao')
     expect(detail.signal.divergences).toEqual(['location_conflict'])
+    expect(detail.workflow).toEqual({ state: 'triagem', version: 2, updatedAt: '2026-10-07T12:00:00Z' })
+    expect(detail.reviewTargets).toEqual([
+      {
+        type: 'grouping',
+        id: signal.id,
+        suggestionIdentityKey: 'group-key',
+        label: 'Agrupamento sugerido',
+      },
+      {
+        type: 'priority',
+        id: signal.priority.id,
+        suggestionIdentityKey: 'priority-key',
+        label: 'Prioridade sugerida',
+      },
+    ])
     expect(detail.sources).toEqual(expect.arrayContaining([
       expect.objectContaining({
         id: '9b2c3d4e-8f90-4ba1-9c2d-3e4f5a6b0042',

@@ -27,8 +27,8 @@ export const WORKFLOW_QUEUE_LABEL: Record<WorkflowState, string> = {
 export const VALID_TRANSITIONS: Record<WorkflowState, WorkflowState[]> = {
   detectado: ['triagem', 'encerrado'],
   triagem: ['verificacao', 'encerrado'],
-  verificacao: ['avaliacao_risco', 'encerrado'],
-  avaliacao_risco: ['encerrado'],
+  verificacao: ['triagem', 'avaliacao_risco', 'encerrado'],
+  avaliacao_risco: ['verificacao', 'encerrado'],
   encerrado: [],
 }
 

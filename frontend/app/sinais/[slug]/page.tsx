@@ -11,5 +11,5 @@ export default async function SignalPage({ params }: { params: Promise<{ slug: s
     if (error instanceof SignalReadError && error.kind === 'not-found') notFound()
     throw error
   }
-  return <SignalInvestigation signal={detail.signal} sources={detail.sources} criteria={detail.criteria} audit={detail.audit} />
+  return <SignalInvestigation signal={detail.signal} sources={detail.sources} criteria={detail.criteria} audit={detail.audit} workflow={detail.workflow} reviewTargets={detail.reviewTargets} />
 }

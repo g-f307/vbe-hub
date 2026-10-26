@@ -4,7 +4,7 @@ type: design
 status: active
 title: Fundação do frontend
 created: 2026-10-07
-updated: 2026-10-07
+updated: 2026-10-10
 owner: VBE Hub
 related_docs:
   - DES-001
@@ -26,7 +26,7 @@ As rotas atuais são deliberadamente demonstrativas:
 | Rota | Papel na fundação | Estado de dados |
 | --- | --- | --- |
 | `/triagem` | fila, filtros, indicadores e paginação | consulta `GET /signals` no servidor Next |
-| `/sinais/[slug]` | ficha técnica, fontes, relações e auditoria | consulta `GET /signals/{id}` no servidor Next; o segmento é o UUID canônico |
+| `/sinais/[slug]` | ficha técnica, fontes, relações, auditoria e revisão | consulta `GET /signals/{id}` no servidor Next; submete decisões confirmadas por rotas internas; o segmento é o UUID canônico |
 | `/panorama` | contexto territorial e indicadores do protótipo | usa mocks versionados; não consulta a API |
 | `/api/health` | health check do contêiner do painel | retorna somente o estado do serviço |
 
@@ -36,8 +36,8 @@ humana.
 
 ## Princípios de apresentação
 
-- O painel usa a marcação visível de ambiente de demonstração. Os sinais, doenças, prioridades e
-  decisões exibidos nesta fase são mocks explícitos, não resultados da API.
+- O painel usa a marcação visível de ambiente de demonstração. Em triagem e investigação, sinais,
+  prioridades e decisões vêm da API e continuam sintéticos; somente o panorama usa mocks explícitos.
 - A IA continuará sendo apresentada como sugestão auditável. A revisão, justificativa e decisão
   pertencem ao profissional de vigilância.
 - A futura fila usa divulgação progressiva: código, estado, condição, local/período e composição de
@@ -52,11 +52,18 @@ valida a resposta mínima, aplica timeout e distingue indisponibilidade, respost
 inexistente. `VBE_API_INTERNAL_URL` é lida somente no servidor Next e usa `http://api:8000` no
 Compose; não há URL interna ou segredo em variável `NEXT_PUBLIC`.
 
+Para escrita, a investigação usa somente `POST /api/signals/{id}/reviews` e
+`POST /api/signals/{id}/workflow/transitions`, rotas do próprio Next que validam o UUID, mantêm a
+URL interna no servidor e encaminham apenas os campos permitidos. Em particular, o navegador não
+envia `actor_id`. O backend continua sendo a autoridade para alvo revisável, transição, versão,
+idempotência e ator sintético. Erros de validação, indisponibilidade, 404 e conflito de versão são
+mostrados no painel; no conflito, a atualização explícita dos dados preserva o formulário local.
+
 O frontend não acessa PostgreSQL, Redis, provedores de IA ou conectores diretamente. A API já
-oferece `GET /signals` e `GET /signals/{signal_id}` para fila e investigação, conforme o [contrato
-de leitura](signal-read-api.md). Filtros e paginação são serializados nos parâmetros canônicos da
-URL compartilhável. Carregamento, vazio, falha e 404 não usam mocks como fallback. Revisão e
-agregados territoriais continuam previstos na [arquitetura](architecture.md#contratos-de-integração-previstos).
+oferece leitura e revisão descritas nos [contratos de leitura](signal-read-api.md) e de [revisão
+humana](human-review-workflow.md). Filtros e paginação são serializados nos parâmetros canônicos da
+URL compartilhável. Carregamento, vazio, falha e 404 não usam mocks como fallback. Agregados
+territoriais e Kanban continuam previstos na [arquitetura](architecture.md#contratos-de-integração-previstos).
 
 ## Execução e verificação
 

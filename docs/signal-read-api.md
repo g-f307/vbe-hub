@@ -4,6 +4,7 @@ type: api
 status: active
 title: Consulta canônica de sinais para o painel
 created: 2026-10-08
+updated: 2026-10-10
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/api/signals.py
@@ -26,9 +27,8 @@ IA ou montar dados a partir de mocks no navegador.
 As respostas organizam evidências sintéticas para revisão. Condição, correlação e prioridade são
 sugestões rastreáveis; nenhuma resposta confirma ocorrência, surto, risco ou decisão sanitária.
 
-Nesta entrega a interface do v0 continua deliberadamente mockada. A issue #49 substituirá a fonte
-de dados das telas de triagem e investigação pelo contrato descrito aqui, preservando a aparência e
-os componentes já versionados.
+As telas v0 de triagem e investigação já consomem este contrato, preservando sua aparência e seus
+componentes. O panorama ainda é uma demonstração separada com mocks explicitamente identificados.
 
 ## Endpoints
 
@@ -63,7 +63,8 @@ A resposta contém `items`, `total`, `page` e `page_size`. Cada item inclui:
   são retornados como `null`, não inferidos;
 - contagem de fontes de mídia e comunidade;
 - última prioridade disponível, com faixa, score, confiança, política e identidade da sugestão;
-- estado e versão do workflow.
+- estado, versão e `updated_at` do workflow; antes da primeira decisão, representa `detected`,
+  versão `0` e `updated_at: null` sem materializar uma linha de workflow.
 
 A ordenação é determinística: faixa de prioridade sugerida (`prompt`, `attention`, `routine`, sem
 prioridade), score, data de criação e UUID. A faixa e o score servem somente à organização da fila.

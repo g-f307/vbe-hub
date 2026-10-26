@@ -48,8 +48,9 @@ aguarda integração própria.
 3. **Concluída:** conectar as rotas v0 de triagem e investigação a esse contrato, mantendo o
    desenho, a responsividade e os estados de carregamento, vazio, falha e 404; os mocks não
    alimentam essas duas rotas, mas podem permanecer em páginas ainda não integradas ou testes de componente.
-4. Integrar a decisão humana auditável: aceitar, corrigir e rejeitar agrupamento, com controle de
-   versão e comunicação clara de sucesso, conflito ou erro.
+4. **Concluída:** integrar a decisão humana auditável no painel v0: aceitar, corrigir e rejeitar
+   agrupamento ou prioridade, atualizar o fluxo, confirmar a ação, controlar versão e comunicar
+   sucesso, conflito ou erro sem expor o ator ou a URL interna da API ao navegador.
 5. Integrar o panorama operacional e a visualização geoespacial agregada por área, sem localização
    individual ou dependência de tile externo para a demonstração.
 6. Acrescentar Kanban como visão complementar de acompanhamento do fluxo, sem transição de estado
