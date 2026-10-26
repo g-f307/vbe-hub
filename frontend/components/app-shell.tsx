@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, type ReactNode } from 'react'
-import { BookOpenText, CircleHelp, Database, ListChecks, Map, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { BookOpenText, CircleHelp, Columns3, Database, ListChecks, Map, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { HelpDialog, MethodSheet } from '@/components/info-panels'
 import { VbeMark } from '@/components/vbe-logo'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -11,11 +11,13 @@ import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { href: '/triagem', label: 'Triagem', icon: ListChecks, match: ['/triagem', '/sinais'] },
+  { href: '/kanban', label: 'Fluxo', icon: Columns3, match: ['/kanban'] },
   { href: '/panorama', label: 'Panorama', icon: Map, match: ['/panorama'] },
 ]
 
 function contextTitle(pathname: string) {
   if (pathname.startsWith('/sinais')) return 'Investigação de sinal'
+  if (pathname.startsWith('/kanban')) return 'Fluxo dos sinais'
   if (pathname.startsWith('/panorama')) return 'Panorama'
   return 'Triagem'
 }
@@ -144,7 +146,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <nav
         aria-label="Navegação principal"
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 border-t border-sidebar-border bg-encontro pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-sidebar-border bg-encontro pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         {NAV_ITEMS.map((item) => {
           const active = item.match.some((m) => pathname.startsWith(m))
