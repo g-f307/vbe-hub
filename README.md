@@ -27,7 +27,9 @@ de triagem e ficha técnica consultam os dados sintéticos persistidos pela API 
 mocks como fallback; a ficha também registra revisão humana e atualização de fluxo com confirmação,
 versão e trilha de auditoria. O panorama territorial consulta agregados da API, usa geometria local
 esquemática e oferece uma lista acessível equivalente, sem expor localização individual nem depender
-de tiles externos.
+de tiles externos. O backend também oferece um [resumo de métricas
+operacionais](docs/operational-metrics-api.md), reconciliado com a persistência e separado das
+evidências de avaliação sintética.
 Consulte o [contrato de leitura](docs/signal-read-api.md). Autenticação institucional e
 integrações reais com EIOS e Guardiões da Saúde permanecem fora desta etapa. A consolidação organiza evidências rastreáveis, mas não confirma
 ocorrências nem substitui a triagem de um profissional de saúde.
@@ -55,7 +57,8 @@ docker compose up --build --detach --wait
 A API estará em `http://localhost:8000` e o painel em `http://localhost:3000`. Triagem e ficha
 técnica usam leitura servidor-a-servidor pela rede interna do Compose; o navegador não recebe URL
 interna, credenciais ou acesso direto ao banco. Se ainda não houver sinais consolidados, a fila
-mostrará o estado vazio canônico. Verifique:
+mostrará o estado vazio canônico. O resumo técnico pode ser consultado sem ferramenta adicional em
+`http://localhost:8000/metrics/summary`; ele não confirma eventos de saúde. Verifique:
 
 ```bash
 docker compose ps

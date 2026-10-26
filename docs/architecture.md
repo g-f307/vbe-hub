@@ -140,7 +140,8 @@ versões explícitas quando aplicável:
   disponível em `GET /signals/{signal_id}`; consulte o [contrato de leitura](signal-read-api.md);
 - resumo geoespacial agregado por área em `GET /signals/geographic-summary`, sem registros
   individualizados;
-- resumo operacional para indicadores e panorama;
+- resumo operacional reconciliável em `GET /metrics/summary`, com proveniência, defasagem,
+  falhas e avaliações sintéticas explicitamente separadas de interpretação epidemiológica;
 - comando de revisão humana que aplica a máquina de estados e retorna o evento de auditoria.
 
 A interface tratará indisponibilidade, carregamento, resposta vazia e conflito de versão sem
