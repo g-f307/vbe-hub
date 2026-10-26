@@ -173,7 +173,7 @@ export function filtersFromSearchParams(searchParams: Record<string, string | st
 }
 
 export async function listSignals(filters: QueueFilters): Promise<SignalQueueView> {
-  const response = await requestJson(`/signals?${buildQueueSearch(filters).toString()}`)
+  const response = await requestSignalApiJson(`/signals?${buildQueueSearch(filters).toString()}`)
   if (!isRecord(response) || !Array.isArray(response.items) || !Number.isInteger(response.page) || !Number.isInteger(response.page_size) || !Number.isInteger(response.total)) {
     throw new SignalReadError('A API retornou uma fila de sinais em formato inválido.', 'invalid-response')
   }
@@ -186,7 +186,7 @@ export async function listSignals(filters: QueueFilters): Promise<SignalQueueVie
 }
 
 export async function getSignalDetail(signalId: string): Promise<SignalDetailView> {
-  const response = await requestJson(`/signals/${encodeURIComponent(signalId)}`)
+  const response = await requestSignalApiJson(`/signals/${encodeURIComponent(signalId)}`)
   if (!isRecord(response)) throw new SignalReadError('A API retornou um detalhe de sinal inválido.', 'invalid-response')
   return mapSignalDetail(response as ApiSignalDetail)
 }
@@ -348,7 +348,7 @@ function auditTitle(action: string): string {
   return titles[action] ?? `Ação registrada: ${action}`
 }
 
-async function requestJson(path: string): Promise<unknown> {
+export async function requestSignalApiJson(path: string): Promise<unknown> {
   let response: Response
   try {
     response = await fetch(`${internalApiBaseUrl()}${path}`, {
