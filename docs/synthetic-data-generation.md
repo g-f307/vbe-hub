@@ -4,7 +4,7 @@ type: operations
 status: active
 title: Geração, validação e importação de dados sintéticos
 created: 2026-09-28
-updated: 2026-09-28
+updated: 2026-10-26
 owner: VBE Hub
 related_docs:
   - API-001
@@ -88,6 +88,25 @@ docker compose --profile tools run --rm synthetic-import
 ```
 
 O importador persiste registros, proveniência e rótulos de avaliação em estruturas separadas. Uma segunda importação do mesmo lote informa todos os registros como `skipped`, sem duplicá-los.
+
+## Cenário canônico do painel
+
+O lote massivo é entrada de processamento e não preenche a fila por si só. Para demonstrar a PoC
+sem depender de Gemini, use o cenário pequeno versionado no código:
+
+```bash
+docker compose --profile tools run --rm demo-load
+```
+
+Ele é independente de `data/generated/` e cria, pelo mesmo conjunto de adaptadores da aplicação,
+três sinais consolidados com duas fontes cada (mídia e comunidade), ficha técnica pré-computada,
+relação de corroboração, prioridade e workflow. Os sinais cobrem as faixas `prompt`, `attention` e
+`routine`, além dos estados `detected`, `triage` e `verification`. Todas as fontes, narrativas,
+fichas e decisões pré-carregadas são sintéticas e explicitamente destinadas à demonstração.
+
+A identidade `synthetic-demo-v1` e os UUIDs dos sinais aparecem na saída. Reexecutar a carga não
+duplica entidades nem reinicializa o workflow que uma pessoa tenha revisado; para um estado limpo,
+remova os volumes conforme [execução local](development.md#persistência-e-encerramento).
 
 ## Fixture e lotes massivos
 

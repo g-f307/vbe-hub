@@ -240,6 +240,22 @@ services:
         "/data/generated/gold.json",
       ]
 
+  demo-load:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+      target: runtime
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_APP_USER}:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    command:
+      ["uv", "run", "--no-sync", "python", "-m", "vbe_hub.synthetic", "demo-load"]
+
   synthetic-validate:
     profiles: ["tools"]
     build:

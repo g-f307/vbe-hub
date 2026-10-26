@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 from pathlib import Path
 
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -11,7 +12,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from vbe_hub.infrastructure.settings import get_settings
 from vbe_hub.synthetic.artifacts import write_dataset
 from vbe_hub.synthetic.generator import generate_dataset
-from vbe_hub.synthetic.importer import import_dataset
+from vbe_hub.synthetic.importer import import_dataset, load_demo_scenario
 from vbe_hub.synthetic.models import GeneratorConfig
 from vbe_hub.synthetic.validator import (
     validate_dataset,
@@ -35,6 +36,10 @@ def _parser() -> argparse.ArgumentParser:
     validate = subparsers.add_parser("validate", help="validate canonical synthetic artifacts")
     validate.add_argument("--input", type=Path, required=True)
     validate.add_argument("--report", type=Path, required=True)
+    subparsers.add_parser(
+        "demo-load",
+        help="load the deterministic canonical scenario for the local panel demonstration",
+    )
     return parser
 
 
@@ -51,6 +56,28 @@ async def _import(records: Path, gold: Path) -> None:
         await engine.dispose()
 
 
+async def _demo_load() -> None:
+    settings = get_settings()
+    engine = create_async_engine(settings.sqlalchemy_database_url)
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+    try:
+        async with session_factory() as session:
+            result = await load_demo_scenario(session)
+            await session.commit()
+        print(
+            json.dumps(
+                {
+                    "identity": "synthetic-demo-v1",
+                    "created": dict(result.created),
+                    "signal_ids": [str(signal_id) for signal_id in result.signal_ids],
+                },
+                sort_keys=True,
+            )
+        )
+    finally:
+        await engine.dispose()
+
+
 def main() -> None:
     args = _parser().parse_args()
     if args.command == "generate":
@@ -63,6 +90,8 @@ def main() -> None:
         write_dataset(generate_dataset(config), config, args.output)
     elif args.command == "import":
         asyncio.run(_import(args.records, args.gold))
+    elif args.command == "demo-load":
+        asyncio.run(_demo_load())
     elif args.command == "validate":
         report = validate_dataset(args.input)
         write_validation_report(report, args.report)

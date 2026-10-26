@@ -51,11 +51,13 @@ aguarda integração própria.
 4. **Concluída:** integrar a decisão humana auditável no painel v0: aceitar, corrigir e rejeitar
    agrupamento ou prioridade, atualizar o fluxo, confirmar a ação, controlar versão e comunicar
    sucesso, conflito ou erro sem expor o ator ou a URL interna da API ao navegador.
-5. Integrar o panorama operacional e a visualização geoespacial agregada por área, sem localização
+5. **Concluída:** disponibilizar uma carga demonstrativa canônica, determinística e idempotente,
+   com sinais sintéticos completos para validar triagem e investigação sem chamadas a IA externa.
+6. Integrar o panorama operacional e a visualização geoespacial agregada por área, sem localização
    individual ou dependência de tile externo para a demonstração.
-6. Acrescentar Kanban como visão complementar de acompanhamento do fluxo, sem transição de estado
+7. Acrescentar Kanban como visão complementar de acompanhamento do fluxo, sem transição de estado
    por arrastar e soltar fora do fluxo de revisão.
-7. Validar responsividade, acessibilidade, dados sintéticos, limites da IA e reprodução completa
+8. Validar responsividade, acessibilidade, dados sintéticos, limites da IA e reprodução completa
    em outro dispositivo via Docker Compose.
 
 ### Critérios de aceite do painel integrado
