@@ -4,7 +4,7 @@ type: design
 status: active
 title: Arquitetura
 created: 2026-09-28
-updated: 2026-10-07
+updated: 2026-10-26
 owner: VBE Hub
 planned_code:
   - backend/
@@ -59,8 +59,8 @@ flowchart LR
 - Backend: Python e FastAPI.
 - Processamento em lote: Celery e Redis; o uso pode começar síncrono para o primeiro experimento pequeno e migrar antes do lote massivo.
 - Persistência: PostgreSQL com extensão `pgvector`, SQLAlchemy 2.x nos adapters e Alembic para migrations.
-- Frontend: Next.js/React em `frontend/`; a fundação visual já é executável. Leaflet será adicionado
-  pelo adaptador de mapa quando a visualização territorial agregada for integrada.
+- Frontend: Next.js/React em `frontend/`; Leaflet fica encapsulado no adaptador territorial,
+  carregado sob demanda e sem tiles externos obrigatórios.
 - Execução local: Docker Compose.
 
 ## Docker como fronteira operacional
@@ -92,8 +92,8 @@ por um comando documentado e oferecer dois modos:
 ## Painel do analista: plano de integração
 
 O protótipo exploratório da interface estabeleceu a linguagem visual e os três percursos da fundação
-agora versionada em `frontend/`. A fundação usa seus dados mockados para demonstração visual, mas
-ainda não substitui os contratos da API nem consulta dados persistidos:
+agora versionada em `frontend/`. Triagem, investigação e panorama consultam contratos da API e não
+substituem falhas por dados mockados:
 
 1. **Triagem**: fila filtrável e paginada de sinais, ordenada por prioridade sugerida e atualizada
    por leitura da API.
@@ -123,10 +123,11 @@ endereço, identificação da pessoa ou inferência de localização precisa. Ma
 apresentarão contagem de sinais, estado predominante, prioridade sugerida e composição de fontes;
 selecionar uma área filtrará ou encaminhará para a fila correspondente.
 
-Leaflet será encapsulado em um adaptador de mapa. Para manter a demonstração reproduzível sem
-Internet, a primeira versão usará geometria e dados de demonstração versionados/localmente
-servidos; tiles externos serão opcionais e nunca requisito de validação. Estados de mapa sem dados,
-geometria indisponível e filtro sem resultado devem ser compreensíveis sem depender do mapa-base.
+Leaflet está encapsulado em um adaptador de mapa carregado apenas na rota territorial. Para manter a
+demonstração reproduzível sem Internet, a primeira versão usa geometria esquemática versionada no
+frontend e não solicita tiles externos. A lista textual oferece todas as operações essenciais por
+teclado e leitor de tela; mapa sem dados, geometria indisponível e filtro sem resultado continuam
+compreensíveis sem mapa-base.
 
 ### Contratos de integração previstos
 
@@ -137,7 +138,8 @@ versões explícitas quando aplicável:
   `GET /signals`;
 - detalhe do sinal, evidências vinculadas, fichas técnicas, justificativa, divergências e auditoria,
   disponível em `GET /signals/{signal_id}`; consulte o [contrato de leitura](signal-read-api.md);
-- resumo geoespacial agregado por área, sem registros individualizados;
+- resumo geoespacial agregado por área em `GET /signals/geographic-summary`, sem registros
+  individualizados;
 - resumo operacional para indicadores e panorama;
 - comando de revisão humana que aplica a máquina de estados e retorna o evento de auditoria.
 

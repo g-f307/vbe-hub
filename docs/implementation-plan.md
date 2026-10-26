@@ -34,8 +34,8 @@ Meta: demonstração validável até **7 de novembro de 2026**, com janela prefe
 O mockup exploratório definiu a direção visual, os componentes de evidência e os percursos de
 triagem, investigação e panorama. A fundação resultante já está em `frontend/`, executa por Docker
 Compose e preserva a exportação original como artefato local ignorado. Triagem e investigação
-possuem vínculo de leitura com o backend e exibem dados sintéticos persistidos; o panorama ainda
-aguarda integração própria.
+possuem vínculo de leitura com o backend e exibem dados sintéticos persistidos; o panorama
+territorial também usa agregados canônicos e geometria local.
 
 ### Ordem de implementação
 
@@ -53,8 +53,8 @@ aguarda integração própria.
    sucesso, conflito ou erro sem expor o ator ou a URL interna da API ao navegador.
 5. **Concluída:** disponibilizar uma carga demonstrativa canônica, determinística e idempotente,
    com sinais sintéticos completos para validar triagem e investigação sem chamadas a IA externa.
-6. Integrar o panorama operacional e a visualização geoespacial agregada por área, sem localização
-   individual ou dependência de tile externo para a demonstração.
+6. **Concluída:** integrar o panorama territorial e a visualização geoespacial agregada por área,
+   com lista acessível equivalente, sem localização individual ou dependência de tile externo.
 7. Acrescentar Kanban como visão complementar de acompanhamento do fluxo, sem transição de estado
    por arrastar e soltar fora do fluxo de revisão.
 8. Validar responsividade, acessibilidade, dados sintéticos, limites da IA e reprodução completa

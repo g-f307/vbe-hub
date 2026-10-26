@@ -4,6 +4,16 @@ const MONTHS = ['jan.', 'fev.', 'mar.', 'abr.', 'maio', 'jun.', 'jul.', 'ago.', 
 const MANAUS_OFFSET_MS = -4 * 60 * 60 * 1000
 
 function toManaus(iso: string) {
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
+  if (dateOnly) {
+    return {
+      day: Number(dateOnly[3]),
+      month: Number(dateOnly[2]) - 1,
+      year: Number(dateOnly[1]),
+      hours: '00',
+      minutes: '00',
+    }
+  }
   const d = new Date(new Date(iso).getTime() + MANAUS_OFFSET_MS)
   return {
     day: d.getUTCDate(),

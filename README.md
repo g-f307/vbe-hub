@@ -25,7 +25,9 @@ humana](docs/human-review-workflow.md) e a [avaliação dos
 agrupamentos](docs/grouping-evaluation.md). O painel reutiliza a exportação visual do v0: as rotas
 de triagem e ficha técnica consultam os dados sintéticos persistidos pela API canônica, sem usar
 mocks como fallback; a ficha também registra revisão humana e atualização de fluxo com confirmação,
-versão e trilha de auditoria. O panorama permanece uma demonstração mockada até sua integração planejada.
+versão e trilha de auditoria. O panorama territorial consulta agregados da API, usa geometria local
+esquemática e oferece uma lista acessível equivalente, sem expor localização individual nem depender
+de tiles externos.
 Consulte o [contrato de leitura](docs/signal-read-api.md). Autenticação institucional e
 integrações reais com EIOS e Guardiões da Saúde permanecem fora desta etapa. A consolidação organiza evidências rastreáveis, mas não confirma
 ocorrências nem substitui a triagem de um profissional de saúde.

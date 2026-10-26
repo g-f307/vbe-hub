@@ -1,4 +1,8 @@
+import re
+import unicodedata
+from collections import Counter
 from collections.abc import AsyncIterator
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
@@ -76,6 +80,56 @@ class SignalQueueResponse(BaseModel):
     page: int
     page_size: int
     total: int
+
+
+class GeographicWindowResponse(BaseModel):
+    start: date | None
+    end: date | None
+
+
+class GeographicTotalsResponse(BaseModel):
+    signals: int
+    mapped_signals: int
+    unmapped_signals: int
+    areas: int
+
+
+class NamedCountResponse(BaseModel):
+    label: str
+    count: int
+
+
+class GeographicAreaResponse(BaseModel):
+    key: str
+    municipality: str
+    district: str
+    signals: int
+    source_counts: SourceCountsResponse
+    workflow_states: dict[str, int]
+    priority_bands: dict[str, int]
+    top_condition: NamedCountResponse | None
+
+
+class GeographicSummaryResponse(BaseModel):
+    dataset_kind: Literal["synthetic"] = "synthetic"
+    dataset_identity: str = "vbe-hub-synthetic-poc"
+    window: GeographicWindowResponse
+    updated_at: datetime | None
+    totals: GeographicTotalsResponse
+    areas: list[GeographicAreaResponse]
+
+
+@dataclass(slots=True)
+class _AreaAggregate:
+    municipality: str
+    district: str
+    signals: int = 0
+    media: int = 0
+    community: int = 0
+    sources: int = 0
+    workflow_states: Counter[str] = field(default_factory=Counter)
+    priority_bands: Counter[str] = field(default_factory=Counter)
+    conditions: Counter[str] = field(default_factory=Counter)
 
 
 class GroupingResponse(BaseModel):
@@ -206,6 +260,25 @@ async def list_signals(
         page_size=page_size,
         total=total,
     )
+
+
+@router.get("/geographic-summary", response_model=GeographicSummaryResponse)
+async def geographic_summary(session: SignalReadSession) -> GeographicSummaryResponse:
+    signals = list((await session.scalars(select(ConsolidatedSignalModel))).all())
+    signal_ids = [signal.id for signal in signals]
+    priorities = await _latest_priorities(session, signal_ids)
+    workflows = await _workflows(session, signal_ids)
+    source_counts = await _source_counts(session, signal_ids)
+    items = [
+        _queue_item(
+            signal,
+            priority=priorities.get(signal.id),
+            workflow=workflows.get(signal.id),
+            source_counts=source_counts.get(signal.id, SourceCountsResponse()),
+        )
+        for signal in signals
+    ]
+    return _geographic_summary(signals, items, workflows)
 
 
 @router.get("/{signal_id}", response_model=SignalDetailResponse)
@@ -339,6 +412,95 @@ def _queue_item(
             updated_at=workflow.updated_at if workflow else None,
         ),
     )
+
+
+def _geographic_summary(
+    signals: list[ConsolidatedSignalModel],
+    items: list[SignalQueueItemResponse],
+    workflows: dict[UUID, SignalWorkflowModel],
+) -> GeographicSummaryResponse:
+    areas: dict[str, _AreaAggregate] = {}
+    for item in items:
+        municipality = item.location.municipality
+        district = item.location.district
+        if municipality is None or district is None:
+            continue
+        key = _area_key(municipality, district)
+        area = areas.setdefault(key, _AreaAggregate(municipality, district))
+        area.signals += 1
+        area.media += item.source_counts.media
+        area.community += item.source_counts.community
+        area.sources += item.source_counts.total
+        area.workflow_states[item.workflow.state.value] += 1
+        if item.priority is not None:
+            area.priority_bands[item.priority.band] += 1
+        area.conditions.update(set(item.conditions))
+
+    area_responses = [
+        GeographicAreaResponse(
+            key=key,
+            municipality=area.municipality,
+            district=area.district,
+            signals=area.signals,
+            source_counts=SourceCountsResponse(
+                media=area.media,
+                community=area.community,
+                total=area.sources,
+            ),
+            workflow_states=dict(sorted(area.workflow_states.items())),
+            priority_bands=dict(sorted(area.priority_bands.items())),
+            top_condition=_top_condition(area.conditions),
+        )
+        for key, area in sorted(
+            areas.items(),
+            key=lambda entry: (
+                entry[1].municipality.casefold(),
+                entry[1].district.casefold(),
+            ),
+        )
+    ]
+    dates_start = [signal.period_start for signal in signals if signal.period_start is not None]
+    dates_end = [
+        signal.period_end or signal.period_start
+        for signal in signals
+        if signal.period_end is not None or signal.period_start is not None
+    ]
+    timestamps = [signal.created_at for signal in signals]
+    timestamps.extend(
+        workflow.updated_at for workflow in workflows.values() if workflow.updated_at is not None
+    )
+    mapped_signals = sum(area.signals for area in area_responses)
+    return GeographicSummaryResponse(
+        window=GeographicWindowResponse(
+            start=min(dates_start, default=None),
+            end=max(dates_end, default=None),
+        ),
+        updated_at=max(timestamps, default=None),
+        totals=GeographicTotalsResponse(
+            signals=len(signals),
+            mapped_signals=mapped_signals,
+            unmapped_signals=len(signals) - mapped_signals,
+            areas=len(area_responses),
+        ),
+        areas=area_responses,
+    )
+
+
+def _area_key(municipality: str, district: str) -> str:
+    return f"{_area_key_part(municipality)}--{_area_key_part(district)}"
+
+
+def _area_key_part(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value)
+    ascii_value = normalized.encode("ascii", "ignore").decode().casefold()
+    return re.sub(r"[^a-z0-9]+", "-", ascii_value).strip("-")
+
+
+def _top_condition(conditions: Counter[str]) -> NamedCountResponse | None:
+    if not conditions:
+        return None
+    label, count = min(conditions.items(), key=lambda item: (-item[1], item[0].casefold()))
+    return NamedCountResponse(label=label, count=count)
 
 
 async def _sources(
