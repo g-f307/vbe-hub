@@ -66,6 +66,20 @@ docker compose --profile tools run --rm frontend-lint
 Os checks automatizados também possuem comandos separados para documentação, testes unitários,
 integração e smoke test. Consulte o [guia de integração contínua](docs/continuous-integration.md).
 
+### Cenário demonstrativo do painel
+
+Para popular triagem e investigação sem chamar Gemini, carregue o cenário canônico pequeno:
+
+```bash
+docker compose --profile tools run --rm demo-load
+```
+
+Ele cria três sinais integralmente sintéticos — Dengue em Compensa, Leptospirose em Manaus e
+Sarampo ou síndrome compatível — com fontes de mídia e comunidade, fichas, relações, prioridade e
+estados diferentes do workflow. Abra `http://localhost:3000/triagem`; o primeiro sinal inicia em
+`detectado` e permite exercitar a decisão humana. Repetir o comando não duplica dados nem apaga
+ações humanas já registradas.
+
 Gere, valide e importe o dataset sintético padrão:
 
 ```bash

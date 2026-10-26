@@ -99,6 +99,23 @@ docker compose --profile tools run --rm synthetic-import
 
 Os artefatos massivos ficam em `data/generated/` e o relatório fica em `data/reports/synthetic-validation.json`; ambos são ignorados pelo Git. Consulte [geração e importação de dados sintéticos](synthetic-data-generation.md) para configuração, regras e diagnóstico.
 
+## Cenário demonstrativo do painel
+
+O importador do lote massivo persiste entradas e rótulos, mas não executa automaticamente todas as
+etapas de processamento necessárias para preencher a fila. Para uma demonstração local da interface
+sem chamada a IA externa, use a carga canônica pequena:
+
+```bash
+docker compose --profile tools run --rm demo-load
+```
+
+O comando materializa seis registros sintéticos, três relações, três sinais consolidados, três
+prioridades e três eventos de workflow. Ele retorna uma identidade e as contagens criadas; na
+segunda execução todas as contagens são zero. O cenário preserva proveniência e é seguro para
+demonstrar a revisão humana: os dados são sintéticos, o ator pré-carregado é `synthetic-demo` e a
+decisão sanitária continua humana. Para reiniciar completamente o cenário, use o reset destrutivo
+de volumes descrito abaixo e execute `demo-load` outra vez.
+
 Para reconstruir sem reaproveitar o cache local:
 
 ```bash
@@ -128,7 +145,7 @@ docker compose run --rm migrate uv run --no-sync alembic upgrade head
 Em uma cópia sem dados locais, o percurso validado pela CI é:
 
 ```bash
-docker compose build --pull migrate api frontend synthetic-generate synthetic-validate synthetic-import
+docker compose build --pull migrate api frontend synthetic-generate synthetic-validate synthetic-import demo-load
 docker compose up --detach --wait --no-build postgres redis migrate api frontend
 docker compose exec -T api python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"
 docker compose exec -T frontend node -e "fetch('http://localhost:3000/api/health').then((response) => { if (!response.ok) process.exit(1) })"
@@ -136,6 +153,7 @@ docker compose run --rm migrate uv run --no-sync alembic check
 docker compose --profile tools run --rm synthetic-generate
 docker compose --profile tools run --rm synthetic-validate
 docker compose --profile tools run --rm synthetic-import
+docker compose --profile tools run --rm demo-load
 ```
 
 A CI também consulta a quantidade persistida e exige os 120 registros da configuração padrão. Use
