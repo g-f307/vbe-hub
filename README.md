@@ -25,7 +25,9 @@ humana](docs/human-review-workflow.md) e a [avaliação dos
 agrupamentos](docs/grouping-evaluation.md). O painel reutiliza a exportação visual do v0: as rotas
 de triagem e ficha técnica consultam os dados sintéticos persistidos pela API canônica, sem usar
 mocks como fallback; a ficha também registra revisão humana e atualização de fluxo com confirmação,
-versão e trilha de auditoria. O panorama territorial consulta agregados da API, usa geometria local
+versão e trilha de auditoria. A visão em `/kanban` organiza os mesmos sinais canônicos em cinco
+estágios, sem permitir mudança por arrastar, e oferece uma tabela acessível equivalente. O panorama
+territorial consulta agregados da API, usa geometria local
 esquemática e oferece uma lista acessível equivalente, sem expor localização individual nem depender
 de tiles externos. O backend também oferece um [resumo de métricas
 operacionais](docs/operational-metrics-api.md), reconciliado com a persistência e separado das
@@ -81,8 +83,9 @@ docker compose --profile tools run --rm demo-load
 
 Ele cria três sinais integralmente sintéticos — Dengue em Compensa, Leptospirose em Manaus e
 Sarampo ou síndrome compatível — com fontes de mídia e comunidade, fichas, relações, prioridade e
-estados diferentes do workflow. Abra `http://localhost:3000/triagem`; o primeiro sinal inicia em
-`detectado` e permite exercitar a decisão humana. Repetir o comando não duplica dados nem apaga
+estados diferentes do workflow. Abra `http://localhost:3000/triagem` para a fila ou
+`http://localhost:3000/kanban` para o fluxo; o primeiro sinal inicia em `detectado` e permite
+exercitar a decisão humana. Repetir o comando não duplica dados nem apaga
 ações humanas já registradas.
 
 Gere, valide e importe o dataset sintético padrão:

@@ -160,7 +160,7 @@ export function ReviewPanel({
   }
 
   return (
-    <section aria-labelledby="decisao-titulo" className="rounded-md border border-encontro/25 bg-mineral">
+    <section id="decisao" aria-labelledby="decisao-titulo" className="scroll-mt-20 rounded-md border border-encontro/25 bg-mineral">
       <div className="border-b border-agua px-4 py-3">
         <div className="flex items-start justify-between gap-3">
           <div>

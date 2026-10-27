@@ -91,8 +91,8 @@ por um comando documentado e oferecer dois modos:
 
 ## Painel do analista: plano de integração
 
-O protótipo exploratório da interface estabeleceu a linguagem visual e os três percursos da fundação
-agora versionada em `frontend/`. Triagem, investigação e panorama consultam contratos da API e não
+O protótipo exploratório da interface estabeleceu a linguagem visual e os quatro percursos da fundação
+agora versionada em `frontend/`. Triagem, investigação, fluxo e panorama consultam contratos da API e não
 substituem falhas por dados mockados:
 
 1. **Triagem**: fila filtrável e paginada de sinais, ordenada por prioridade sugerida e atualizada
@@ -100,6 +100,7 @@ substituem falhas por dados mockados:
 2. **Investigação**: detalhe de um sinal com resumo consolidado, evidências de origem, fichas
    técnicas, critérios de agrupamento, trilha de auditoria e painel de decisão humana.
 3. **Panorama**: leitura operacional e territorial agregada, com ligação para a fila filtrada.
+4. **Fluxo**: visão complementar em quadro ou tabela dos mesmos sinais e filtros canônicos.
 
 Os componentes devem preservar divulgação progressiva de informação. O item compacto da fila
 mostra código, prioridade sugerida, estado, condição/sintomas-chave, local/período e composição de
@@ -110,10 +111,12 @@ de evidências de uma vez.
 ### Visualizações de fluxo
 
 A tabela/fila é a visão principal porque permite comparar prioridade, filtros e evidências de
-forma densa. Uma visão Kanban é complementar: organiza os mesmos sinais por `triagem`,
+forma densa. A visão Kanban complementar organiza os mesmos sinais por `detectado`, `triagem`,
 `verificação`, `avaliação de risco` e `encerrado` para revelar volume e gargalos. Ela não confirma
-eventos e não pode permitir arrastar um cartão para alterar estado sem abrir a decisão humana,
-validar a transição no backend e registrar o evento de auditoria.
+eventos nem oferece arrastar e soltar. O cartão apenas abre a investigação; qualquer transição é
+validada no backend e registrada no evento de auditoria pelo painel de decisão humana. A leitura
+ampla usa o limite explícito de 100 itens aceito por `GET /signals`, informa truncamento e mantém
+uma tabela acessível com a mesma consulta.
 
 ### Visualização geoespacial
 

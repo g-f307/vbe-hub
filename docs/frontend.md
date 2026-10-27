@@ -26,21 +26,22 @@ As rotas atuais são deliberadamente demonstrativas:
 | Rota | Papel na fundação | Estado de dados |
 | --- | --- | --- |
 | `/triagem` | fila, filtros, indicadores e paginação | consulta `GET /signals` no servidor Next |
+| `/kanban` | quadro complementar dos cinco estágios e tabela acessível | consulta até 100 itens de `GET /signals` com os mesmos filtros; não altera estado |
 | `/sinais/[slug]` | ficha técnica, fontes, relações, auditoria e revisão | consulta `GET /signals/{id}` no servidor Next; submete decisões confirmadas por rotas internas; o segmento é o UUID canônico |
 | `/panorama` | leitura territorial agregada, mapa local e lista acessível | consulta `GET /signals/geographic-summary` no servidor Next |
 | `/api/health` | health check do contêiner do painel | retorna somente o estado do serviço |
 
-Os dados de `lib/mock-data.ts` não alimentam triagem, investigação nem panorama. Permanecem apenas
+Os dados de `lib/mock-data.ts` não alimentam triagem, fluxo, investigação nem panorama. Permanecem apenas
 como legado do protótipo enquanto outros componentes deixam de depender deles; não representam
 situação epidemiológica e não implicam decisão humana.
 
 ## Princípios de apresentação
 
-- O painel usa a marcação visível de ambiente de demonstração. Em triagem, investigação e panorama,
+- O painel usa a marcação visível de ambiente de demonstração. Em triagem, fluxo, investigação e panorama,
   sinais, prioridades, decisões e agregados vêm da API e continuam sintéticos.
 - A IA continuará sendo apresentada como sugestão auditável. A revisão, justificativa e decisão
   pertencem ao profissional de vigilância.
-- A futura fila usa divulgação progressiva: código, estado, condição, local/período e composição de
+- A fila e o quadro usam divulgação progressiva: código, estado, condição, local/período e composição de
   fontes ficam no item compacto; evidências, divergências, ficha e auditoria ficam no detalhe.
 - A futura visão territorial mostra apenas agregados aprovados por área. Relatos individuais,
   endereço e coordenadas precisas não pertencem ao mapa.
@@ -61,12 +62,19 @@ mostrados no painel; no conflito, a atualização explícita dos dados preserva 
 
 O frontend não acessa PostgreSQL, Redis, provedores de IA ou conectores diretamente. A API já
 oferece leitura e revisão descritas nos [contratos de leitura](signal-read-api.md) e de [revisão
-humana](human-review-workflow.md). Filtros e paginação são serializados nos parâmetros canônicos da
+humana](human-review-workflow.md). Filtros, paginação e modo do quadro são serializados nos parâmetros canônicos da
 URL compartilhável. Carregamento, vazio, falha e 404 não usam mocks como fallback. Agregados
 territoriais são lidos no servidor Next e o mapa Leaflet é carregado sob demanda, sem tile externo.
 A geometria esquemática `demo-areas-v1` fica versionada no frontend; áreas desconhecidas continuam
-disponíveis na lista e na fila, marcadas como sem geometria. O Kanban continua previsto na
-[arquitetura](architecture.md#contratos-de-integração-previstos).
+disponíveis na lista e na fila, marcadas como sem geometria.
+
+O Kanban é uma leitura complementar, não uma segunda máquina de estados. Ele agrupa a mesma
+resposta de `GET /signals` em `detectado`, `triagem`, `verificação`, `avaliação de risco` e
+`encerrado`. Não há arrastar e soltar: os cartões encaminham para a investigação e para o painel de
+decisão auditável. A leitura é limitada explicitamente aos primeiros 100 sinais; quando o total é
+maior, a interface orienta reduzir a consulta por filtros ou usar a fila paginada. A alternativa em
+tabela, os estados vazios por coluna e a falha com recarga preservam uso por teclado e sem gesto de
+arrastar.
 
 ## Execução e verificação
 
