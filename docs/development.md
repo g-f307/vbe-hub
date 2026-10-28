@@ -256,3 +256,7 @@ houver uma nova versão de prompt, política ou dataset; nesse caso, execute pri
 ## Avaliação live da ficha técnica
 
 Com `GEMINI_API_KEY` apenas no `.env`, execute primeiro `EVALUATION_SPLIT=calibration docker compose --profile live run --rm --build technical-sheet-evaluate` e, sem ajustar o prompt pela amostra reservada, repita com `EVALUATION_SPLIT=evaluation`. Os relatórios sanitizados são gravados em `data/reports/`, fora do Git. Consulte o [protocolo de avaliação](technical-sheet-evaluation.md).
+
+Se a calibração terminar com `quota_exhausted`, não execute a amostra reservada: recomponha a
+cota/crédito do projeto e repita a calibração. Respostas recusadas antes da geração não constituem
+evidência de qualidade. A aplicação não repete automaticamente erros 402.

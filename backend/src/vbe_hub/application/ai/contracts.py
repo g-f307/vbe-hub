@@ -27,6 +27,7 @@ class ExecutionStatus(StrEnum):
 
 class ProviderErrorCode(StrEnum):
     CONFIGURATION = "configuration"
+    QUOTA_EXHAUSTED = "quota_exhausted"
     TIMEOUT = "timeout"
     RATE_LIMITED = "rate_limited"
     INVALID_RESPONSE = "invalid_response"
@@ -128,6 +129,7 @@ class StructuredExtractionResult:
     technical_sheet: Mapping[str, Any]
     evidence: tuple[FieldEvidence, ...]
     metadata: AIExecutionMetadata
+    grounding_repaired_fields: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.metadata.status is not ExecutionStatus.SUCCEEDED:

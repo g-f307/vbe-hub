@@ -18,12 +18,12 @@ class SequencedClient:
         return GeminiClientResponse(payload=payload, input_tokens=10, output_tokens=10)
 
 
-async def test_invalid_grounding_is_retried_before_returning_success() -> None:
+async def test_invalid_schema_is_retried_before_returning_success() -> None:
     valid = json.loads(
         Path("tests/fixtures/ai/technical-sheet/v1/success.json").read_text(encoding="utf-8")
     )
     invalid = json.loads(json.dumps(valid))
-    invalid["evidence"][0]["excerpt"] = "not present"
+    invalid["unexpected"] = "not present"
     client = SequencedClient([invalid, valid])
     text = (
         "Relato sintético: moradores do bairro Flores apresentam febre e manchas vermelhas. "
@@ -46,7 +46,7 @@ async def test_invalid_grounding_is_retried_before_returning_success() -> None:
             input_hash="8" * 64,
             normalized_data={"source_kind": "community", "text": text},
             schema_version="technical-sheet-v1",
-            prompt_version="extract-v2",
+            prompt_version="extract-v3",
             trace_id="retry-validation",
         )
     )
