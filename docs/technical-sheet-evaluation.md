@@ -4,7 +4,7 @@ type: testing
 status: active
 title: Avaliação da extração da ficha técnica
 created: 2026-09-29
-updated: 2026-09-29
+updated: 2026-10-28
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/evaluation/
@@ -60,4 +60,12 @@ são usados como linha de base offline do avaliador.
 
 Esta avaliação mede desempenho técnico em dados sintéticos, não adequação clínica ou
 epidemiológica.
+
+## Situação após a análise de 28/10/2026
+
+A política `extract-v3` corrige a perda integral de uma ficha quando apenas um campo não possui
+grounding literal e passa a contar os reparos no relatório. A tentativa de calibração foi recusada
+por `402 RESOURCE_EXHAUSTED`, antes de gerar fichas; por isso não substitui a linha de base e a
+amostra reservada não foi aberta. Consulte a
+[análise e correção da extração](technical-sheet-remediation-2026-10-28.md).
 

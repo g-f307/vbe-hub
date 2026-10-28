@@ -4,7 +4,7 @@ type: api
 status: active
 title: Contrato da ficha técnica extraída
 created: 2026-09-29
-updated: 2026-09-29
+updated: 2026-10-28
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/application/ai/technical_sheet.py
@@ -28,9 +28,9 @@ busca e correlação. Ela não representa diagnóstico, confirmação de surto, 
 ou decisão sanitária.
 
 - schema: `technical-sheet-v1`;
-- prompt atual: `extract-v2` (`extract-v1` preservado como histórico de calibração);
+- prompt atual: `extract-v3` (`extract-v1` e `extract-v2` preservados como histórico);
 - JSON Schema versionado: `backend/src/vbe_hub/application/ai/assets/technical-sheet-v1.schema.json`;
-- prompt versionado: `backend/src/vbe_hub/application/ai/assets/extract-v2.prompt.txt`.
+- prompt versionado: `backend/src/vbe_hub/application/ai/assets/extract-v3.prompt.txt`.
 
 O teste de contrato exige que o arquivo JSON Schema permaneça idêntico ao schema produzido pelo
 modelo Pydantic. Mudanças incompatíveis exigem nova versão, sem editar silenciosamente a versão
@@ -61,8 +61,10 @@ estado.
 
 O Gemini recebe o JSON Schema como formato obrigatório, mas a resposta continua não confiável.
 Antes da persistência, a aplicação repete localmente a validação de tipos, enums, limites, campos
-extras, nulos e evidências literais. Resposta inválida vira falha estruturada e nunca entra como
-ficha válida.
+extras, nulos e evidências literais. Resposta fora do schema vira falha estruturada e nunca entra
+como ficha válida. Quando a estrutura é válida, mas uma evidência não aparece literalmente na
+origem, somente o campo sem sustentação é removido; os demais são preservados e o reparo é
+registrado. O sistema não inventa uma evidência substituta.
 
 ## Cache e auditoria
 
@@ -96,6 +98,7 @@ experimento sem mudança de código.
 
 O SDK tem seu retry interno desabilitado. A aplicação limita tentativas, timeout, caracteres de
 entrada e tokens de saída, e aplica backoff somente para timeout, rate limit e indisponibilidade.
+Crédito ou cota esgotados são classificados como `quota_exhausted`, sem repetição automática.
 Detalhes atuais devem ser confirmados na [documentação de modelos](https://ai.google.dev/gemini-api/docs/models),
 na [saída estruturada](https://ai.google.dev/gemini-api/docs/structured-output), nos
 [limites](https://ai.google.dev/gemini-api/docs/rate-limits) e nos
