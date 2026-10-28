@@ -128,6 +128,7 @@ class StructuredExtractionResult:
     technical_sheet: Mapping[str, Any]
     evidence: tuple[FieldEvidence, ...]
     metadata: AIExecutionMetadata
+    grounding_repaired_fields: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.metadata.status is not ExecutionStatus.SUCCEEDED:

@@ -42,7 +42,7 @@ def valid_payload() -> dict[str, object]:
 def extraction_request(
     text: str,
     *,
-    prompt_version: str = "extract-v2",
+    prompt_version: str = "extract-v3",
     schema_version: str = "technical-sheet-v1",
 ) -> StructuredExtractionRequest:
     return StructuredExtractionRequest(
@@ -121,9 +121,9 @@ async def test_hostile_instructions_are_delimited_as_untrusted_content() -> None
     assert prompt.index("UNTRUSTED_RECORD_END_") < prompt.index("Return only the JSON object")
 
 
-async def test_invalid_or_ungrounded_response_becomes_sanitized_non_retryable_error() -> None:
+async def test_schema_invalid_response_becomes_sanitized_non_retryable_error() -> None:
     payload = valid_payload()
-    payload["evidence"][0]["excerpt"] = "not present in source"
+    payload["unexpected"] = "not present in schema"
     client = StubGeminiClient(
         [GeminiClientResponse(payload=payload, input_tokens=10, output_tokens=10)] * 3
     )
@@ -135,6 +135,27 @@ async def test_invalid_or_ungrounded_response_becomes_sanitized_non_retryable_er
     assert captured.value.retryable is False
     assert str(captured.value) == "Gemini returned an invalid structured response."
     assert "not present" not in str(captured.value)
+
+
+async def test_ungrounded_field_is_dropped_without_discarding_grounded_sheet() -> None:
+    text = (
+        "Relato sintético: moradores do bairro Flores apresentam febre e manchas vermelhas. "
+        "A investigação epidemiológica está em andamento."
+    )
+    payload = valid_payload()
+    payload["evidence"][0]["excerpt"] = "trecho inexistente"
+    client = StubGeminiClient(
+        [GeminiClientResponse(payload=payload, input_tokens=80, output_tokens=120)]
+    )
+
+    result = await make_extractor(client).extract(extraction_request(text))
+
+    assert result.technical_sheet["record_nature"] is None
+    assert result.technical_sheet["disease_or_condition"] == "sarampo"
+    assert result.technical_sheet["symptoms"] == ["febre", "manchas vermelhas"]
+    assert result.grounding_repaired_fields == ("record_nature",)
+    assert all(item.excerpt in text for item in result.evidence)
+    assert len(client.requests) == 1
 
 
 @pytest.mark.parametrize(
@@ -201,7 +222,7 @@ async def test_oversized_input_fails_before_network() -> None:
 
 @pytest.mark.parametrize(
     ("prompt_version", "schema_version"),
-    [("extract-v3", "technical-sheet-v1"), ("extract-v2", "technical-sheet-v2")],
+    [("extract-v2", "technical-sheet-v1"), ("extract-v3", "technical-sheet-v2")],
 )
 async def test_unknown_contract_version_fails_before_network(
     prompt_version: str, schema_version: str

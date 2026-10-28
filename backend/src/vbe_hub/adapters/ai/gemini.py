@@ -22,11 +22,12 @@ from vbe_hub.application.ai import (
 from vbe_hub.application.ai.technical_sheet import (
     SCHEMA_VERSION,
     TechnicalSheet,
+    repair_ungrounded_fields,
     validate_grounded_sheet,
 )
 
 _ASSETS = Path(__file__).parents[2] / "application" / "ai" / "assets"
-PROMPT_VERSION = "extract-v2"
+PROMPT_VERSION = "extract-v3"
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,6 +118,8 @@ class GeminiStructuredExtractor:
         )
         response: GeminiClientResponse | None = None
         sheet: TechnicalSheet | None = None
+        grounding_repaired_fields: tuple[str, ...] = ()
+        grounding_repaired_fields: tuple[str, ...] = ()
         total_input_units = 0
         total_output_units = 0
         for attempt in range(1, self._max_attempts + 1):
@@ -138,7 +141,12 @@ class GeminiStructuredExtractor:
                     started_monotonic=started_monotonic,
                 ) from None
             try:
-                sheet = validate_grounded_sheet(response.payload, source_text=source_content)
+                try:
+                    sheet = validate_grounded_sheet(response.payload, source_text=source_content)
+                except ValueError:
+                    sheet, grounding_repaired_fields = repair_ungrounded_fields(
+                        response.payload, source_text=source_content
+                    )
                 break
             except (ValidationError, ValueError, TypeError):
                 if attempt < self._max_attempts:
@@ -174,6 +182,7 @@ class GeminiStructuredExtractor:
                 input_units=total_input_units,
                 output_units=total_output_units,
             ),
+            grounding_repaired_fields=grounding_repaired_fields,
         )
 
     def _build_contents(self, request: StructuredExtractionRequest, source_content: str) -> str:

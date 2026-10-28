@@ -89,6 +89,35 @@ def validate_grounded_sheet(payload: dict[str, Any], *, source_text: str) -> Tec
     return sheet
 
 
+def repair_ungrounded_fields(
+    payload: dict[str, Any], *, source_text: str
+) -> tuple[TechnicalSheet, tuple[str, ...]]:
+    """Drop unsupported fields while preserving the valid, grounded remainder.
+
+    Schema-invalid payloads still fail closed. This repair only handles grounding failures and
+    never invents or rewrites model output.
+    """
+
+    sheet = TechnicalSheet.model_validate(payload)
+    grounded_evidence = [item for item in sheet.evidence if item.excerpt in source_text]
+    grounded_fields = {item.field for item in grounded_evidence}
+    repaired = sheet.model_dump(mode="python")
+    repaired["evidence"] = [item.model_dump(mode="python") for item in grounded_evidence]
+
+    repaired_fields = tuple(sorted(_populated_fields(sheet).difference(grounded_fields)))
+    for field_name in repaired_fields:
+        if field_name == "symptoms":
+            repaired["symptoms"] = []
+        elif field_name.startswith("temporal."):
+            repaired["temporal"][field_name.removeprefix("temporal.")] = None
+        elif field_name.startswith("location."):
+            repaired["location"][field_name.removeprefix("location.")] = None
+        else:
+            repaired[field_name] = None
+
+    return validate_grounded_sheet(repaired, source_text=source_text), repaired_fields
+
+
 def _populated_fields(sheet: TechnicalSheet) -> set[str]:
     populated: set[str] = set()
     direct_fields = (
