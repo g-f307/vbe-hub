@@ -32,6 +32,10 @@ esquemática e oferece uma lista acessível equivalente, sem expor localização
 de tiles externos. O backend também oferece um [resumo de métricas
 operacionais](docs/operational-metrics-api.md), reconciliado com a persistência e separado das
 evidências de avaliação sintética.
+O [experimento integrado](docs/integrated-validation.md) reúne essas evidências de forma
+reproduzível e sem novas chamadas ao Gemini. O resultado geral permanece bloqueado porque a linha
+de base da extração da ficha técnica ainda não atendeu a todas as metas; isso não altera as
+aprovações com ressalvas da correlação e do agrupamento.
 Consulte o [contrato de leitura](docs/signal-read-api.md). Autenticação institucional e
 integrações reais com EIOS e Guardiões da Saúde permanecem fora desta etapa. A consolidação organiza evidências rastreáveis, mas não confirma
 ocorrências nem substitui a triagem de um profissional de saúde.
@@ -102,5 +106,8 @@ A execução básica, os testes e os dados sintéticos não exigem chave externa
 avaliação de correlação com o Gemini, configure `GEMINI_API_KEY` somente no `.env` local e siga o
 [guia de execução local](docs/development.md#avaliação-live-da-correlação). Essa etapa consome
 cota do provider e não é necessária para iniciar a aplicação.
+
+Para repetir a validação integrada sem consumir a cota do Gemini, siga o protocolo e os comandos
+em [experimento integrado da PoC](docs/integrated-validation.md#reprodução-sem-consumir-cota-externa).
 
 Consulte o [guia de execução local](docs/development.md) para desenvolvimento com hot reload, portas, volumes, reconstrução sem cache e reset, e o [guia do dataset sintético](docs/synthetic-data-generation.md) para parâmetros, artefatos e reprodutibilidade. O host não precisa de Python, uv, Node.js, PostgreSQL ou Redis.

@@ -89,6 +89,17 @@ EVALUATION_COMMIT=$(git rev-parse --short HEAD) \
 Ela gera relatórios sanitizados em `data/reports/`. O protocolo e a rodada oficial estão em
 [avaliação de agrupamentos](grouping-evaluation.md).
 
+### Experimento integrado sem Gemini
+
+O serviço `integrated-evaluate` repete a geração validada, consulta o estado operacional atual,
+refaz o agrupamento determinístico e incorpora as evidências oficiais congeladas de extração e
+correlação. Ele não chama o Gemini. Para evitar misturar o resultado com dados de desenvolvimento,
+execute o protocolo em um projeto Compose isolado conforme o
+[experimento integrado da PoC](integrated-validation.md#reprodução-sem-consumir-cota-externa).
+
+O resultado esperado enquanto a linha de base da ficha técnica não for substituída por uma rodada
+aprovada é `block`. Isso representa a decisão técnica do conjunto, não erro do comando.
+
 O gerador, o validador e o importador sintéticos também são ferramentas da composição:
 
 ```bash
