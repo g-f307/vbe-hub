@@ -1,6 +1,6 @@
 import asyncio
-import hashlib
 import json
+import secrets
 import time
 from collections.abc import Awaitable, Callable, Iterator, Mapping
 from dataclasses import dataclass
@@ -119,7 +119,6 @@ class GeminiStructuredExtractor:
         response: GeminiClientResponse | None = None
         sheet: TechnicalSheet | None = None
         grounding_repaired_fields: tuple[str, ...] = ()
-        grounding_repaired_fields: tuple[str, ...] = ()
         total_input_units = 0
         total_output_units = 0
         for attempt in range(1, self._max_attempts + 1):
@@ -189,7 +188,9 @@ class GeminiStructuredExtractor:
         instructions = (
             (_ASSETS / f"{request.prompt_version}.prompt.txt").read_text(encoding="utf-8").strip()
         )
-        delimiter = hashlib.sha256(request.trace_id.encode()).hexdigest()[:16]
+        delimiter = secrets.token_hex(8)
+        while delimiter in source_content:
+            delimiter = secrets.token_hex(8)
         return (
             f"{instructions}\n\n"
             f"UNTRUSTED_RECORD_START_{delimiter}\n{source_content}\n"
@@ -238,6 +239,8 @@ class GeminiStructuredExtractor:
 
 
 def _classify_transport_error(status_code: int | None) -> tuple[ProviderErrorCode, bool]:
+    if status_code == 402:
+        return ProviderErrorCode.QUOTA_EXHAUSTED, False
     if status_code == 408:
         return ProviderErrorCode.TIMEOUT, True
     if status_code == 429:
@@ -251,6 +254,7 @@ def _classify_transport_error(status_code: int | None) -> tuple[ProviderErrorCod
 
 def _public_error_message(code: ProviderErrorCode) -> str:
     messages = {
+        ProviderErrorCode.QUOTA_EXHAUSTED: "Gemini quota or prepaid credit is exhausted.",
         ProviderErrorCode.TIMEOUT: "Gemini request timed out.",
         ProviderErrorCode.RATE_LIMITED: "Gemini rate limit was reached.",
         ProviderErrorCode.TEMPORARILY_UNAVAILABLE: "Gemini is temporarily unavailable.",
