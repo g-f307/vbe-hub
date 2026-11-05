@@ -4,7 +4,7 @@ type: testing
 status: active
 title: Avaliação da extração da ficha técnica
 created: 2026-09-29
-updated: 2026-10-28
+updated: 2026-11-04
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/evaluation/
@@ -32,7 +32,7 @@ impede recomendar qualquer campo para uso direto.
 
 ## Reprodução
 
-Com a chave apenas no `.env`, execute primeiro a calibração:
+Com a chave apenas no `.env`, execute primeiro a calibração. Para Gemini:
 
 ```bash
 EVALUATION_SPLIT=calibration docker compose --profile live run --rm --build technical-sheet-evaluate
@@ -44,9 +44,25 @@ Sem ajustar o prompt a partir da amostra reservada, execute a avaliação:
 EVALUATION_SPLIT=evaluation docker compose --profile live run --rm technical-sheet-evaluate
 ```
 
+Para avaliar a mesma política com OpenAI, configure `OPENAI_API_KEY` e use o serviço alternativo:
+
+```bash
+EVALUATION_SPLIT=calibration docker compose --profile live run --rm --build technical-sheet-evaluate-openai
+EVALUATION_SPLIT=evaluation docker compose --profile live run --rm technical-sheet-evaluate-openai
+```
+
+Os dois provedores recebem os mesmos quatro casos por split, schema `technical-sheet-v1` e prompt
+`extract-v3`. A avaliação reservada só pode ser executada depois que a calibração termina sem
+falha operacional; não se ajusta o prompt olhando o resultado reservado. Essa separação reduz o
+risco de adequar a solução ao próprio conjunto usado para medi-la.
+
 JSON, CSV e Markdown são gravados em `data/reports/`, fora do Git. Eles contêm métricas,
 identificadores sintéticos e erros classificados, mas não incluem chave, entrada normalizada,
 prompt completo ou resposta bruta do modelo.
+
+Os preços configurados servem apenas para estimar o custo da rodada e devem ser conferidos antes
+de cada execução. Testes e CI não fazem chamadas externas. Uma chave ausente ou inválida encerra
+a execução sem transformar a recusa do provedor em evidência de qualidade.
 
 ## Interpretação
 

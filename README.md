@@ -104,12 +104,17 @@ docker compose --profile tools run --rm synthetic-validate
 docker compose --profile tools run --rm synthetic-import
 ```
 
-### Avaliação opcional com Gemini
+### Avaliação opcional com provedores externos
 
 A execução básica, os testes e os dados sintéticos não exigem chave externa. Para repetir a
 avaliação de correlação com o Gemini, configure `GEMINI_API_KEY` somente no `.env` local e siga o
 [guia de execução local](docs/development.md#avaliação-live-da-correlação). Essa etapa consome
 cota do provider e não é necessária para iniciar a aplicação.
+
+A extração da ficha técnica também pode ser avaliada com OpenAI, sem mudar embeddings ou
+correlação. Configure `OPENAI_API_KEY` somente no `.env` local e siga o
+[protocolo da ficha](docs/technical-sheet-evaluation.md). Execute primeiro os quatro casos de
+calibração e só use os quatro casos reservados se a calibração for operacionalmente válida.
 
 Para repetir a validação integrada sem consumir a cota do Gemini, siga o protocolo e os comandos
 em [experimento integrado da PoC](docs/integrated-validation.md#reprodução-sem-consumir-cota-externa).

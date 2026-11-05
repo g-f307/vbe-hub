@@ -4,7 +4,7 @@ type: adr
 status: active
 title: "ADR-002: Isolar provedores de IA"
 created: 2026-09-28
-updated: 2026-09-29
+updated: 2026-11-04
 owner: VBE Hub
 related_docs:
   - DES-001
@@ -22,7 +22,7 @@ A PoC precisa de extração estruturada, embeddings e julgamento de relações. 
 
 ## Decisão
 
-Definir portas na camada de aplicação para extração, embeddings e julgamento de relação. Manter os tipos de domínio e os casos de uso sem imports de SDKs. Usar Gemini como implementação inicial de referência e Ollama somente como implementação opcional de comparação local.
+Definir portas na camada de aplicação para extração, embeddings e julgamento de relação. Manter os tipos de domínio e os casos de uso sem imports de SDKs. Usar Gemini como implementação inicial de referência, OpenAI como alternativa de avaliação para extração estruturada e Ollama somente como implementação opcional de comparação local. A inclusão de um provedor em uma porta não implica adotá-lo nas demais.
 
 ## Alternativas consideradas
 
@@ -31,4 +31,4 @@ Definir portas na camada de aplicação para extração, embeddings e julgamento
 
 ## Consequências
 
-O código terá pequenos adapters adicionais. Em troca, testes usam um provedor falso determinístico e uma suíte de contrato reutilizável, e a comparação Gemini/Ollama torna-se uma avaliação empírica do TCC. Erros atravessam essa fronteira apenas em categorias neutras e com mensagens sanitizadas.
+O código terá pequenos adapters adicionais. Em troca, testes usam um provedor falso determinístico e uma suíte de contrato reutilizável, e a comparação entre provedores torna-se uma avaliação empírica do TCC. Erros atravessam essa fronteira apenas em categorias neutras e com mensagens sanitizadas. Desde 2026-11-04, a porta `StructuredExtractor` possui também um adapter OpenAI; a decisão arquitetural original permanece inalterada.
