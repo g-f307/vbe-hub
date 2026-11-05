@@ -26,13 +26,14 @@ class EvaluationPrediction:
     record_id: str
     technical_sheet: Mapping[str, Any]
     metadata: AIExecutionMetadata
+    grounding_repaired_fields: tuple[str, ...]
 
 
 async def extract_predictions(
     records: list[EvaluationInput],
     *,
     extractor: StructuredExtractor,
-    prompt_version: str = "extract-v2",
+    prompt_version: str = "extract-v3",
 ) -> list[EvaluationPrediction]:
     predictions: list[EvaluationPrediction] = []
     for record in records:
@@ -54,6 +55,7 @@ async def extract_predictions(
                 record_id=record.record_id,
                 technical_sheet=result.technical_sheet,
                 metadata=result.metadata,
+                grounding_repaired_fields=result.grounding_repaired_fields,
             )
         )
     return predictions

@@ -9,7 +9,7 @@ from uuid import UUID
 from google import genai
 from google.genai import types
 
-from vbe_hub.adapters.ai.gemini import GeminiStructuredExtractor
+from vbe_hub.adapters.ai.gemini import PROMPT_VERSION, GeminiStructuredExtractor
 from vbe_hub.adapters.ai.google_genai_client import GoogleGenAIClient
 from vbe_hub.application.ai import ProviderError, ProviderErrorCode, StructuredExtractionRequest
 from vbe_hub.application.ai.technical_sheet import SCHEMA_VERSION
@@ -43,7 +43,7 @@ async def run_live(
         input_hash=hashlib.sha256(canonical).hexdigest(),
         normalized_data=normalized_data,
         schema_version=SCHEMA_VERSION,
-        prompt_version="extract-v2",
+        prompt_version=PROMPT_VERSION,
         trace_id="live-synthetic-fixture-v1",
     )
     root_client = client_factory(

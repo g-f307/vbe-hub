@@ -13,6 +13,7 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 7. [Protocolo de avaliação da ficha](technical-sheet-evaluation.md)
 8. [Linha de base Gemini de 29/09/2026](technical-sheet-baseline-2026-09-29.md)
 9. [Indexação semântica](semantic-indexing.md)
+   - [Análise e correção da extração em 28/10/2026](technical-sheet-remediation-2026-10-28.md)
 10. [Seleção de pares candidatos](candidate-selection.md)
 11. [Classificação das relações](relation-classification.md)
 12. [Avaliação da correlação](correlation-evaluation.md)

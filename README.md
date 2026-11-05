@@ -36,6 +36,10 @@ O [experimento integrado](docs/integrated-validation.md) reúne essas evidência
 reproduzível e sem novas chamadas ao Gemini. O resultado geral permanece bloqueado porque a linha
 de base da extração da ficha técnica ainda não atendeu a todas as metas; isso não altera as
 aprovações com ressalvas da correlação e do agrupamento.
+Uma [análise posterior](docs/technical-sheet-remediation-2026-10-28.md) corrigiu a perda integral
+de fichas causada por grounding de um único campo. A reavaliação continua pendente porque a
+calibração foi recusada por créditos esgotados antes de gerar respostas; portanto, a linha de base
+não foi substituída.
 Consulte o [contrato de leitura](docs/signal-read-api.md). Autenticação institucional e
 integrações reais com EIOS e Guardiões da Saúde permanecem fora desta etapa. A consolidação organiza evidências rastreáveis, mas não confirma
 ocorrências nem substitui a triagem de um profissional de saúde.

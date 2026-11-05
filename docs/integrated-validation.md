@@ -4,7 +4,7 @@ type: testing
 status: active
 title: Experimento integrado da prova de conceito
 created: 2026-10-27
-updated: 2026-10-27
+updated: 2026-10-28
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/evaluation/integrated_experiment.py
@@ -87,6 +87,11 @@ ser diluída pelas etapas aprovadas.
 
 A ficha, a relação, o agrupamento e a prioridade produzidos pela IA continuam sendo sugestões
 auditáveis. A decisão final pertence ao profissional de vigilância.
+
+Em 28/10/2026, a perda integral por grounding foi corrigida no código, mas a nova calibração foi
+recusada por crédito esgotado antes de produzir fichas. Assim, a linha de base antiga e o bloqueio
+global continuam vigentes até uma calibração e uma avaliação reservada válidas. Consulte a
+[análise da correção](technical-sheet-remediation-2026-10-28.md).
 
 ## Reprodução sem consumir cota externa
 

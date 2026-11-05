@@ -17,6 +17,7 @@ class CapturingExtractor:
         return StructuredExtractionResult(
             technical_sheet={"disease_or_condition": "sarampo"},
             evidence=(),
+            grounding_repaired_fields=("record_nature",),
             metadata=AIExecutionMetadata(
                 provider="test",
                 model="test-model",
@@ -43,6 +44,7 @@ async def test_extractor_receives_only_pipeline_input_without_gold() -> None:
     predictions = await extract_predictions(records, extractor=extractor)
 
     assert predictions[0].technical_sheet["disease_or_condition"] == "sarampo"
+    assert predictions[0].grounding_repaired_fields == ("record_nature",)
     assert extractor.requests[0].normalized_data == records[0].normalized_data
     assert "gold" not in extractor.requests[0].normalized_data
     assert "expected" not in extractor.requests[0].normalized_data

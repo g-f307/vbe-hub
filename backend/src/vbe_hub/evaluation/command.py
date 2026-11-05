@@ -4,6 +4,7 @@ import csv
 import hashlib
 import json
 import math
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -88,6 +89,9 @@ async def run_evaluation(
     output_units = sum(item.metadata.output_units or 0 for item in successes) + sum(
         item["output_units"] or 0 for item in failures
     )
+    repaired_fields = Counter(
+        field for item in successes for field in item.grounding_repaired_fields
+    )
     execution = {
         "attempted": len(records),
         "succeeded": len(successes),
@@ -102,6 +106,11 @@ async def run_evaluation(
         "estimated_cost_usd": _cost(
             input_units, output_units, input_usd_per_million, output_usd_per_million
         ),
+        "grounding_repairs": {
+            "records": sum(bool(item.grounding_repaired_fields) for item in successes),
+            "fields": sum(repaired_fields.values()),
+            "by_field": dict(sorted(repaired_fields.items())),
+        },
     }
     report = build_report(
         experiment={
