@@ -58,6 +58,7 @@ from vbe_hub.domain.records import (
     RawRecord,
     SourceKind,
 )
+from vbe_hub.normalization.adapters import CommunityNormalizer, MediaNormalizer
 
 _NAMESPACE = UUID("c64400c7-6a6e-4b94-b3d7-31abf4899965")
 _NOW = datetime(2026, 10, 10, 12, 0, tzinfo=UTC)
@@ -139,7 +140,13 @@ _SCENARIOS = (
 )
 
 
-async def load_demo_scenario(session: AsyncSession) -> DemoLoadResult:
+async def load_demo_scenario(
+    session: AsyncSession,
+    *,
+    scenario_keys: frozenset[str] | None = None,
+    store_fixture_sheets: bool = True,
+    relation_overrides: Mapping[str, RelationKind] | None = None,
+) -> DemoLoadResult:
     """Materialize the small offline scenario used by the manual panel demonstration.
 
     It intentionally uses the domain records and persistence adapters instead of SQL fixtures.
@@ -163,17 +170,28 @@ async def load_demo_scenario(session: AsyncSession) -> DemoLoadResult:
     workflow_service = WorkflowService(SqlAlchemyWorkflowRepository(session), now=lambda: _NOW)
     signal_ids: list[UUID] = []
 
-    for scenario in _SCENARIOS:
+    scenarios = (
+        _SCENARIOS
+        if scenario_keys is None
+        else tuple(item for item in _SCENARIOS if item.key in scenario_keys)
+    )
+    if scenario_keys is not None and len(scenarios) != len(scenario_keys):
+        raise ValueError("unknown demo scenario key")
+
+    for scenario in scenarios:
         records = await _store_records(
             scenario,
             raw_repository=raw_repository,
             extraction_repository=extraction_repository,
             created=created,
+            store_fixture_sheets=store_fixture_sheets,
         )
+        relation_kind = (relation_overrides or {}).get(scenario.key, RelationKind.CORROBORATES)
         relation = await _store_relation(
             scenario,
             records[0].id,
             records[1].id,
+            relation_kind=relation_kind,
             relation_repository=relation_repository,
             created=created,
         )
@@ -190,49 +208,65 @@ async def load_demo_scenario(session: AsyncSession) -> DemoLoadResult:
                 )
             ],
         )
-        signal = result.signals[0]
-        if await signal_repository.get(signal.id) is None:
-            created["signals"] += 1
+        for signal in result.signals:
+            if await signal_repository.get(signal.id) is None:
+                created["signals"] += 1
         await signal_repository.save(result)
-
-        priority = PriorityCalculator(
-            PriorityPolicy.v1(
-                version=_PRIORITY_VERSION,
-                attention_threshold=50,
-                prompt_threshold=80,
+        source_metadata = dict(
+            zip(
+                (record.id for record in records),
+                (
+                    (SourceKind.MEDIA, "demo-news"),
+                    (SourceKind.COMMUNITY, "demo-community"),
+                ),
+                strict=True,
             )
-        ).calculate(
-            signal=signal,
-            records=[
-                PriorityRecord(
-                    record_id=record.id,
-                    source_kind=source_kind,
-                    source_name=source_name,
-                    technical_sheet=_sheet(scenario),
-                )
-                for record, source_kind, source_name in zip(
-                    records,
-                    (SourceKind.MEDIA, SourceKind.COMMUNITY),
-                    ("demo-news", "demo-community"),
-                    strict=True,
-                )
-            ],
-            relations=[
-                PriorityRelation(
-                    assessment_id=relation.id,
-                    relation=RelationKind.CORROBORATES,
-                    record_ids=(records[0].id, records[1].id),
-                )
-            ],
-            evaluated_at=_NOW,
         )
-        if await priority_repository.get(priority.id) is None:
-            created["priorities"] += 1
-        await priority_repository.save(priority)
-        created["workflow_events"] += await _ensure_workflow(
-            workflow_service, signal.id, scenario.key, scenario.target_state
-        )
-        signal_ids.append(signal.id)
+        for signal in result.signals:
+            priority = PriorityCalculator(
+                PriorityPolicy.v1(
+                    version=_PRIORITY_VERSION,
+                    attention_threshold=50,
+                    prompt_threshold=80,
+                )
+            ).calculate(
+                signal=signal,
+                records=[
+                    PriorityRecord(
+                        record_id=record_id,
+                        source_kind=source_metadata[record_id][0],
+                        source_name=source_metadata[record_id][1],
+                        technical_sheet=_sheet(scenario),
+                    )
+                    for record_id in (*signal.core_record_ids, *signal.context_record_ids)
+                ],
+                relations=(
+                    [
+                        PriorityRelation(
+                            assessment_id=relation.id,
+                            relation=relation_kind,
+                            record_ids=(records[0].id, records[1].id),
+                        )
+                    ]
+                    if relation.id in signal.relation_ids
+                    else []
+                ),
+                evaluated_at=_NOW,
+            )
+            if await priority_repository.get(priority.id) is None:
+                created["priorities"] += 1
+            await priority_repository.save(priority)
+            created["workflow_events"] += await _ensure_workflow(
+                workflow_service,
+                signal.id,
+                (
+                    scenario.key
+                    if relation_kind is RelationKind.CORROBORATES
+                    else f"{scenario.key}-{relation_kind.value}-{signal.id}"
+                ),
+                scenario.target_state,
+            )
+            signal_ids.append(signal.id)
 
     return DemoLoadResult(
         created=MappingProxyType(created),
@@ -246,6 +280,7 @@ async def _store_records(
     raw_repository: SqlAlchemyRawRecordRepository,
     extraction_repository: SqlAlchemyExtractionRepository,
     created: dict[str, int],
+    store_fixture_sheets: bool,
 ) -> tuple[NormalizedRecord, NormalizedRecord]:
     records: list[NormalizedRecord] = []
     for source_kind, source_name, title, body in _source_rows(scenario):
@@ -287,14 +322,19 @@ async def _store_records(
                 raw_record_id=raw_id,
                 normalizer_version=_NORMALIZER_VERSION,
                 status=NormalizationStatus(state=ProcessingState.SUCCEEDED),
-                normalized_data={"text": raw.body, "synthetic": True},
+                normalized_data=(
+                    MediaNormalizer().normalize(raw)
+                    if source_kind is SourceKind.MEDIA
+                    else CommunityNormalizer().normalize(raw)
+                )
+                | {"synthetic": True},
                 created_at=scenario.published_at,
                 updated_at=scenario.published_at,
             )
             await raw_repository.save_normalized(normalized)
             created["normalized_records"] += 1
         cache_key = _hash(f"extraction:{scenario.key}:{source_kind.value}")
-        if await extraction_repository.get_succeeded(cache_key) is None:
+        if store_fixture_sheets and await extraction_repository.get_succeeded(cache_key) is None:
             await extraction_repository.save(
                 ExtractionRecord(
                     id=_id(f"extraction:{scenario.key}:{source_kind.value}"),
@@ -334,19 +374,27 @@ async def _store_relation(
     left_id: UUID,
     right_id: UUID,
     *,
+    relation_kind: RelationKind,
     relation_repository: SqlAlchemyRelationAssessmentRepository,
     created: dict[str, int],
 ) -> RelationAssessmentRecord:
-    cache_key = _hash(f"relation:{scenario.key}")
+    # Preserve the identifiers of the original corroborating demo so an upgrade does not
+    # duplicate cards already loaded by `demo-load`. Alternative relations are separate fixtures.
+    relation_identity = (
+        f"relation:{scenario.key}"
+        if relation_kind is RelationKind.CORROBORATES
+        else f"relation:{scenario.key}:{relation_kind.value}"
+    )
+    cache_key = _hash(relation_identity)
     existing = await relation_repository.get(cache_key)
     if existing is not None:
         return existing
     relation = RelationAssessmentRecord(
-        id=_id(f"relation:{scenario.key}"),
+        id=_id(relation_identity),
         cache_key=cache_key,
         left_id=min(left_id, right_id, key=str),
         right_id=max(left_id, right_id, key=str),
-        relation=RelationKind.CORROBORATES,
+        relation=relation_kind,
         method=RelationMethod.PROVIDER,
         confidence=0.88,
         justification="Fontes sintéticas independentes descrevem o mesmo sinal demonstrativo.",
