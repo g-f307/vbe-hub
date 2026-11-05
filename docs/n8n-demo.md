@@ -4,7 +4,7 @@ type: guide
 status: active
 title: Demonstração do fluxo de fontes dispersas com n8n
 created: 2026-11-04
-updated: 2026-11-04
+updated: 2026-11-05
 owner: VBE Hub
 related_docs:
   - ADR-004
@@ -21,63 +21,89 @@ uma confirmação de evento de saúde.
 
 ## O que o fluxo demonstra
 
-O workflow `VBE Hub — fontes dispersas e consolidação` contém duas entradas identificáveis:
+O workflow `VBE Hub — lote manual de 10 sinais` contém duas etapas de fonte identificáveis para
+cada caso:
 
 - **Fonte 1 — notícia:** simula um registro de mídia;
 - **Fonte 2 — relato comunitário:** simula um registro comunitário independente.
 
-O n8n reúne as duas entradas e solicita ao backend a execução de um dos três cenários fechados:
+O catálogo fechado contém dez pares de fontes com linguagem natural. O texto se parece com o que
+poderia chegar de uma notícia local ou canal comunitário, mas os metadados preservam
+`synthetic: true` e nenhuma narrativa representa uma ocorrência real.
 
-| Cenário | Relação demonstrada | Resultado esperado |
+| Caso | Localização | Conteúdo principal |
 | --- | --- | --- |
-| `related` | Evidências corroborantes | Um card consolidado com as duas origens. |
-| `incompatible` | Evidências incompatíveis | Dois cards separados. |
-| `ambiguous` | Contexto relacionado, mas inconclusivo | Dois cards ligados por contexto para revisão profissional. |
+| `dengue-compensa` | Compensa | Síndrome febril e sinais de alarme. |
+| `sarampo-cidade-nova` | Cidade Nova | Febre e exantema em crianças. |
+| `leptospirose-jorge-teixeira` | Jorge Teixeira | Sintomas após contato com alagamento. |
+| `malaria-taruma` | Tarumã | Febre intermitente e calafrios. |
+| `doenca-diarreica-educandos` | Educandos | Diarreia, vômito e dor abdominal. |
+| `influenza-parque-dez` | Parque 10 | Síndrome gripal em ambiente escolar. |
+| `hepatite-a-colonia-antonio-aleixo` | Colônia Antônio Aleixo | Icterícia e sintomas gastrointestinais. |
+| `chikungunya-ponta-negra` | Ponta Negra | Febre e dor articular intensa. |
+| `meningite-zumbi` | Zumbi | Síndrome febril com rigidez de nuca. |
+| `febre-amarela-reserva-ducke` | Entorno da Reserva Ducke | Síndrome febril após exposição em mata. |
+
+Cada par é classificado como corroborante para formar exatamente um card. Essa relação é uma
+fixture demonstrativa, não uma conclusão produzida ou validada pela IA.
 
 O n8n apenas apresenta e orquestra a demonstração. Persistência, normalização, ficha técnica,
 relação, consolidação e prioridade continuam sob responsabilidade do backend canônico.
 
 ## Rodada limpa: estado antes e depois
 
-Use sempre o projeto isolado `vbe-hub-demo`. O primeiro comando remove **somente** os containers,
-rede e volumes desse projeto demonstrativo; ele não remove o banco do projeto Compose padrão.
+O reset abaixo remove containers, banco, cache e cadastro local do n8n do projeto `vbe-hub`.
+Execute-o somente quando quiser descartar toda a rodada local:
 
 ```bash
-docker compose -p vbe-hub-demo --profile demo down --volumes
-docker compose -p vbe-hub-demo --profile demo up --build --detach --wait
+docker compose -p vbe-hub --profile demo down --volumes
+docker compose -p vbe-hub --profile demo up --build --detach --wait
 ```
 
 Abra o painel em `http://localhost:3000/triagem`. Antes da execução, a fila deve mostrar o estado
 vazio. A resposta canônica também pode ser verificada em `http://localhost:8000/signals`.
 
-Abra `http://localhost:5678`, crie a conta proprietária **local** solicitada pelo n8n e selecione o
-workflow importado. No nó **Configuração da demonstração**, mantenha inicialmente:
+## Execução manual na interface do n8n
 
-- `scenario`: `related`;
-- `mode`: `offline`.
+1. Abra `http://localhost:5678`.
+2. Se for a primeira execução após o reset, crie a conta proprietária **local** solicitada pelo
+   n8n. Não reutilize uma senha institucional.
+3. Abra o workflow **VBE Hub — lote manual de 10 sinais**.
+4. Abra o nó **Configurar execução manual** e escolha os três campos:
 
-Execute o workflow. O último nó resume a relação sugerida, os itens criados e os identificadores dos
-cards. Recarregue `/triagem`: o estado posterior deve conter um card com evidências de mídia e
-comunidade. A investigação do card preserva o vínculo com os dois registros de origem. Reexecutar o
-mesmo cenário é idempotente e não duplica o card.
+   - `execution_scope`: `single` para um caso ou `batch` para os dez;
+   - `case_id`: um identificador da tabela acima; usado somente quando o escopo é `single`;
+   - `mode`: `offline` para fixtures gratuitas ou `online` para extração OpenAI.
 
-Para repetir a comparação desde o banco vazio, execute novamente os dois comandos de reset e subida.
+5. Feche o editor do nó e clique em **Execute workflow**. Esse clique é o único gatilho: não há
+   agenda, webhook ou execução automática.
+6. Acompanhe **Processar um caso por vez**. Cada item passa por notícia, relato comunitário,
+   backend e resultado antes de o próximo começar.
+7. Abra ou atualize `http://localhost:3000/triagem`. No escopo `batch`, a rodada concluída deve
+   apresentar dez cards; cada card conserva duas origens.
+
+Para observar o antes e o depois com mais clareza, comece com `single`, `dengue-compensa` e
+`offline`. Depois altere para `batch` e execute os nove casos ainda ausentes. Como a carga é
+idempotente, o caso inicial não será duplicado.
+
+Para repetir a comparação desde o banco vazio, execute novamente os comandos de reset e subida.
 
 ## Modo online opcional
 
 O modo `offline` usa fichas sintéticas congeladas e não consome API externa. Para demonstrar a
 extração com OpenAI, configure `OPENAI_API_KEY` apenas no `.env` local e troque `mode` para
-`online`. Uma primeira execução faz no máximo duas extrações — uma por fonte — e o cache persistido
-evita nova cobrança para entradas idênticas.
+`online`. Um caso faz no máximo duas extrações; o lote completo faz no máximo vinte. O cache
+persistido evita nova cobrança para entradas idênticas.
 
-No modo online, a IA estrutura as duas fontes. A relação usada pelos três cenários é deliberadamente
-pré-definida para que a apresentação seja repetível; portanto, esta demonstração não mede acurácia
-do modelo e não substitui os protocolos de avaliação do projeto.
+Faça primeiro um caso online e confira o consumo no provedor antes de escolher o lote. No modo
+online, a IA estrutura as fontes, mas a relação dos dez casos continua predefinida para que a
+apresentação seja repetível. Esta demonstração não mede acurácia e não substitui os protocolos de
+avaliação do projeto.
 
 ## Segurança e limites
 
 - o workflow não contém chave de API; somente o backend recebe a credencial pelo ambiente;
-- cenário e modo são listas fechadas, não texto arbitrário enviado a ferramentas;
+- escopo, caso e modo são listas fechadas; o lote tem no máximo dez casos;
 - o n8n não recebe acesso ao banco e chama apenas a rota interna da API;
 - diagnósticos, catálogo de templates e notificações externas do n8n ficam desativados;
 - os dados são sintéticos e não devem ser substituídos por relatos identificáveis;
@@ -86,5 +112,5 @@ do modelo e não substitui os protocolos de avaliação do projeto.
 Para encerrar sem apagar a evidência local, use:
 
 ```bash
-docker compose -p vbe-hub-demo --profile demo down
+docker compose -p vbe-hub --profile demo down
 ```
