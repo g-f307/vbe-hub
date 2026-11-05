@@ -33,11 +33,10 @@ O backend permanece responsável por persistência, normalização, extração, 
 prioridade. O perfil `demo` do Docker Compose importa o workflow versionado e mantém os dados do n8n
 em volume próprio.
 
-O modo offline é o padrão reproduzível. O catálogo manual é fechado em dez casos e o n8n os envia
-sequencialmente, um par de fontes por vez. O modo OpenAI é opcional, recebe a credencial
-exclusivamente no backend e limita a rodada completa a vinte entradas. A classificação de relação
-dos casos é congelada para assegurar uma narrativa repetível e não deve ser apresentada como
-avaliação de acurácia.
+O catálogo manual é fechado em dez casos e o n8n os envia sequencialmente, um par de fontes por
+vez. O modo OpenAI é o percurso principal, recebe a credencial exclusivamente no backend, extrai as
+duas fichas e classifica a relação antes da consolidação. O modo offline conserva fixtures apenas
+como contingência e não deve ser apresentado como avaliação da IA.
 
 ## Alternativas consideradas
 

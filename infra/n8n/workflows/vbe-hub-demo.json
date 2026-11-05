@@ -17,7 +17,7 @@
           "assignments": [
             {"id": "scope", "name": "execution_scope", "value": "batch", "type": "string"},
             {"id": "case", "name": "case_id", "value": "dengue-compensa", "type": "string"},
-            {"id": "mode", "name": "mode", "value": "offline", "type": "string"}
+            {"id": "mode", "name": "mode", "value": "online", "type": "string"}
           ]
         },
         "options": {}

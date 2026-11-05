@@ -44,8 +44,9 @@ poderia chegar de uma notícia local ou canal comunitário, mas os metadados pre
 | `meningite-zumbi` | Zumbi | Síndrome febril com rigidez de nuca. |
 | `febre-amarela-reserva-ducke` | Entorno da Reserva Ducke | Síndrome febril após exposição em mata. |
 
-Cada par é classificado como corroborante para formar exatamente um card. Essa relação é uma
-fixture demonstrativa, não uma conclusão produzida ou validada pela IA.
+No modo online, cada par é deliberadamente enviado sem uma relação predefinida: a OpenAI estrutura
+as fontes e sugere a relação, e o consolidado respeita essa resposta validada. Assim, dez casos de
+entrada não garantem dez cards de saída; divergências fazem parte do que deve ser observado.
 
 O n8n apenas apresenta e orquestra a demonstração. Persistência, normalização, ficha técnica,
 relação, consolidação e prioridade continuam sob responsabilidade do backend canônico.
@@ -79,31 +80,36 @@ vazio. A resposta canônica também pode ser verificada em `http://localhost:800
    agenda, webhook ou execução automática.
 6. Acompanhe **Processar um caso por vez**. Cada item passa por notícia, relato comunitário,
    backend e resultado antes de o próximo começar.
-7. Abra ou atualize `http://localhost:3000/triagem`. No escopo `batch`, a rodada concluída deve
-   apresentar dez cards; cada card conserva duas origens.
+7. Abra ou atualize `http://localhost:3000/triagem`. A quantidade final de cards depende das
+   relações sugeridas pela IA: fontes corroborantes podem formar um card; fontes incompatíveis
+   permanecem separadas.
 
 Para observar o antes e o depois com mais clareza, comece com `single`, `dengue-compensa` e
-`offline`. Depois altere para `batch` e execute os nove casos ainda ausentes. Como a carga é
-idempotente, o caso inicial não será duplicado.
+`online`. Depois altere para `batch` se o primeiro resultado e o consumo estiverem adequados. Como
+a carga é idempotente, o caso inicial não será duplicado.
 
 Para repetir a comparação desde o banco vazio, execute novamente os comandos de reset e subida.
 
 ## Modo online opcional
 
-O modo `offline` usa fichas sintéticas congeladas e não consome API externa. Para demonstrar a
-extração com OpenAI, configure `OPENAI_API_KEY` apenas no `.env` local e troque `mode` para
-`online`. Um caso faz no máximo duas extrações; o lote completo faz no máximo vinte. O cache
-persistido evita nova cobrança para entradas idênticas.
+O modo `online` é o padrão da demonstração e chama a OpenAI para duas extrações e uma classificação
+de relação por caso. Configure `OPENAI_API_KEY` apenas no `.env` local. Uma rodada completa envolve
+até trinta operações lógicas do provedor, sem contar eventuais tentativas automáticas da extração.
+O cache persistido evita repetir análises bem-sucedidas para entradas idênticas.
 
 Faça primeiro um caso online e confira o consumo no provedor antes de escolher o lote. No modo
-online, a IA estrutura as fontes, mas a relação dos dez casos continua predefinida para que a
-apresentação seja repetível. Esta demonstração não mede acurácia e não substitui os protocolos de
-avaliação do projeto.
+online, a IA estrutura as duas fontes e classifica se são duplicadas, corroborantes, atualizações,
+contexto relacionado ou não relacionadas. Essa classificação define se o sistema consolida ou
+separa os cards. A rodada continua exploratória e não substitui os protocolos formais de avaliação.
+
+O modo `offline` permanece apenas como contingência. Ele usa fichas e relações congeladas, não
+consome API externa e não serve para avaliar o comportamento da IA.
 
 ## Segurança e limites
 
 - o workflow não contém chave de API; somente o backend recebe a credencial pelo ambiente;
 - escopo, caso e modo são listas fechadas; o lote tem no máximo dez casos;
+- a IA não recebe ferramentas e sua saída precisa passar por schema antes da persistência;
 - o n8n não recebe acesso ao banco e chama apenas a rota interna da API;
 - diagnósticos, catálogo de templates e notificações externas do n8n ficam desativados;
 - os dados são sintéticos e não devem ser substituídos por relatos identificáveis;
