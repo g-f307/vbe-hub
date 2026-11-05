@@ -1,0 +1,122 @@
+{
+  "id": "vbeHubDemo64",
+  "name": "VBE Hub — fontes dispersas até sinal consolidado",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Iniciar demonstração",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-760, 120]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "scenario", "name": "scenario", "value": "related", "type": "string"},
+            {"id": "mode", "name": "mode", "value": "offline", "type": "string"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "configuration",
+      "name": "Escolher cenário e modo",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-540, 120]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "kind-media", "name": "source_kind", "value": "media", "type": "string"},
+            {"id": "title-media", "name": "title", "value": "Notícia sintética: aumento de casos e sintomas no bairro", "type": "string"},
+            {"id": "body-media", "name": "text", "value": "Veículo local relata aumento de atendimentos por febre e manchas vermelhas em Cidade Nova.", "type": "string"},
+            {"id": "synthetic-media", "name": "synthetic", "value": true, "type": "boolean"}
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "media-source",
+      "name": "Fonte 1 — notícia",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-300, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "kind-community", "name": "source_kind", "value": "community", "type": "string"},
+            {"id": "body-community", "name": "text", "value": "Moradores relatam crianças com febre e manchas vermelhas no mesmo bairro nesta semana.", "type": "string"},
+            {"id": "synthetic-community", "name": "synthetic", "value": true, "type": "boolean"}
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "community-source",
+      "name": "Fonte 2 — relato comunitário",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-300, 240]
+    },
+    {
+      "parameters": {"mode": "append", "options": {}},
+      "id": "merge-sources",
+      "name": "Agregar fontes dispersas",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [-60, 120]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://api:8000/demo/scenarios/{{ $('Escolher cenário e modo').first().json.scenario }}/runs",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\"mode\": \"{{ $('Escolher cenário e modo').first().json.mode }}\"}",
+        "options": {"timeout": 30000}
+      },
+      "id": "run-vbe-hub",
+      "name": "VBE Hub — normalizar, extrair e consolidar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [180, 120]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "result", "name": "resultado", "value": "={{ $json }}", "type": "object"},
+            {"id": "panel", "name": "abrir_painel", "value": "http://localhost:3000/triagem", "type": "string"},
+            {"id": "notice", "name": "aviso", "value": "A IA apenas sugere relações; a decisão pertence à vigilância.", "type": "string"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "human-review",
+      "name": "Resultado para revisão humana",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [430, 120]
+    }
+  ],
+  "connections": {
+    "Iniciar demonstração": {"main": [[{"node": "Escolher cenário e modo", "type": "main", "index": 0}]]},
+    "Escolher cenário e modo": {"main": [[{"node": "Fonte 1 — notícia", "type": "main", "index": 0}, {"node": "Fonte 2 — relato comunitário", "type": "main", "index": 0}]]},
+    "Fonte 1 — notícia": {"main": [[{"node": "Agregar fontes dispersas", "type": "main", "index": 0}]]},
+    "Fonte 2 — relato comunitário": {"main": [[{"node": "Agregar fontes dispersas", "type": "main", "index": 1}]]},
+    "Agregar fontes dispersas": {"main": [[{"node": "VBE Hub — normalizar, extrair e consolidar", "type": "main", "index": 0}]]},
+    "VBE Hub — normalizar, extrair e consolidar": {"main": [[{"node": "Resultado para revisão humana", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "saveManualExecutions": true},
+  "staticData": null,
+  "meta": {"templateCredsSetupCompleted": true},
+  "pinData": {},
+  "tags": []
+}
