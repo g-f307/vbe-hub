@@ -1,58 +1,77 @@
 {
   "id": "vbeHubDemo64",
-  "name": "VBE Hub — fontes dispersas até sinal consolidado",
+  "name": "VBE Hub — lote manual de 10 sinais",
   "active": false,
   "nodes": [
     {
       "parameters": {},
       "id": "manual-trigger",
-      "name": "Iniciar demonstração",
+      "name": "Iniciar somente quando eu clicar",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [-760, 120]
+      "position": [-980, 180]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            {"id": "scenario", "name": "scenario", "value": "related", "type": "string"},
-            {"id": "mode", "name": "mode", "value": "offline", "type": "string"}
+            {"id": "scope", "name": "execution_scope", "value": "batch", "type": "string"},
+            {"id": "case", "name": "case_id", "value": "dengue-compensa", "type": "string"},
+            {"id": "mode", "name": "mode", "value": "online", "type": "string"}
           ]
         },
         "options": {}
       },
       "id": "configuration",
-      "name": "Escolher cenário e modo",
+      "name": "Configurar execução manual",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [-540, 120]
+      "position": [-760, 180]
+    },
+    {
+      "parameters": {
+        "jsCode": "const config = $('Configurar execução manual').first().json;\nconst cases = [\n  {case_id:'dengue-compensa', label:'Dengue — Compensa', media_title:'Unidades registram aumento de atendimentos por dengue na Compensa', media_text:'Serviços de saúde da zona oeste observaram crescimento na procura por atendimento de pessoas com febre, dor no corpo e sinais de sangramento na Compensa.', community_text:'Moradores da Compensa comentam que várias famílias procuraram atendimento nos últimos dias por febre alta, dores no corpo e mal-estar.'},\n  {case_id:'sarampo-cidade-nova', label:'Sarampo — Cidade Nova', media_title:'Crianças com febre e manchas na pele mobilizam atendimento na Cidade Nova', media_text:'Famílias buscaram avaliação para crianças com febre e manchas avermelhadas na pele em diferentes pontos da Cidade Nova.', community_text:'Responsáveis relatam em grupos do bairro crianças com febre, olhos irritados e manchas vermelhas pelo corpo ao longo desta semana.'},\n  {case_id:'leptospirose-jorge-teixeira', label:'Leptospirose — Jorge Teixeira', media_title:'Após alagamentos, moradores procuram atendimento com sintomas febris', media_text:'Unidades atenderam pessoas com febre, dor muscular e náusea depois do contato com água acumulada durante as chuvas.', community_text:'No Jorge Teixeira, moradores relatam febre forte e dores nas pernas depois de atravessarem áreas alagadas para chegar em casa.'},\n  {case_id:'malaria-taruma', label:'Malária — Tarumã', media_title:'Casos de febre com calafrios levam moradores do Tarumã às unidades de saúde', media_text:'Equipes registraram procura de moradores do Tarumã com episódios de febre que vai e volta, calafrios intensos e sudorese, principalmente no fim do dia.', community_text:'Moradores próximos a áreas de mata no Tarumã relatam vizinhos com febre em ciclos, tremores e suor intenso durante a noite.'},\n  {case_id:'doenca-diarreica-educandos', label:'Doença diarreica — Educandos', media_title:'Aumenta procura por atendimento após episódios de diarreia em Educandos', media_text:'Moradores de Educandos buscaram atendimento com diarreia, vômito e dor abdominal. Os relatos se concentram em famílias de ruas próximas à orla.', community_text:'Famílias de Educandos dizem que adultos e crianças da mesma casa tiveram diarreia e vômitos depois do fim de semana.'},\n  {case_id:'influenza-parque-dez', label:'Síndrome gripal — Parque 10', media_title:'Síndrome gripal eleva ausências em escolas do Parque 10', media_text:'Escolas do Parque 10 registraram aumento de faltas entre alunos com febre, tosse e dor de garganta durante a semana.', community_text:'Responsáveis de alunos do Parque 10 relatam muitas crianças em casa com tosse forte, febre e incômodo na garganta.'},\n  {case_id:'hepatite-a-colonia-antonio-aleixo', label:'Hepatite A — Colônia Antônio Aleixo', media_title:'Pacientes com sinais de icterícia são atendidos na Colônia Antônio Aleixo', media_text:'Serviços locais avaliaram pacientes com pele e olhos amarelados, náusea e dor abdominal na Colônia Antônio Aleixo.', community_text:'Moradores da Colônia Antônio Aleixo comentam casos de pessoas com olhos amarelados, enjoo persistente e dor na barriga.'},\n  {case_id:'chikungunya-ponta-negra', label:'Chikungunya — Ponta Negra', media_title:'Dor intensa nas articulações motiva atendimentos na Ponta Negra', media_text:'Pacientes da Ponta Negra procuraram atendimento com febre, inchaço e dores fortes nas articulações, com dificuldade para caminhar.', community_text:'Em grupos da Ponta Negra, moradores relatam febre seguida de dor muito forte nas mãos, pés e joelhos.'},\n  {case_id:'meningite-zumbi', label:'Síndrome meníngea — Zumbi', media_title:'Pacientes com febre e rigidez de nuca são avaliados na zona leste', media_text:'Uma unidade da zona leste recebeu pacientes do Zumbi com febre alta, dor de cabeça intensa e dificuldade para movimentar o pescoço.', community_text:'Moradores do Zumbi relatam pessoas da mesma área com febre, dor de cabeça muito forte e pescoço endurecido.'},\n  {case_id:'febre-amarela-reserva-ducke', label:'Síndrome compatível com febre amarela — Reserva Ducke', media_title:'Quadros febris após atividades em área de mata são investigados em Manaus', media_text:'Pessoas que estiveram no entorno da Reserva Ducke foram atendidas com febre, dor muscular e coloração amarelada nos olhos.', community_text:'Moradores próximos à Reserva Ducke relatam trabalhadores com febre forte, dores no corpo e olhos amarelados depois de entrarem na mata.'}\n];\nif (!['single','batch'].includes(config.execution_scope)) throw new Error('execution_scope deve ser single ou batch');\nif (!['offline','online'].includes(config.mode)) throw new Error('mode deve ser offline ou online');\nconst selected = config.execution_scope === 'batch' ? cases : cases.filter(item => item.case_id === config.case_id);\nif (selected.length === 0) throw new Error('case_id não pertence ao catálogo permitido');\nreturn selected.map((item, index) => ({json:{...item, mode:config.mode, synthetic:true, sequence:index + 1, total:selected.length}}));"
+      },
+      "id": "catalog",
+      "name": "Catálogo fechado de 10 casos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-520, 180]
+    },
+    {
+      "parameters": {"options": {}, "batchSize": 1},
+      "id": "loop",
+      "name": "Processar um caso por vez",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [-280, 180]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            {"id": "kind-media", "name": "source_kind", "value": "media", "type": "string"},
-            {"id": "title-media", "name": "title", "value": "Notícia sintética: aumento de casos e sintomas no bairro", "type": "string"},
-            {"id": "body-media", "name": "text", "value": "Veículo local relata aumento de atendimentos por febre e manchas vermelhas em Cidade Nova.", "type": "string"},
-            {"id": "synthetic-media", "name": "synthetic", "value": true, "type": "boolean"}
+            {"id": "media-kind", "name": "media.source_kind", "value": "media", "type": "string"},
+            {"id": "media-title", "name": "media.title", "value": "={{ $json.media_title }}", "type": "string"},
+            {"id": "media-text", "name": "media.text", "value": "={{ $json.media_text }}", "type": "string"},
+            {"id": "media-synthetic", "name": "media.synthetic", "value": true, "type": "boolean"}
           ]
         },
         "includeOtherFields": true,
         "options": {}
       },
       "id": "media-source",
-      "name": "Fonte 1 — notícia",
+      "name": "Fonte 1 — notícia local",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [-300, 0]
+      "position": [-40, 300]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            {"id": "kind-community", "name": "source_kind", "value": "community", "type": "string"},
-            {"id": "body-community", "name": "text", "value": "Moradores relatam crianças com febre e manchas vermelhas no mesmo bairro nesta semana.", "type": "string"},
-            {"id": "synthetic-community", "name": "synthetic", "value": true, "type": "boolean"}
+            {"id": "community-kind", "name": "community.source_kind", "value": "community", "type": "string"},
+            {"id": "community-text", "name": "community.text", "value": "={{ $json.community_text }}", "type": "string"},
+            {"id": "community-synthetic", "name": "community.synthetic", "value": true, "type": "boolean"}
           ]
         },
         "includeOtherFields": true,
@@ -62,57 +81,67 @@
       "name": "Fonte 2 — relato comunitário",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [-300, 240]
-    },
-    {
-      "parameters": {"mode": "append", "options": {}},
-      "id": "merge-sources",
-      "name": "Agregar fontes dispersas",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [-60, 120]
+      "position": [200, 300]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://api:8000/demo/scenarios/{{ $('Escolher cenário e modo').first().json.scenario }}/runs",
+        "url": "=http://api:8000/demo/scenarios/{{ $json.case_id }}/runs",
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={\"mode\": \"{{ $('Escolher cenário e modo').first().json.mode }}\"}",
-        "options": {"timeout": 30000}
+        "body": "={\"mode\": \"{{ $json.mode }}\"}",
+        "options": {"timeout": 60000}
       },
       "id": "run-vbe-hub",
-      "name": "VBE Hub — normalizar, extrair e consolidar",
+      "name": "VBE Hub — persistir e consolidar",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [180, 120]
+      "position": [440, 300]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            {"id": "result", "name": "resultado", "value": "={{ $json }}", "type": "object"},
-            {"id": "panel", "name": "abrir_painel", "value": "http://localhost:3000/triagem", "type": "string"},
-            {"id": "notice", "name": "aviso", "value": "A IA apenas sugere relações; a decisão pertence à vigilância.", "type": "string"}
+            {"id": "result", "name": "resultado_do_caso", "value": "={{ $json }}", "type": "object"},
+            {"id": "notice", "name": "aviso", "value": "Sugestão automática; a decisão pertence à vigilância.", "type": "string"}
           ]
         },
         "options": {}
       },
-      "id": "human-review",
-      "name": "Resultado para revisão humana",
+      "id": "case-result",
+      "name": "Resultado do caso para revisão",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [430, 120]
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "status", "name": "status", "value": "Lote concluído. Confira os cards no painel.", "type": "string"},
+            {"id": "panel", "name": "abrir_painel", "value": "http://localhost:3000/triagem", "type": "string"},
+            {"id": "review", "name": "revisao_humana", "value": "Obrigatória antes de qualquer interpretação sanitária.", "type": "string"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "batch-result",
+      "name": "Fim — abrir painel e revisar",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-40, 40]
     }
   ],
   "connections": {
-    "Iniciar demonstração": {"main": [[{"node": "Escolher cenário e modo", "type": "main", "index": 0}]]},
-    "Escolher cenário e modo": {"main": [[{"node": "Fonte 1 — notícia", "type": "main", "index": 0}, {"node": "Fonte 2 — relato comunitário", "type": "main", "index": 0}]]},
-    "Fonte 1 — notícia": {"main": [[{"node": "Agregar fontes dispersas", "type": "main", "index": 0}]]},
-    "Fonte 2 — relato comunitário": {"main": [[{"node": "Agregar fontes dispersas", "type": "main", "index": 1}]]},
-    "Agregar fontes dispersas": {"main": [[{"node": "VBE Hub — normalizar, extrair e consolidar", "type": "main", "index": 0}]]},
-    "VBE Hub — normalizar, extrair e consolidar": {"main": [[{"node": "Resultado para revisão humana", "type": "main", "index": 0}]]}
+    "Iniciar somente quando eu clicar": {"main": [[{"node": "Configurar execução manual", "type": "main", "index": 0}]]},
+    "Configurar execução manual": {"main": [[{"node": "Catálogo fechado de 10 casos", "type": "main", "index": 0}]]},
+    "Catálogo fechado de 10 casos": {"main": [[{"node": "Processar um caso por vez", "type": "main", "index": 0}]]},
+    "Processar um caso por vez": {"main": [[{"node": "Fim — abrir painel e revisar", "type": "main", "index": 0}], [{"node": "Fonte 1 — notícia local", "type": "main", "index": 0}]]},
+    "Fonte 1 — notícia local": {"main": [[{"node": "Fonte 2 — relato comunitário", "type": "main", "index": 0}]]},
+    "Fonte 2 — relato comunitário": {"main": [[{"node": "VBE Hub — persistir e consolidar", "type": "main", "index": 0}]]},
+    "VBE Hub — persistir e consolidar": {"main": [[{"node": "Resultado do caso para revisão", "type": "main", "index": 0}]]},
+    "Resultado do caso para revisão": {"main": [[{"node": "Processar um caso por vez", "type": "main", "index": 0}]]}
   },
   "settings": {"executionOrder": "v1", "saveManualExecutions": true},
   "staticData": null,

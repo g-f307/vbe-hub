@@ -7,7 +7,21 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-DemoScenario = Literal["related", "incompatible", "ambiguous"]
+DemoScenario = Literal[
+    "related",
+    "incompatible",
+    "ambiguous",
+    "dengue-compensa",
+    "sarampo-cidade-nova",
+    "leptospirose-jorge-teixeira",
+    "malaria-taruma",
+    "doenca-diarreica-educandos",
+    "influenza-parque-dez",
+    "hepatite-a-colonia-antonio-aleixo",
+    "chikungunya-ponta-negra",
+    "meningite-zumbi",
+    "febre-amarela-reserva-ducke",
+]
 DemoMode = Literal["online", "offline"]
 
 
