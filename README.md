@@ -87,6 +87,10 @@ integração e smoke test. Consulte o [guia de integração contínua](docs/cont
 
 ### Cenário demonstrativo do painel
 
+Para uma apresentação visual do percurso notícia + relato comunitário, com banco isolado e uma
+comparação verificável entre fila vazia e cards consolidados, use o perfil n8n descrito no
+[guia da demonstração de fontes dispersas](docs/n8n-demo.md). O modo padrão não consome API externa.
+
 Para popular triagem e investigação sem chamar Gemini, carregue o cenário canônico pequeno:
 
 ```bash

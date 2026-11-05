@@ -12,3 +12,4 @@ Voltar à [documentação](../README.md).
 | [ADR-006](ADR-006-versioned-signal-consolidation.md) | Aceita | Consolidação determinística, auditável e versionada. |
 | [ADR-007](ADR-007-rules-based-suggested-priority.md) | Aceita | Prioridade sugerida por regras explicáveis e versionadas. |
 | [ADR-008](ADR-008-append-only-human-review.md) | Aceita | Decisões humanas como eventos imutáveis e concorrentes. |
+| [ADR-009](ADR-009-n8n-demo-orchestration.md) | Aceita | n8n restrito à orquestração visual da demonstração sintética. |

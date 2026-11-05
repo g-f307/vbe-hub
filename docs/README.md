@@ -30,9 +30,10 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 22. [Modelo persistente inicial](data-model.md)
 23. [Fundação do frontend](frontend.md)
 24. [Plano de implementação](implementation-plan.md)
-25. [Execução e validação local](development.md)
-26. [Integração contínua](continuous-integration.md)
-27. [Decisões arquiteturais](decisions/README.md)
+25. [Demonstração visual com fontes dispersas no n8n](n8n-demo.md)
+26. [Execução e validação local](development.md)
+27. [Integração contínua](continuous-integration.md)
+28. [Decisões arquiteturais](decisions/README.md)
 
 ## Situação
 

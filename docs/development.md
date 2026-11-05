@@ -112,6 +112,10 @@ Os artefatos massivos ficam em `data/generated/` e o relatório fica em `data/re
 
 ## Cenário demonstrativo do painel
 
+Para apresentar visualmente duas fontes independentes e observar o banco antes e depois da
+consolidação, use o perfil n8n em um projeto Compose isolado. O procedimento, o reset seguro e os
+limites do modo OpenAI estão no [guia da demonstração de fontes dispersas](n8n-demo.md).
+
 O importador do lote massivo persiste entradas e rótulos, mas não executa automaticamente todas as
 etapas de processamento necessárias para preencher a fila. Para uma demonstração local da interface
 sem chamada a IA externa, use a carga canônica pequena:
