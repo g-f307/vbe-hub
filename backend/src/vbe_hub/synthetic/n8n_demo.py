@@ -37,6 +37,24 @@ _SCENARIOS = {
     },
 }
 
+for _case_id in (
+    "dengue-compensa",
+    "sarampo-cidade-nova",
+    "leptospirose-jorge-teixeira",
+    "malaria-taruma",
+    "doenca-diarreica-educandos",
+    "influenza-parque-dez",
+    "hepatite-a-colonia-antonio-aleixo",
+    "chikungunya-ponta-negra",
+    "meningite-zumbi",
+    "febre-amarela-reserva-ducke",
+):
+    _SCENARIOS[_case_id] = {
+        "key": _case_id,
+        "relation": "corroborates",
+        "explanation": "As duas fontes descrevem sinais compatíveis no mesmo local e período.",
+    }
+
 
 class N8nDemoService:
     def __init__(

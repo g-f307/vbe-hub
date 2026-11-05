@@ -1,8 +1,10 @@
 from datetime import UTC, datetime
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from vbe_hub.adapters.persistence.models import RawRecordModel
 from vbe_hub.application.ai import (
     AIExecutionMetadata,
     ExecutionStatus,
@@ -131,3 +133,56 @@ async def test_ambiguous_demo_marks_relation_for_human_review(
     assert result["relation"] == "related_context"
     assert len(result["signal_ids"]) == 2
     assert "revisão" in result["relation_explanation"]
+
+
+@pytest.mark.integration
+async def test_ten_case_catalog_creates_ten_consolidated_signals_from_twenty_sources(
+    db_session: AsyncSession,
+) -> None:
+    case_ids = (
+        "dengue-compensa",
+        "sarampo-cidade-nova",
+        "leptospirose-jorge-teixeira",
+        "malaria-taruma",
+        "doenca-diarreica-educandos",
+        "influenza-parque-dez",
+        "hepatite-a-colonia-antonio-aleixo",
+        "chikungunya-ponta-negra",
+        "meningite-zumbi",
+        "febre-amarela-reserva-ducke",
+    )
+    service = N8nDemoService(session=db_session)
+
+    results = [
+        await service.run(scenario=case_id, mode="offline") for case_id in case_ids
+    ]
+    await db_session.commit()
+
+    assert sum(item["created"]["raw_records"] for item in results) == 20
+    assert sum(item["created"]["signals"] for item in results) == 10
+    assert len({item["signal_ids"][0] for item in results}) == 10
+    assert all(item["relation"] == "corroborates" for item in results)
+
+
+@pytest.mark.integration
+async def test_batch_source_content_is_natural_but_metadata_remains_synthetic(
+    db_session: AsyncSession,
+) -> None:
+    service = N8nDemoService(session=db_session)
+
+    await service.run(scenario="malaria-taruma", mode="offline")
+    await db_session.commit()
+    records = list(
+        (
+            await db_session.execute(
+                select(RawRecordModel).where(
+                    RawRecordModel.external_id.like("demo:malaria-taruma:%")
+                )
+            )
+        ).scalars()
+    )
+
+    assert len(records) == 2
+    assert {record.source_kind for record in records} == {"media", "community"}
+    assert all(record.original_payload["synthetic"] is True for record in records)
+    assert all("sintétic" not in f"{record.title} {record.body}".casefold() for record in records)
