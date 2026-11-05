@@ -40,6 +40,10 @@ Uma [análise posterior](docs/technical-sheet-remediation-2026-10-28.md) corrigi
 de fichas causada por grounding de um único campo. A reavaliação continua pendente porque a
 calibração foi recusada por créditos esgotados antes de gerar respostas; portanto, a linha de base
 não foi substituída.
+Em 04/11/2026, uma [avaliação alternativa com OpenAI](docs/openai-technical-sheet-evaluation-2026-11-04.md)
+gerou oito fichas sintéticas sem falhas e atendeu às metas dos campos centrais da correlação. A
+evidência é exploratória, baseada em amostra pequena, e não substitui validação clínica ou
+epidemiológica.
 Consulte o [contrato de leitura](docs/signal-read-api.md). Autenticação institucional e
 integrações reais com EIOS e Guardiões da Saúde permanecem fora desta etapa. A consolidação organiza evidências rastreáveis, mas não confirma
 ocorrências nem substitui a triagem de um profissional de saúde.

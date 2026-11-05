@@ -85,3 +85,12 @@ por `402 RESOURCE_EXHAUSTED`, antes de gerar fichas; por isso não substitui a l
 amostra reservada não foi aberta. Consulte a
 [análise e correção da extração](technical-sheet-remediation-2026-10-28.md).
 
+## Avaliação alternativa em 04/11/2026
+
+O mesmo contrato foi avaliado com OpenAI após a correção. Calibração e amostra reservada geraram
+quatro fichas válidas cada, sem falhas operacionais. Na amostra reservada, condição, sintomas,
+casos, município, bairro e início temporal coincidiram integralmente com o gabarito sintético. A
+relevância sugerida permaneceu restrita a `evidence_only`. Consulte o
+[relatório exploratório OpenAI](openai-technical-sheet-evaluation-2026-11-04.md) para método,
+identidades, custo e limitações.
+
