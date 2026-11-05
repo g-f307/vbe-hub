@@ -40,6 +40,10 @@ Uma [análise posterior](docs/technical-sheet-remediation-2026-10-28.md) corrigi
 de fichas causada por grounding de um único campo. A reavaliação continua pendente porque a
 calibração foi recusada por créditos esgotados antes de gerar respostas; portanto, a linha de base
 não foi substituída.
+Em 04/11/2026, uma [avaliação alternativa com OpenAI](docs/openai-technical-sheet-evaluation-2026-11-04.md)
+gerou oito fichas sintéticas sem falhas e atendeu às metas dos campos centrais da correlação. A
+evidência é exploratória, baseada em amostra pequena, e não substitui validação clínica ou
+epidemiológica.
 Consulte o [contrato de leitura](docs/signal-read-api.md). Autenticação institucional e
 integrações reais com EIOS e Guardiões da Saúde permanecem fora desta etapa. A consolidação organiza evidências rastreáveis, mas não confirma
 ocorrências nem substitui a triagem de um profissional de saúde.
@@ -104,12 +108,17 @@ docker compose --profile tools run --rm synthetic-validate
 docker compose --profile tools run --rm synthetic-import
 ```
 
-### Avaliação opcional com Gemini
+### Avaliação opcional com provedores externos
 
 A execução básica, os testes e os dados sintéticos não exigem chave externa. Para repetir a
 avaliação de correlação com o Gemini, configure `GEMINI_API_KEY` somente no `.env` local e siga o
 [guia de execução local](docs/development.md#avaliação-live-da-correlação). Essa etapa consome
 cota do provider e não é necessária para iniciar a aplicação.
+
+A extração da ficha técnica também pode ser avaliada com OpenAI, sem mudar embeddings ou
+correlação. Configure `OPENAI_API_KEY` somente no `.env` local e siga o
+[protocolo da ficha](docs/technical-sheet-evaluation.md). Execute primeiro os quatro casos de
+calibração e só use os quatro casos reservados se a calibração for operacionalmente válida.
 
 Para repetir a validação integrada sem consumir a cota do Gemini, siga o protocolo e os comandos
 em [experimento integrado da PoC](docs/integrated-validation.md#reprodução-sem-consumir-cota-externa).

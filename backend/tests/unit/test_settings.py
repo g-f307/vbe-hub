@@ -57,3 +57,30 @@ def test_gemini_limits_reject_unbounded_configuration() -> None:
             GEMINI_MAX_ATTEMPTS=10,
             _env_file=None,
         )
+
+
+def test_openai_is_optional_with_cost_bounded_defaults() -> None:
+    settings = Settings(
+        DATABASE_URL="postgresql://user:password@postgres:5432/vbehub",
+        REDIS_URL="redis://redis:6379/0",
+        _env_file=None,
+    )
+
+    assert settings.openai_api_key is None
+    assert settings.openai_model == "gpt-6-luna"
+    assert settings.openai_timeout_seconds == 15
+    assert settings.openai_max_attempts == 3
+    assert settings.openai_max_input_chars == 12_000
+    assert settings.openai_max_output_tokens == 2_048
+    assert settings.openai_input_usd_per_million == 0.1
+    assert settings.openai_output_usd_per_million == 0.5
+
+
+def test_openai_limits_reject_unbounded_configuration() -> None:
+    with pytest.raises(ValidationError, match="OPENAI_MAX_ATTEMPTS"):
+        Settings(
+            DATABASE_URL="postgresql://user:password@postgres:5432/vbehub",
+            REDIS_URL="redis://redis:6379/0",
+            OPENAI_MAX_ATTEMPTS=10,
+            _env_file=None,
+        )

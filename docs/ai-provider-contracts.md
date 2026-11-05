@@ -4,7 +4,7 @@ type: api
 status: active
 title: Contratos de provedores de inteligência artificial
 created: 2026-09-29
-updated: 2026-09-29
+updated: 2026-11-04
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/application/ai/
@@ -22,7 +22,7 @@ Voltar ao [índice da documentação](README.md).
 ## Objetivo e limite
 
 A aplicação expõe três portas assíncronas e independentes de SDK: `StructuredExtractor`,
-`EmbeddingProvider` e `RelationJudge`. Implementações Gemini, Ollama ou futuras pertencem à
+`EmbeddingProvider` e `RelationJudge`. Implementações Gemini, OpenAI, Ollama ou futuras pertencem à
 camada de adapters; os casos de uso devem depender apenas desses contratos.
 
 Nesta etapa, o resultado da IA é uma sugestão auditável. Os contratos não confirmam eventos,
@@ -58,6 +58,7 @@ aplicável, início com fuso horário, duração, unidades de entrada/saída e u
 usam `ProviderError`, com mensagem sanitizada, indicação de repetibilidade e uma das categorias:
 
 - configuração ausente ou inválida;
+- autenticação recusada;
 - tempo limite;
 - limite de requisições ou cota;
 - resposta inválida;
@@ -65,8 +66,9 @@ usam `ProviderError`, com mensagem sanitizada, indicação de repetibilidade e u
 - falha permanente não classificada.
 
 Adapters não propagam respostas brutas, credenciais, prompts completos ou detalhes internos do
-fornecedor. O adapter Gemini aplica timeout, tentativas, backoff, entrada e saída limitados por
-configuração.
+fornecedor. Os adapters Gemini e OpenAI aplicam timeout, tentativas, backoff, entrada e saída
+limitados por configuração. Nesta etapa, OpenAI implementa somente `StructuredExtractor`; isso
+não muda o provedor de embeddings ou o julgamento de relações.
 
 ## Fronteiras de confiança
 

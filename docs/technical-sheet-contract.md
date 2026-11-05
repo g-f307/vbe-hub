@@ -4,12 +4,13 @@ type: api
 status: active
 title: Contrato da ficha técnica extraída
 created: 2026-09-29
-updated: 2026-10-28
+updated: 2026-11-04
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/application/ai/technical_sheet.py
   - backend/src/vbe_hub/application/ai/assets/
   - backend/src/vbe_hub/adapters/ai/gemini.py
+  - backend/src/vbe_hub/adapters/ai/openai_extractor.py
 related_docs:
   - API-002
   - API-003
@@ -59,7 +60,7 @@ confiável. O prompt instrui o modelo a não obedecer comandos encontrados dentr
 adapter não fornece ferramentas, busca, execução de código, shell, SQL ou capacidade de alterar
 estado.
 
-O Gemini recebe o JSON Schema como formato obrigatório, mas a resposta continua não confiável.
+Gemini e OpenAI recebem o JSON Schema como formato obrigatório, mas a resposta continua não confiável.
 Antes da persistência, a aplicação repete localmente a validação de tipos, enums, limites, campos
 extras, nulos e evidências literais. Resposta fora do schema vira falha estruturada e nunca entra
 como ficha válida. Quando a estrutura é válida, mas uma evidência não aparece literalmente na
@@ -103,3 +104,18 @@ Detalhes atuais devem ser confirmados na [documentação de modelos](https://ai.
 na [saída estruturada](https://ai.google.dev/gemini-api/docs/structured-output), nos
 [limites](https://ai.google.dev/gemini-api/docs/rate-limits) e nos
 [preços](https://ai.google.dev/gemini-api/docs/pricing) antes de cada experimento.
+
+## OpenAI
+
+O adapter alternativo usa o SDK oficial e a Responses API com Structured Outputs em modo estrito.
+O valor inicial de avaliação é `gpt-6-luna`, configurável por `OPENAI_MODEL`. Ferramentas são
+desabilitadas, a resposta não é armazenada pelo provedor (`store=false`) e o esforço de raciocínio
+é desativado para esta tarefa de extração. O modelo não é parte do domínio.
+
+O SDK não executa tentativas próprias. A aplicação aplica os mesmos limites locais de timeout,
+tentativas, caracteres e tokens do contrato e repete somente timeout, rate limit e falhas 5xx.
+Autenticação, créditos/cota e resposta inválida falham sem repetição inútil. Erros são
+sanitizados; resposta bruta e credencial não entram no relatório. Antes de uma rodada, confirme
+modelo, [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
+[limites](https://developers.openai.com/api/docs/guides/rate-limits) e
+[erros](https://developers.openai.com/api/docs/guides/error-codes) na documentação oficial.

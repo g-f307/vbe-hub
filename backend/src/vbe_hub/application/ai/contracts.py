@@ -27,6 +27,7 @@ class ExecutionStatus(StrEnum):
 
 class ProviderErrorCode(StrEnum):
     CONFIGURATION = "configuration"
+    AUTHENTICATION = "authentication"
     QUOTA_EXHAUSTED = "quota_exhausted"
     TIMEOUT = "timeout"
     RATE_LIMITED = "rate_limited"
