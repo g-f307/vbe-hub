@@ -77,6 +77,15 @@ class DemoLoadResult:
 
 
 @dataclass(frozen=True, slots=True)
+class PreparedDemoScenario:
+    """Persisted source records ready for provider-backed analysis."""
+
+    key: str
+    records: tuple[NormalizedRecord, NormalizedRecord]
+    created: Mapping[str, int]
+
+
+@dataclass(frozen=True, slots=True)
 class _Scenario:
     key: str
     condition: str
@@ -354,6 +363,8 @@ async def load_demo_scenario(
     scenario_keys: frozenset[str] | None = None,
     store_fixture_sheets: bool = True,
     relation_overrides: Mapping[str, RelationKind] | None = None,
+    technical_sheet_overrides: Mapping[str, Mapping[UUID, Mapping[str, Any]]] | None = None,
+    relation_assessment_overrides: Mapping[str, RelationAssessmentRecord] | None = None,
 ) -> DemoLoadResult:
     """Materialize the small offline scenario used by the manual panel demonstration.
 
@@ -395,18 +406,27 @@ async def load_demo_scenario(
             store_fixture_sheets=store_fixture_sheets,
         )
         relation_kind = (relation_overrides or {}).get(scenario.key, RelationKind.CORROBORATES)
-        relation = await _store_relation(
-            scenario,
-            records[0].id,
-            records[1].id,
-            relation_kind=relation_kind,
-            relation_repository=relation_repository,
-            created=created,
-        )
+        relation = (relation_assessment_overrides or {}).get(scenario.key)
+        if relation is None:
+            relation = await _store_relation(
+                scenario,
+                records[0].id,
+                records[1].id,
+                relation_kind=relation_kind,
+                relation_repository=relation_repository,
+                created=created,
+            )
+        elif relation.relation is None:
+            raise ValueError("demo relation assessment must have succeeded")
+        relation_kind = relation.relation
+        scenario_sheets = (technical_sheet_overrides or {}).get(scenario.key, {})
+        sheets = {
+            record.id: scenario_sheets.get(record.id, _sheet(scenario)) for record in records
+        }
         result = SignalConsolidationService(
             ConsolidationPolicy(version=_CONSOLIDATION_VERSION)
         ).consolidate(
-            records=[SignalRecord(record.id, _sheet(scenario)) for record in records],
+            records=[SignalRecord(record.id, sheets[record.id]) for record in records],
             relations=[
                 SignalRelationInput(
                     relation.id,
@@ -444,7 +464,7 @@ async def load_demo_scenario(
                         record_id=record_id,
                         source_kind=source_metadata[record_id][0],
                         source_name=source_metadata[record_id][1],
-                        technical_sheet=_sheet(scenario),
+                        technical_sheet=sheets[record_id],
                     )
                     for record_id in (*signal.core_record_ids, *signal.context_record_ids)
                 ],
@@ -479,6 +499,39 @@ async def load_demo_scenario(
     return DemoLoadResult(
         created=MappingProxyType(created),
         signal_ids=tuple(signal_ids),
+    )
+
+
+async def prepare_demo_scenario(
+    session: AsyncSession,
+    *,
+    scenario_key: str,
+) -> PreparedDemoScenario:
+    """Persist only the two canonical sources needed for online analysis."""
+
+    scenarios = tuple(item for item in _BATCH_SCENARIOS if item.key == scenario_key)
+    if len(scenarios) != 1:
+        raise ValueError("unknown demo scenario key")
+    created = {
+        "raw_records": 0,
+        "normalized_records": 0,
+        "technical_sheets": 0,
+        "relations": 0,
+        "signals": 0,
+        "priorities": 0,
+        "workflow_events": 0,
+    }
+    records = await _store_records(
+        scenarios[0],
+        raw_repository=SqlAlchemyRawRecordRepository(session),
+        extraction_repository=SqlAlchemyExtractionRepository(session),
+        created=created,
+        store_fixture_sheets=False,
+    )
+    return PreparedDemoScenario(
+        key=scenario_key,
+        records=records,
+        created=MappingProxyType(created),
     )
 
 

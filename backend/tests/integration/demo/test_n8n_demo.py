@@ -8,6 +8,8 @@ from vbe_hub.adapters.persistence.models import RawRecordModel
 from vbe_hub.application.ai import (
     AIExecutionMetadata,
     ExecutionStatus,
+    RelationKind,
+    RelationResult,
     StructuredExtractionResult,
 )
 from vbe_hub.synthetic.n8n_demo import N8nDemoService
@@ -54,6 +56,31 @@ class RecordingExtractor:
         )
 
 
+class RecordingRelationJudge:
+    def __init__(self, relation: RelationKind) -> None:
+        self.relation = relation
+        self.requests = []
+
+    async def judge(self, request):
+        self.requests.append(request)
+        return RelationResult(
+            relation=self.relation,
+            justification="As fontes descrevem locais ou eventos diferentes.",
+            confidence=0.86,
+            metadata=AIExecutionMetadata(
+                provider="openai",
+                model="test-model",
+                contract_version="relation-v1",
+                prompt_version=request.prompt_version,
+                started_at=datetime(2026, 11, 5, tzinfo=UTC),
+                duration_ms=1,
+                status=ExecutionStatus.SUCCEEDED,
+                input_units=12,
+                output_units=4,
+            ),
+        )
+
+
 @pytest.mark.integration
 async def test_offline_n8n_demo_persists_one_card_with_two_sources_idempotently(
     db_session: AsyncSession,
@@ -89,9 +116,11 @@ async def test_online_n8n_demo_extracts_both_normalized_sources_with_configured_
     db_session: AsyncSession,
 ) -> None:
     extractor = RecordingExtractor()
+    judge = RecordingRelationJudge(RelationKind.CORROBORATES)
     service = N8nDemoService(
         session=db_session,
         extractor=extractor,
+        relation_judge=judge,
         extraction_model="test-model",
     )
 
@@ -104,6 +133,31 @@ async def test_online_n8n_demo_extracts_both_normalized_sources_with_configured_
         "media",
         "community",
     }
+    assert len(judge.requests) == 1
+
+
+@pytest.mark.integration
+async def test_online_n8n_demo_uses_ai_relation_before_deciding_consolidation(
+    db_session: AsyncSession,
+) -> None:
+    extractor = RecordingExtractor()
+    judge = RecordingRelationJudge(RelationKind.UNRELATED)
+    service = N8nDemoService(
+        session=db_session,
+        extractor=extractor,
+        relation_judge=judge,
+        extraction_model="test-model",
+    )
+
+    result = await service.run(scenario="dengue-compensa", mode="online")
+    await db_session.commit()
+
+    assert len(judge.requests) == 1
+    assert result["relation"] == "unrelated"
+    assert result["relation_explanation"] == (
+        "As fontes descrevem locais ou eventos diferentes."
+    )
+    assert len(result["signal_ids"]) == 2
 
 
 @pytest.mark.integration
