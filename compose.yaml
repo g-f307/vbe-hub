@@ -56,6 +56,12 @@ services:
       REDIS_URL: redis://redis:6379/0
       DEPENDENCY_TIMEOUT_SECONDS: ${DEPENDENCY_TIMEOUT_SECONDS:-2}
       REVIEW_ACTOR_ID: ${REVIEW_ACTOR_ID:-synthetic-analyst}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-6-luna}
+      OPENAI_TIMEOUT_SECONDS: ${OPENAI_TIMEOUT_SECONDS:-15}
+      OPENAI_MAX_ATTEMPTS: ${OPENAI_MAX_ATTEMPTS:-3}
+      OPENAI_MAX_INPUT_CHARS: ${OPENAI_MAX_INPUT_CHARS:-12000}
+      OPENAI_MAX_OUTPUT_TOKENS: ${OPENAI_MAX_OUTPUT_TOKENS:-2048}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -497,6 +503,51 @@ services:
         "--output", "/data/reports",
       ]
 
+  n8n-import:
+    profiles: ["demo"]
+    image: n8nio/n8n:2.46.6
+    user: "node"
+    environment: &n8n-environment
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:-local-demo-change-me}
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "true"
+      N8N_BLOCK_FILE_ACCESS_TO_N8N_FILES: "true"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+      N8N_TEMPLATES_ENABLED: "false"
+      N8N_SECURE_COOKIE: "false"
+      N8N_SAMESITE_COOKIE: strict
+      GENERIC_TIMEZONE: America/Manaus
+      TZ: America/Manaus
+    volumes:
+      - n8n_demo_data:/home/node/.n8n
+      - ./infra/n8n/workflows:/workflows:ro
+    command: ["import:workflow", "--input=/workflows/vbe-hub-demo.json"]
+    restart: "no"
+
+  n8n:
+    profiles: ["demo"]
+    image: n8nio/n8n:2.46.6
+    user: "node"
+    environment: *n8n-environment
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    volumes:
+      - n8n_demo_data:/home/node/.n8n
+    depends_on:
+      n8n-import:
+        condition: service_completed_successfully
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5678/healthz').then(r => { if (!r.ok) process.exit(1) })"]
+      interval: 5s
+      timeout: 4s
+      retries: 24
+      start_period: 15s
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:
+  n8n_demo_data:
