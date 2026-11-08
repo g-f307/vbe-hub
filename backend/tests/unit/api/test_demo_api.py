@@ -18,12 +18,17 @@ class StubDemoService:
             "mode": mode,
             "relation": "corroborates",
             "relation_explanation": "Fontes sintéticas complementares.",
-            "signal_ids": [UUID("10000000-0000-0000-0000-000000000001")],
-            "created": {"raw_records": 2, "signals": 1},
+            "signal_ids": [
+                UUID("10000000-0000-0000-0000-000000000001"),
+                UUID("10000000-0000-0000-0000-000000000002"),
+            ],
+            "created": {"raw_records": 2, "individual_signals": 2},
             "sources": [
                 {"source_kind": "media", "external_id": "demo:related:media"},
                 {"source_kind": "community", "external_id": "demo:related:community"},
             ],
+            "evidence_mode": "recorded_fixture",
+            "association_status": "unassociated",
             "review_notice": "Sugestão de IA; requer revisão humana.",
         }
 
@@ -41,12 +46,17 @@ def test_demo_run_accepts_only_named_synthetic_scenarios() -> None:
         "mode": "offline",
         "relation": "corroborates",
         "relation_explanation": "Fontes sintéticas complementares.",
-        "signal_ids": ["10000000-0000-0000-0000-000000000001"],
-        "created": {"raw_records": 2, "signals": 1},
+        "signal_ids": [
+            "10000000-0000-0000-0000-000000000001",
+            "10000000-0000-0000-0000-000000000002",
+        ],
+        "created": {"raw_records": 2, "individual_signals": 2},
         "sources": [
             {"source_kind": "media", "external_id": "demo:related:media"},
             {"source_kind": "community", "external_id": "demo:related:community"},
         ],
+        "evidence_mode": "recorded_fixture",
+        "association_status": "unassociated",
         "review_notice": "Sugestão de IA; requer revisão humana.",
     }
 

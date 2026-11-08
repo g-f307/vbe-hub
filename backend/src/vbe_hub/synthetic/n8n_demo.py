@@ -33,7 +33,11 @@ from vbe_hub.application.correlation.relations import (
     RelationAssessmentService,
 )
 from vbe_hub.infrastructure.settings import get_settings
-from vbe_hub.synthetic.demo import DemoLoadResult, load_demo_scenario, prepare_demo_scenario
+from vbe_hub.synthetic.demo import (
+    DemoLoadResult,
+    load_individual_demo_scenario,
+    prepare_demo_scenario,
+)
 
 _SCENARIOS = {
     "related": {
@@ -114,11 +118,11 @@ class N8nDemoService:
             relation = assessment.relation
             explanation = assessment.justification
         else:
-            result = await load_demo_scenario(
+            result = await load_individual_demo_scenario(
                 session,
-                scenario_keys=frozenset({definition["key"]}),
+                scenario_key=definition["key"],
                 store_fixture_sheets=True,
-                relation_overrides={definition["key"]: RelationKind(definition["relation"])},
+                relation_kind=RelationKind(definition["relation"]),
             )
             relation = RelationKind(definition["relation"])
             explanation = definition["explanation"]
@@ -131,6 +135,8 @@ class N8nDemoService:
             "relation_explanation": explanation,
             "signal_ids": list(result.signal_ids),
             "created": dict(result.created),
+            "evidence_mode": "live_openai" if mode == "online" else "recorded_fixture",
+            "association_status": "unassociated",
             "sources": [
                 {
                     "source_kind": "media",
@@ -228,19 +234,18 @@ class N8nDemoService:
             relation_count_after = await session.scalar(
                 select(func.count()).select_from(RelationAssessmentModel)
             )
-            result = await load_demo_scenario(
+            result = await load_individual_demo_scenario(
                 session,
-                scenario_keys=frozenset({scenario_key}),
+                scenario_key=scenario_key,
                 store_fixture_sheets=False,
-                technical_sheet_overrides={scenario_key: sheets},
-                relation_assessment_overrides={scenario_key: assessment},
+                relation_assessment=assessment,
             )
         finally:
             if root_client is not None:
                 await root_client.close()
-        counts = {
-            key: prepared.created[key] + result.created[key] for key in prepared.created
-        }
+        counts = dict(result.created)
+        counts["raw_records"] += prepared.created["raw_records"]
+        counts["normalized_records"] += prepared.created["normalized_records"]
         counts["technical_sheets"] = extraction_created
         counts["relations"] = (relation_count_after or 0) - (relation_count_before or 0)
         return DemoLoadResult(created=counts, signal_ids=result.signal_ids), assessment

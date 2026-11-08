@@ -4,32 +4,35 @@ type: guide
 status: active
 title: Demonstração do fluxo de fontes dispersas com n8n
 created: 2026-11-04
-updated: 2026-11-05
+updated: 2026-11-08
 owner: VBE Hub
 related_docs:
   - ADR-004
   - ADR-009
+  - ADR-010
   - API-007
 ---
 
 # Demonstração do fluxo de fontes dispersas com n8n
 
-Esta demonstração torna visível a problemática central da PoC: uma notícia e um relato comunitário
-chegam por caminhos distintos, são processados pelo backend e podem originar um card consolidado
-para revisão. Todos os textos são sintéticos. O resultado automático é uma sugestão auditável, não
-uma confirmação de evento de saúde.
+Esta demonstração mostra como uma notícia e um relato comunitário chegam por caminhos distintos,
+viram **dois sinais individuais** e recebem uma sugestão de relação. A IA não reúne os sinais e não
+cria uma ficha: essa decisão pertence ao analista. Todos os textos são sintéticos, embora tenham
+linguagem semelhante à de entradas reais.
 
-## O que o fluxo demonstra
+## Resultado esperado
 
-O workflow `VBE Hub — lote manual de 10 sinais` contém duas etapas de fonte identificáveis para
-cada caso:
+O workflow `VBE Hub — lote manual de 20 sinais individuais` percorre dez casos. Cada caso possui:
 
-- **Fonte 1 — notícia:** simula um registro de mídia;
-- **Fonte 2 — relato comunitário:** simula um registro comunitário independente.
+- uma notícia local, persistida como um sinal;
+- um relato comunitário independente, persistido como outro sinal;
+- uma análise de compatibilidade disponível na aba **Sinais relacionados**;
+- nenhuma ficha de investigação criada automaticamente.
 
-O catálogo fechado contém dez pares de fontes com linguagem natural. O texto se parece com o que
-poderia chegar de uma notícia local ou canal comunitário, mas os metadados preservam
-`synthetic: true` e nenhuma narrativa representa uma ocorrência real.
+Uma rodada completa termina com **20 sinais em Detectado** e **10 sugestões de relação**. Os mesmos
+20 sinais aparecem na fila principal; a sugestão não remove nem oculta o sinal relacionado. Somente
+ao abrir um sinal, selecionar a sugestão e confirmar é que o sistema cria uma ficha preservando as
+duas descrições originais.
 
 | Caso | Localização | Conteúdo principal |
 | --- | --- | --- |
@@ -44,78 +47,76 @@ poderia chegar de uma notícia local ou canal comunitário, mas os metadados pre
 | `meningite-zumbi` | Zumbi | Síndrome febril com rigidez de nuca. |
 | `febre-amarela-reserva-ducke` | Entorno da Reserva Ducke | Síndrome febril após exposição em mata. |
 
-No modo online, cada par é deliberadamente enviado sem uma relação predefinida: a OpenAI estrutura
-as fontes e sugere a relação, e o consolidado respeita essa resposta validada. Assim, dez casos de
-entrada não garantem dez cards de saída; divergências fazem parte do que deve ser observado.
+O n8n apenas torna o percurso visível e chama a API. Persistência, normalização, extração, relação,
+sugestões e composição humana permanecem no backend canônico.
 
-O n8n apenas apresenta e orquestra a demonstração. Persistência, normalização, ficha técnica,
-relação, consolidação e prioridade continuam sob responsabilidade do backend canônico.
+## Preparar uma rodada limpa
 
-## Rodada limpa: estado antes e depois
-
-O reset abaixo remove containers, banco, cache e cadastro local do n8n do projeto `vbe-hub`.
-Execute-o somente quando quiser descartar toda a rodada local:
+O reset abaixo apaga banco, cache e configuração local do n8n do projeto. Use somente quando puder
+descartar toda a evidência local:
 
 ```bash
 docker compose -p vbe-hub --profile demo down --volumes
 docker compose -p vbe-hub --profile demo up --build --detach --wait
 ```
 
-Abra o painel em `http://localhost:3000/triagem`. Antes da execução, a fila deve mostrar o estado
-vazio. A resposta canônica também pode ser verificada em `http://localhost:8000/signals`.
+Antes da execução, abra `http://localhost:3000/`: a fila deve estar vazia. A resposta da API pode
+ser conferida em `http://localhost:8000/v1/signals`.
 
-## Execução manual na interface do n8n
+## Executar manualmente no n8n
 
 1. Abra `http://localhost:5678`.
-2. Se for a primeira execução após o reset, crie a conta proprietária **local** solicitada pelo
-   n8n. Não reutilize uma senha institucional.
-3. Abra o workflow **VBE Hub — lote manual de 10 sinais**.
-4. Abra o nó **Configurar execução manual** e escolha os três campos:
+2. Na primeira execução após o reset, crie a conta proprietária local solicitada pelo n8n. Não
+   reutilize senha institucional.
+3. Abra **VBE Hub — lote manual de 20 sinais individuais**.
+4. Em **Configurar execução manual**, escolha:
 
    - `execution_scope`: `single` para um caso ou `batch` para os dez;
-   - `case_id`: um identificador da tabela acima; usado somente quando o escopo é `single`;
-   - `mode`: `offline` para fixtures gratuitas ou `online` para extração OpenAI.
+   - `case_id`: um identificador da tabela, quando o escopo for `single`;
+   - `mode`: `online` para OpenAI ou `offline` para a evidência gravada.
 
-5. Feche o editor do nó e clique em **Execute workflow**. Esse clique é o único gatilho: não há
-   agenda, webhook ou execução automática.
-6. Acompanhe **Processar um caso por vez**. Cada item passa por notícia, relato comunitário,
-   backend e resultado antes de o próximo começar.
-7. Abra ou atualize `http://localhost:3000/triagem`. A quantidade final de cards depende das
-   relações sugeridas pela IA: fontes corroborantes podem formar um card; fontes incompatíveis
-   permanecem separadas.
+5. Clique em **Execute workflow**. Não há agenda, webhook nem execução automática.
+6. Acompanhe **Processar um caso por vez**. Um par termina antes de o próximo começar.
+7. Atualize `http://localhost:3000/`. Um caso deve acrescentar dois sinais; o lote, vinte.
+8. Abra um sinal, entre em **Sinais relacionados** e examine a justificativa. Os dois cards continuam
+   independentes até você selecionar e confirmar a composição.
 
-Para observar o antes e o depois com mais clareza, comece com `single`, `dengue-compensa` e
-`online`. Depois altere para `batch` se o primeiro resultado e o consumo estiverem adequados. Como
-a carga é idempotente, o caso inicial não será duplicado.
+Repetir o mesmo caso é idempotente: os contadores `created` voltam como zero e nenhum sinal é
+duplicado. As sugestões prontas podem ser reapresentadas sem refazer uma chamada já armazenada.
 
-Para repetir a comparação desde o banco vazio, execute novamente os comandos de reset e subida.
+## Modo online e custo controlado
 
-## Modo online opcional
+O modo `online` é o percurso que avalia a IA. Configure `OPENAI_API_KEY` somente no `.env` local.
+Cada caso pode envolver duas extrações e uma classificação de relação. O lote completo representa
+até 30 operações lógicas, sem contar novas tentativas em falhas transitórias.
 
-O modo `online` é o padrão da demonstração e chama a OpenAI para duas extrações e uma classificação
-de relação por caso. Configure `OPENAI_API_KEY` apenas no `.env` local. Uma rodada completa envolve
-até trinta operações lógicas do provedor, sem contar eventuais tentativas automáticas da extração.
-O cache persistido evita repetir análises bem-sucedidas para entradas idênticas.
+Comece com `single`, `dengue-compensa` e `online`; confira o resultado e o consumo no provedor antes
+de selecionar `batch`. A execução é sequencial e só começa pelo clique do usuário. Resultados
+bem-sucedidos são armazenados para evitar custo e demora repetidos.
 
-Faça primeiro um caso online e confira o consumo no provedor antes de escolher o lote. No modo
-online, a IA estrutura as duas fontes e classifica se são duplicadas, corroborantes, atualizações,
-contexto relacionado ou não relacionadas. Essa classificação define se o sistema consolida ou
-separa os cards. A rodada continua exploratória e não substitui os protocolos formais de avaliação.
+O modo `offline` usa fichas e relações previamente gravadas (`recorded_fixture`), não chama
+provedor externo e serve para ensaiar a apresentação ou operar sem crédito. Ele demonstra o fluxo,
+mas **não** constitui uma avaliação da IA.
 
-O modo `offline` permanece apenas como contingência. Ele usa fichas e relações congeladas, não
-consome API externa e não serve para avaliar o comportamento da IA.
+## Como interpretar a resposta
+
+- `signal_ids`: sempre dois identificadores, um por fonte;
+- `association_status: unassociated`: confirma que a API não criou ficha automaticamente;
+- `evidence_mode`: `live_openai` ou `recorded_fixture`;
+- `created`: informa apenas o que foi criado naquela execução; zero é esperado na repetição;
+- `relation` e `relation_explanation`: sugestão auditável, sujeita à revisão humana.
 
 ## Segurança e limites
 
-- o workflow não contém chave de API; somente o backend recebe a credencial pelo ambiente;
-- escopo, caso e modo são listas fechadas; o lote tem no máximo dez casos;
-- a IA não recebe ferramentas e sua saída precisa passar por schema antes da persistência;
-- o n8n não recebe acesso ao banco e chama apenas a rota interna da API;
-- diagnósticos, catálogo de templates e notificações externas do n8n ficam desativados;
-- os dados são sintéticos e não devem ser substituídos por relatos identificáveis;
-- a conta local do n8n é apenas para demonstração e não representa autenticação institucional.
+- o workflow não contém chave; somente o backend recebe a credencial pelo ambiente;
+- escopo, caso e modo usam listas fechadas e o lote tem no máximo dez pares;
+- a IA não recebe ferramentas e sua saída passa por schema antes da persistência;
+- o n8n não acessa o banco e chama apenas a rota interna da API;
+- diagnósticos, templates e notificações externas do n8n ficam desativados;
+- os dados são sintéticos e não devem ser trocados por relatos identificáveis;
+- a conta local do n8n não representa autenticação institucional.
 
-Para encerrar sem apagar a evidência local, use:
+Para encerrar preservando os dados:
 
 ```bash
 docker compose -p vbe-hub --profile demo down

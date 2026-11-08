@@ -106,9 +106,10 @@ integração e smoke test. Consulte o [guia de integração contínua](docs/cont
 ### Cenário demonstrativo do painel
 
 Para uma apresentação visual do percurso notícia + relato comunitário, com comparação verificável
-entre fila vazia e até dez cards consolidados, use o profile n8n descrito no [guia da demonstração
+entre fila vazia e 20 sinais individuais, use o profile n8n descrito no [guia da demonstração
 de fontes dispersas](docs/n8n-demo.md). A execução é manual e sequencial; o modo online avalia
-extração e relação com OpenAI, enquanto o modo offline existe somente como contingência.
+extração e relação com OpenAI, enquanto o modo offline usa evidência gravada como contingência.
+As sugestões não criam fichas: a composição continua sendo uma ação explícita do analista.
 
 Para popular triagem e investigação sem chamar Gemini, carregue o cenário canônico pequeno:
 

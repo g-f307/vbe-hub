@@ -10,8 +10,17 @@ from types import MappingProxyType
 from typing import Any
 from uuid import UUID, uuid5
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from vbe_hub.adapters.persistence.investigation_models import (
+    IndividualSignalModel,
+    SignalRelationSuggestionModel,
+)
+from vbe_hub.adapters.persistence.investigation_repository import (
+    SqlAlchemyInvestigationRepository,
+    SqlAlchemySignalSuggestionRepository,
+)
 from vbe_hub.adapters.persistence.priority_repository import SqlAlchemyPriorityRepository
 from vbe_hub.adapters.persistence.relation_repository import (
     SqlAlchemyRelationAssessmentRepository,
@@ -506,6 +515,7 @@ async def prepare_demo_scenario(
     session: AsyncSession,
     *,
     scenario_key: str,
+    store_fixture_sheets: bool = False,
 ) -> PreparedDemoScenario:
     """Persist only the two canonical sources needed for online analysis."""
 
@@ -526,12 +536,91 @@ async def prepare_demo_scenario(
         raw_repository=SqlAlchemyRawRecordRepository(session),
         extraction_repository=SqlAlchemyExtractionRepository(session),
         created=created,
-        store_fixture_sheets=False,
+        store_fixture_sheets=store_fixture_sheets,
     )
     return PreparedDemoScenario(
         key=scenario_key,
         records=records,
         created=MappingProxyType(created),
+    )
+
+
+async def load_individual_demo_scenario(
+    session: AsyncSession,
+    *,
+    scenario_key: str,
+    store_fixture_sheets: bool = True,
+    relation_kind: RelationKind = RelationKind.CORROBORATES,
+    relation_assessment: RelationAssessmentRecord | None = None,
+) -> DemoLoadResult:
+    """Persist each source as a detected signal and only suggest their relation.
+
+    No investigation file is created here: composing sources is an explicit human action.
+    """
+
+    prepared = await prepare_demo_scenario(
+        session,
+        scenario_key=scenario_key,
+        store_fixture_sheets=store_fixture_sheets,
+    )
+    created = {
+        "raw_records": prepared.created["raw_records"],
+        "normalized_records": prepared.created["normalized_records"],
+        "technical_sheets": prepared.created["technical_sheets"],
+        "relations": 0,
+        "individual_signals": 0,
+        "relation_suggestions": 0,
+    }
+    scenario = next(item for item in _BATCH_SCENARIOS if item.key == scenario_key)
+    relation = relation_assessment
+    if relation is None:
+        relation = await _store_relation(
+            scenario,
+            prepared.records[0].id,
+            prepared.records[1].id,
+            relation_kind=relation_kind,
+            relation_repository=SqlAlchemyRelationAssessmentRepository(session),
+            created=created,
+        )
+    elif relation.relation is None:
+        raise ValueError("demo relation assessment must have succeeded")
+
+    investigations = SqlAlchemyInvestigationRepository(session)
+    signal_ids: list[UUID] = []
+    for record in prepared.records:
+        existing = await session.scalar(
+            select(IndividualSignalModel.id).where(
+                IndividualSignalModel.normalized_record_id == record.id,
+                IndividualSignalModel.contract_version == "individual-signal-v1",
+            )
+        )
+        signal = await investigations.get_or_create_signal(
+            record.id,
+            "individual-signal-v1",
+            record.created_at,
+        )
+        if existing is None:
+            created["individual_signals"] += 1
+        signal_ids.append(signal.id)
+
+    if relation.relation is not RelationKind.UNRELATED:
+        left, right = sorted(signal_ids)
+        existing_suggestion = await session.scalar(
+            select(SignalRelationSuggestionModel.id).where(
+                SignalRelationSuggestionModel.left_signal_id == left,
+                SignalRelationSuggestionModel.right_signal_id == right,
+                SignalRelationSuggestionModel.contract_version == "related-signal-v1",
+            )
+        )
+        suggestions = SqlAlchemySignalSuggestionRepository(session, now=lambda: _NOW)
+        await suggestions.mark_pending(left, right, "related-signal-v1")
+        await suggestions.mark_ready(left, right, "related-signal-v1", relation.id)
+        if existing_suggestion is None:
+            created["relation_suggestions"] += 1
+
+    return DemoLoadResult(
+        created=MappingProxyType(created),
+        signal_ids=tuple(signal_ids),
     )
 
 

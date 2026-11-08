@@ -91,7 +91,9 @@ territorial também usa agregados canônicos e geometria local.
 10. **Implementada na branch da #75:** permitir selecionar sugestões prontas, comparar fontes e IDs,
     confirmar explicitamente a criação ou ampliação da ficha e corrigir vínculos com motivo,
     versão otimista e histórico, sem enviar identidade de ator pelo navegador.
-11. Validar responsividade, acessibilidade, dados sintéticos, limites da IA e reprodução completa
+11. **Implementada na #76:** migrar a demonstração n8n para 20 sinais individuais em `detected`,
+    com dez sugestões auditáveis e nenhuma composição automática.
+12. Validar responsividade, acessibilidade, dados sintéticos, limites da IA e reprodução completa
    em outro dispositivo via Docker Compose.
 
 ### Critérios de aceite do painel integrado

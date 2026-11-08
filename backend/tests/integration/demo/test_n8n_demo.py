@@ -4,6 +4,13 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from vbe_hub.adapters.persistence.individual_workflow_models import (
+    IndividualSignalWorkflowModel,
+)
+from vbe_hub.adapters.persistence.investigation_models import (
+    InvestigationFileMemberModel,
+    SignalRelationSuggestionModel,
+)
 from vbe_hub.adapters.persistence.models import RawRecordModel
 from vbe_hub.application.ai import (
     AIExecutionMetadata,
@@ -82,7 +89,7 @@ class RecordingRelationJudge:
 
 
 @pytest.mark.integration
-async def test_offline_n8n_demo_persists_one_card_with_two_sources_idempotently(
+async def test_offline_n8n_demo_persists_two_detected_signals_without_composing_a_file(
     db_session: AsyncSession,
 ) -> None:
     service = N8nDemoService(session=db_session)
@@ -95,20 +102,38 @@ async def test_offline_n8n_demo_persists_one_card_with_two_sources_idempotently(
     assert first["scenario"] == "related"
     assert first["mode"] == "offline"
     assert first["relation"] == "corroborates"
-    assert len(first["signal_ids"]) == 1
-    assert first["created"] == {
-        "raw_records": 2,
-        "normalized_records": 2,
-        "technical_sheets": 2,
-        "relations": 1,
-        "signals": 1,
-        "priorities": 1,
-        "workflow_events": 0,
+    assert len(first["signal_ids"]) == 2
+    assert first["evidence_mode"] == "recorded_fixture"
+    assert first["association_status"] == "unassociated"
+    assert set(first["created"]) == {
+        "raw_records",
+        "normalized_records",
+        "technical_sheets",
+        "relations",
+        "individual_signals",
+        "relation_suggestions",
     }
     assert repeated["signal_ids"] == first["signal_ids"]
     assert repeated["created"] == {key: 0 for key in first["created"]}
     assert [item["source_kind"] for item in first["sources"]] == ["media", "community"]
     assert first["review_notice"] == "Sugestão de IA; requer revisão humana."
+    workflows = list((await db_session.scalars(select(IndividualSignalWorkflowModel))).all())
+    file_members = list(
+        (
+            await db_session.scalars(
+                select(InvestigationFileMemberModel).where(
+                    InvestigationFileMemberModel.signal_id.in_(first["signal_ids"])
+                )
+            )
+        ).all()
+    )
+    suggestions = list(
+        (await db_session.scalars(select(SignalRelationSuggestionModel))).all()
+    )
+    assert {workflow.state for workflow in workflows} == {"detected"}
+    assert len(file_members) == 0
+    assert len(suggestions) == 1
+    assert suggestions[0].status == "ready"
 
 
 @pytest.mark.integration
@@ -133,11 +158,11 @@ async def test_online_n8n_demo_extracts_both_normalized_sources_with_configured_
         "media",
         "community",
     }
-    assert len(judge.requests) == 1
+    assert result["evidence_mode"] == "live_openai"
 
 
 @pytest.mark.integration
-async def test_online_n8n_demo_uses_ai_relation_before_deciding_consolidation(
+async def test_online_n8n_demo_returns_cached_or_fresh_ai_suggestion_without_association(
     db_session: AsyncSession,
 ) -> None:
     extractor = RecordingExtractor()
@@ -152,12 +177,9 @@ async def test_online_n8n_demo_uses_ai_relation_before_deciding_consolidation(
     result = await service.run(scenario="dengue-compensa", mode="online")
     await db_session.commit()
 
-    assert len(judge.requests) == 1
-    assert result["relation"] == "unrelated"
-    assert result["relation_explanation"] == (
-        "As fontes descrevem locais ou eventos diferentes."
-    )
+    assert result["relation"] in {"corroborates", "related_context", "unrelated"}
     assert len(result["signal_ids"]) == 2
+    assert result["association_status"] == "unassociated"
 
 
 @pytest.mark.integration
@@ -171,8 +193,8 @@ async def test_incompatible_demo_keeps_sources_as_two_signals(
 
     assert result["relation"] == "unrelated"
     assert len(result["signal_ids"]) == 2
-    assert result["created"]["signals"] == 2
-    assert result["created"]["priorities"] == 2
+    assert result["created"]["individual_signals"] in {0, 2}
+    assert result["created"]["relation_suggestions"] == 0
 
 
 @pytest.mark.integration
@@ -190,7 +212,7 @@ async def test_ambiguous_demo_marks_relation_for_human_review(
 
 
 @pytest.mark.integration
-async def test_ten_case_catalog_creates_ten_consolidated_signals_from_twenty_sources(
+async def test_ten_case_catalog_creates_twenty_detected_signals_and_ten_suggestions(
     db_session: AsyncSession,
 ) -> None:
     case_ids = (
@@ -212,10 +234,42 @@ async def test_ten_case_catalog_creates_ten_consolidated_signals_from_twenty_sou
     ]
     await db_session.commit()
 
-    assert sum(item["created"]["raw_records"] for item in results) == 20
-    assert sum(item["created"]["signals"] for item in results) == 10
-    assert len({item["signal_ids"][0] for item in results}) == 10
+    signal_ids = {signal_id for item in results for signal_id in item["signal_ids"]}
+    assert len(signal_ids) == 20
     assert all(item["relation"] == "corroborates" for item in results)
+    workflows = list(
+        (
+            await db_session.scalars(
+                select(IndividualSignalWorkflowModel).where(
+                    IndividualSignalWorkflowModel.signal_id.in_(signal_ids)
+                )
+            )
+        ).all()
+    )
+    suggestions = list(
+        (
+            await db_session.scalars(
+                select(SignalRelationSuggestionModel).where(
+                    SignalRelationSuggestionModel.left_signal_id.in_(signal_ids),
+                    SignalRelationSuggestionModel.right_signal_id.in_(signal_ids),
+                )
+            )
+        ).all()
+    )
+    file_members = list(
+        (
+            await db_session.scalars(
+                select(InvestigationFileMemberModel).where(
+                    InvestigationFileMemberModel.signal_id.in_(signal_ids)
+                )
+            )
+        ).all()
+    )
+    assert len(workflows) == 20
+    assert all(workflow.state == "detected" for workflow in workflows)
+    assert len(suggestions) == 10
+    assert all(suggestion.status == "ready" for suggestion in suggestions)
+    assert len(file_members) == 0
 
 
 @pytest.mark.integration
