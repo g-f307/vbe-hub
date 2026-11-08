@@ -16,9 +16,10 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-> **Transição em andamento em 08/11/2026:** a fundação visual nova já executa na rota `/`, mas
-> ainda usa a carga local explicitamente marcada como demonstração. As rotas legadas continuam
-> disponíveis como referência de integração até a migração funcional das issues #74 e #75. A
+> **Transição em andamento em 08/11/2026:** a fundação visual nova já executa na rota `/` e lê um
+> sinal individual por fonte no contrato `/v1`. O detalhe usa uma página dedicada, com ficha
+> técnica, proveniência, auditoria e sugestões relacionadas pré-calculadas. As rotas legadas
+> continuam disponíveis como referência até a composição funcional de fichas na issue #75. A
 > [ADR-010](docs/decisions/ADR-010-individual-signals-human-investigation.md) redefine cada fonte
 > como sinal individual. As tabelas, o worker assíncrono, a [API `/v1`](docs/individual-signal-api.md)
 > e o workflow-v2 já existem. Nenhuma sugestão da
@@ -32,8 +33,8 @@ de correlação da Macroentrega 1 foi aprovada com ressalvas na avaliação expl
 30/09/2026; todas as metas previamente definidas foram atendidas. Consulte a [síntese para
 profissionais de saúde](docs/health-stakeholder-validation.md), o [protocolo de revisão
 humana](docs/human-review-workflow.md) e a [avaliação dos
-agrupamentos](docs/grouping-evaluation.md). O painel reutiliza a exportação visual do v0: as rotas
-de triagem e ficha técnica consultam os dados sintéticos persistidos pela API canônica, sem usar
+agrupamentos](docs/grouping-evaluation.md). O painel reutiliza a exportação visual do v0: a fila de
+detectados e a página dedicada consultam os dados sintéticos persistidos pela API `/v1`, sem usar
 mocks como fallback; a ficha também registra revisão humana e atualização de fluxo com confirmação,
 versão e trilha de auditoria. A visão em `/kanban` organiza os mesmos sinais canônicos em cinco
 estágios, sem permitir mudança por arrastar, e oferece uma tabela acessível equivalente. O panorama
