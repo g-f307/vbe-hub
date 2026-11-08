@@ -4,20 +4,22 @@ type: adr
 status: active
 title: "ADR-008: Registrar decisões humanas como eventos imutáveis"
 created: 2026-10-06
-updated: 2026-10-06
+updated: 2026-11-08
 owner: VBE Hub
 related_docs:
   - API-007
   - DATA-001
   - ADR-006
   - ADR-007
+  - ADR-010
 ---
 
 # ADR-008: Registrar decisões humanas como eventos imutáveis
 
 ## Status
 
-Aceita em 2026-10-06.
+Aceita em 2026-10-06 e preservada pela ADR-010. A implementação futura estenderá os eventos
+imutáveis para composição, remoção e transferência de membros das fichas de investigação.
 
 ## Contexto
 

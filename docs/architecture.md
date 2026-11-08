@@ -4,7 +4,7 @@ type: design
 status: active
 title: Arquitetura
 created: 2026-09-28
-updated: 2026-10-26
+updated: 2026-11-08
 owner: VBE Hub
 planned_code:
   - backend/
@@ -12,6 +12,7 @@ planned_code:
   - infra/
 related_docs:
   - REQ-001
+  - DES-002
   - API-001
   - ADR-001
   - ADR-002
@@ -20,6 +21,7 @@ related_docs:
   - ADR-006
   - ADR-007
   - ADR-008
+  - ADR-010
 ---
 
 # Arquitetura
@@ -27,6 +29,11 @@ related_docs:
 ## Visão e princípio
 
 O VBE Hub será um monólito modular: uma aplicação implantável, com módulos internos independentes e contratos explícitos. Essa escolha reduz a complexidade de operação até a validação e preserva pontos de extensão para conectores e provedores de IA futuros.
+
+## Estado atual e arquitetura alvo
+
+O primeiro diagrama representa o pipeline implementado antes da ADR-010. Ele permanece executável
+durante a migração, mas a consolidação automática não será a unidade canônica futura.
 
 ```mermaid
 flowchart LR
@@ -44,15 +51,40 @@ flowchart LR
   W --> DB
 ```
 
+A arquitetura alvo preserva ingestão, normalização e fichas técnicas, mas transforma cada fonte em
+um sinal individual. Relações são preparadas antecipadamente e a ficha nasce somente de decisão
+humana:
+
+```mermaid
+flowchart LR
+  S[Fontes sintéticas] --> I[Ingestão]
+  I --> N[Normalização]
+  N --> G[Sinal individual\ndetected]
+  G --> X[Extração e embeddings]
+  X --> C[Seleção limitada de candidatos]
+  C --> A[OpenAI julga relações]
+  A --> R[(Sugestões persistidas)]
+  G --> T[Triagem humana]
+  R --> T
+  T --> F[Ficha de investigação\n1..N sinais]
+  F --> W[Verificação e avaliação de risco]
+  G --> DB[(PostgreSQL + pgvector)]
+  R --> DB
+  F --> DB
+```
+
+O [contrato de transição](signal-domain-transition.md) distingue comportamento existente, modelo
+alvo e sequência expand/contract.
+
 ## Camadas e módulos
 
 | Camada | Módulos | Responsabilidade |
 | --- | --- | --- |
-| Interface | painel, mapa, detalhe do sinal | Explicar evidências e capturar decisão humana. |
-| API | registros, sinais, revisões, métricas | Expor dados ao painel e coordenar casos de uso. |
-| Domínio | normalização, triagem, correlação, agrupamento, prioridade | Aplicar regras sem depender de web, banco ou provedor de IA. |
+| Interface | detectados, detalhe do sinal, relacionados, ficha, mapa | Explicar evidências e capturar decisão humana. |
+| API | sinais, sugestões, fichas, revisões, métricas | Expor dados ao painel e coordenar casos de uso. |
+| Domínio | normalização, triagem, correlação, composição humana, prioridade | Aplicar regras sem depender de web, banco ou provedor de IA. |
 | Processamento | gerador, extração, embeddings, lote | Executar tarefas demoradas fora da requisição web. |
-| Adapters | PostgreSQL, Gemini, Ollama, EIOS futuro, GdS futuro | Isolar dependências externas. |
+| Adapters | PostgreSQL, OpenAI, adapters históricos, EIOS futuro, GdS futuro | Isolar dependências externas. |
 
 ## Stack proposta
 
@@ -91,39 +123,34 @@ por um comando documentado e oferecer dois modos:
 
 ## Painel do analista: plano de integração
 
-O protótipo exploratório da interface estabeleceu a linguagem visual e os quatro percursos da fundação
-agora versionada em `frontend/`. Triagem, investigação, fluxo e panorama consultam contratos da API e não
-substituem falhas por dados mockados:
+O frontend executável ainda representa consolidados. A substituição visual e os contratos abaixo
+são o alvo aprovado, não comportamento já entregue:
 
-1. **Triagem**: fila filtrável e paginada de sinais, ordenada por prioridade sugerida e atualizada
-   por leitura da API.
-2. **Investigação**: detalhe de um sinal com resumo consolidado, evidências de origem, fichas
-   técnicas, critérios de agrupamento, trilha de auditoria e painel de decisão humana.
-3. **Panorama**: leitura operacional e territorial agregada, com ligação para a fila filtrada.
-4. **Fluxo**: visão complementar em quadro ou tabela dos mesmos sinais e filtros canônicos.
+1. **Detectados**: fila filtrável e paginada com um card por fonte/sinal individual.
+2. **Investigação do sinal**: detalhe da fonte, ficha técnica, proveniência, auditoria e aba de
+   relacionados pré-calculados.
+3. **Ficha de investigação**: conjunto confirmado pelo analista, mantendo cada membro separado.
+4. **Panorama**: leitura operacional e territorial agregada, declarando se conta sinais ou fichas.
+5. **Fluxo**: visão complementar em quadro ou tabela, sem criar uma segunda máquina de estados.
 
-Os componentes devem preservar divulgação progressiva de informação. O item compacto da fila
-mostra código, prioridade sugerida, estado, condição/sintomas-chave, local/período e composição de
-fontes. Justificativa, divergências, campos ausentes, fichas técnicas e texto de origem pertencem
-ao detalhe ou à expansão explícita; a fila não deve esconder a origem nem apresentar todo o volume
-de evidências de uma vez.
+Os componentes devem preservar divulgação progressiva de informação. O item compacto mostra
+código, tipo e emissor da fonte, estado, condição/sintomas-chave, local e período. Justificativas,
+relacionados, campos ausentes, ficha técnica e texto de origem pertencem ao detalhe. Prioridade
+passa a ser atributo da ficha, não do sinal ainda detectado.
 
 ### Visualizações de fluxo
 
-A tabela/fila é a visão principal porque permite comparar prioridade, filtros e evidências de
-forma densa. A visão Kanban complementar organiza os mesmos sinais por `detectado`, `triagem`,
-`verificação`, `avaliação de risco` e `encerrado` para revelar volume e gargalos. Ela não confirma
-eventos nem oferece arrastar e soltar. O cartão apenas abre a investigação; qualquer transição é
-validada no backend e registrada no evento de auditoria pelo painel de decisão humana. A leitura
-ampla usa o limite explícito de 100 itens aceito por `GET /signals`, informa truncamento e mantém
-uma tabela acessível com a mesma consulta.
+A tabela/fila é a visão principal porque permite comparar filtros e evidências de forma densa. A
+visão de fluxo precisa distinguir sinais em `detected`/`triage` de fichas em `verification`,
+`risk_assessment` ou `closed`; ela não pode contá-los como uma única entidade. Não há transição por
+arrastar e soltar. Toda ação é validada no backend e registrada como evento de decisão humana.
 
 ### Visualização geoespacial
 
-O mapa exibirá somente localização consolidada e agregada por bairro ou outra unidade
+O mapa exibirá somente localização agregada por bairro ou outra unidade
 administrativa aprovada para a demonstração. Não exibirá coordenada de relato individual,
 endereço, identificação da pessoa ou inferência de localização precisa. Marcadores ou polígonos
-apresentarão contagem de sinais, estado predominante, prioridade sugerida e composição de fontes;
+apresentarão contagens separadas de sinais e fichas, estado predominante e prioridade sugerida das fichas;
 selecionar uma área filtrará ou encaminhará para a fila correspondente.
 
 Leaflet está encapsulado em um adaptador de mapa carregado apenas na rota territorial. Para manter a
@@ -134,13 +161,12 @@ compreensíveis sem mapa-base.
 
 ### Contratos de integração previstos
 
-O frontend não acessa tabelas do banco diretamente. A API expõe, com paginação, filtros e
-versões explícitas quando aplicável:
+O frontend não acessa tabelas do banco diretamente. Após a #71, a API deverá expor, com paginação,
+filtros e versões explícitas quando aplicável:
 
-- fila de sinais com campos de leitura rápida e contagem de fontes por tipo, disponível em
-  `GET /signals`;
-- detalhe do sinal, evidências vinculadas, fichas técnicas, justificativa, divergências e auditoria,
-  disponível em `GET /signals/{signal_id}`; consulte o [contrato de leitura](signal-read-api.md);
+- fila com um sinal por fonte e campos de leitura rápida;
+- detalhe individual, ficha técnica, proveniência, sugestões relacionadas e ficha ativa;
+- comando humano para criar ou alterar a composição da ficha;
 - resumo geoespacial agregado por área em `GET /signals/geographic-summary`, sem registros
   individualizados;
 - resumo operacional reconciliável em `GET /metrics/summary`, com proveniência, defasagem,
@@ -163,25 +189,29 @@ todas as telas da PoC.
 
 ## IA: decisão operacional
 
-A camada de aplicação depende das portas `StructuredExtractor`, `EmbeddingProvider` e `RelationJudge`; domínio e aplicação não dependem de Gemini ou Ollama diretamente.
+A camada de aplicação depende das portas `StructuredExtractor`, `EmbeddingProvider` e
+`RelationJudge`; domínio e aplicação não dependem do SDK de um provedor.
 
-- Padrão para validação: Gemini, com saída JSON estruturada e embeddings multilíngues.
-- Alternativa local: Ollama para experimentos, testes offline e comparação de custo/latência.
+- Após a migração da ADR-010, OpenAI será o único provedor externo do caminho oficial para
+  extração, embeddings e julgamento de relação.
+- Gemini e Ollama permanecem apenas como implementações/evidências históricas ou experimentais e
+  não serão necessários para executar a PoC.
 - Não usar LLM para comparar todos os pares: a busca vetorial e filtros temporal/geográfico geram candidatos; a IA julga somente os candidatos promissores.
 - Toda resposta de IA deve registrar modelo, versão do prompt, entrada resumida, saída validada, tempo, erro e decisão humana posterior.
+- A aba de relacionados lê resultados persistidos; abrir a interface não inicia processamento
+  síncrono no provedor.
 
 Uma GTX 1650 de 4 GB suporta experimentação com modelos pequenos quantizados e embeddings, mas não deve ser a única estratégia para a extração clínica multilíngue em grande lote. A qualidade será medida, não presumida.
 
-## Consolidação auditável
+## Consolidação legada e composição humana
 
-O módulo de consolidação consome fichas e relações já classificadas, sem nova chamada ao modelo de
-IA. Relações fortes formam componentes apenas quando não há conflitos geográfico, clínico ou
-temporal; relações contextuais são anexadas sem unir componentes independentes. Os campos
-consolidados mantêm proveniência e divergências, e a política versionada torna o reprocessamento
-idempotente sem apagar resultados anteriores. Consulte o [contrato de
-consolidação](signal-consolidation.md) e a [ADR-006](decisions/ADR-006-versioned-signal-consolidation.md).
+O módulo de consolidação atual permanece como legado reproduzível durante a migração. No modelo
+alvo, nenhuma relação da IA une sinais automaticamente. O analista seleciona membros e cria uma
+ficha que referencia cada sinal, sem gerar campos que substituam as descrições individuais.
+Consulte a [ADR-010](decisions/ADR-010-individual-signals-human-investigation.md) e o
+[mapa de transição](signal-domain-transition.md).
 
-A prioridade sugerida é calculada depois da consolidação, sem LLM, por pesos e faixas versionados.
+A prioridade sugerida será calculada para a ficha, sem LLM, por pesos e faixas versionados.
 Score, confiança dos dados e futura avaliação humana são conceitos e contratos diferentes. Cada
 componente aponta para evidências de origem e campos desconhecidos permanecem explícitos. Consulte
 o [contrato de prioridade](suggested-priority.md) e a
@@ -191,15 +221,20 @@ o [contrato de prioridade](suggested-priority.md) e a
 
 `detected → triage → verification → risk_assessment → closed`
 
-O fluxo é uma máquina `workflow-v1` com transições explícitas, versão otimista e eventos
-imutáveis. Um sinal pode ser encerrado durante triagem, verificação ou avaliação de risco, sempre
-com motivo e ator. Aceitação, correção e rejeição de sugestões preservam valor anterior, novo valor
-e vínculo com a origem. A prioridade automática continua sendo sugestão, distinta do resultado da
-avaliação de risco. Consulte o [contrato de revisão humana](human-review-workflow.md) e a
+No modelo alvo, `detected` e `triage` pertencem ao sinal individual; após a composição humana,
+`verification`, `risk_assessment` e `closed` pertencem à ficha. A transição de responsabilidade é
+atômica e auditável. Abrir uma tela não muda estado.
+
+O `workflow-v1` atualmente implementado permanece durante a compatibilidade. O `workflow-v2`
+preservará versão otimista, idempotência e eventos imutáveis ao transferir a responsabilidade do
+sinal para a ficha. Aceitação, correção e rejeição preservam valor anterior, novo valor e vínculo
+com a origem. Consulte o [contrato de revisão humana](human-review-workflow.md) e a
 [ADR-008](decisions/ADR-008-append-only-human-review.md).
 
 ## Fontes futuras e dados sintéticos
 
 O EIOS trabalha com inteligência de fontes abertas e notícias em múltiplas fontes/idiomas. O Guardiões da Saúde é uma plataforma de vigilância participativa, cujos reportes são compilados para análise de sintomas e doenças. Os contratos sintéticos refletem essas características, mas serão revisados antes de qualquer conector real, pois os endpoints, permissões e campos disponíveis precisam de confirmação com cada provedor.
 
-Fontes: [WHO EIOS](https://www.who.int/initiatives/eios), [ProEpi Guardiões da Saúde](https://proepi.org.br/guardians-of-health/), [documentação de saída estruturada Gemini](https://ai.google.dev/gemini-api/docs/structured-output) e [documentação de embeddings Gemini](https://ai.google.dev/gemini-api/docs/embeddings).
+Fontes de domínio: [WHO EIOS](https://www.who.int/initiatives/eios) e
+[ProEpi Guardiões da Saúde](https://proepi.org.br/guardians-of-health/). A decisão de provedor está
+registrada nas ADR-002 e ADR-010, sem tornar documentação externa parte do contrato do domínio.

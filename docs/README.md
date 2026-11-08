@@ -19,32 +19,30 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 11. [Classificação das relações](relation-classification.md)
 12. [Avaliação da correlação](correlation-evaluation.md)
 13. [Validação da correlação para profissionais de saúde](health-stakeholder-validation.md)
-14. [Consolidação de sinais de alerta](signal-consolidation.md)
-15. [Prioridade sugerida e explicável](suggested-priority.md)
-16. [Revisão humana e trilha de auditoria](human-review-workflow.md)
-17. [Avaliação dos agrupamentos e da revisão](grouping-evaluation.md)
-18. [Consulta canônica de sinais para o painel](signal-read-api.md)
-19. [Métricas operacionais e evidências sintéticas](operational-metrics-api.md)
-20. [Experimento integrado da prova de conceito](integrated-validation.md)
-21. [Geração e importação de dados sintéticos](synthetic-data-generation.md)
-22. [Modelo persistente inicial](data-model.md)
-23. [Fundação do frontend](frontend.md)
-24. [Plano de implementação](implementation-plan.md)
-25. [Demonstração visual com fontes dispersas no n8n](n8n-demo.md)
-26. [Execução e validação local](development.md)
-27. [Integração contínua](continuous-integration.md)
-28. [Decisões arquiteturais](decisions/README.md)
+14. [Transição para sinais individuais e fichas de investigação](signal-domain-transition.md)
+15. [Consolidação de sinais de alerta — legado](signal-consolidation.md)
+16. [Prioridade sugerida e explicável](suggested-priority.md)
+17. [Revisão humana e trilha de auditoria](human-review-workflow.md)
+18. [Avaliação dos agrupamentos e da revisão](grouping-evaluation.md)
+19. [Consulta canônica de sinais para o painel](signal-read-api.md)
+20. [Métricas operacionais e evidências sintéticas](operational-metrics-api.md)
+21. [Experimento integrado da prova de conceito](integrated-validation.md)
+22. [Geração e importação de dados sintéticos](synthetic-data-generation.md)
+23. [Modelo persistente inicial](data-model.md)
+24. [Fundação do frontend](frontend.md)
+25. [Plano de implementação](implementation-plan.md)
+26. [Demonstração visual com fontes dispersas no n8n](n8n-demo.md)
+27. [Execução e validação local](development.md)
+28. [Integração contínua](continuous-integration.md)
+29. [Decisões arquiteturais](decisions/README.md)
 
 ## Situação
 
-Fundação reproduzível, normalização, extração, indexação semântica, funil de correlação,
-consolidação auditável, prioridade sugerida por regras e fluxo de revisão humana implementados e
-avaliados com dados sintéticos. Correlação e agrupamento foram aprovados com ressalvas. O
-experimento integrado é reproduzível sem novas chamadas ao Gemini, mas permanece bloqueado pela
-linha de base da extração da ficha técnica. A API e as
-rotas de triagem, investigação e panorama usam leitura canônica; a investigação também registra
-decisões auditáveis por rotas internas do painel. O backend expõe métricas operacionais
-reconciliáveis separadas das avaliações sintéticas. Autenticação institucional e integrações reais
-com EIOS e Guardiões da Saúde permanecem
-nas etapas seguintes; os contratos atuais simulam as entradas sem afirmar equivalência com
-endpoints oficiais.
+O comportamento executável ainda usa sinais consolidados e permanece reproduzível como evidência
+histórica. Em 2026-11-08, a ADR-010 aprovou a transição para um sinal individual por fonte,
+sugestões de relação pré-calculadas pela OpenAI e fichas formadas somente por decisão humana. Essa
+transição ainda não está implementada e será realizada nas issues #69 a #77 pelo caminho
+expand/contract descrito em [Transição para sinais individuais](signal-domain-transition.md).
+
+Autenticação institucional e integrações reais com EIOS e Guardiões da Saúde permanecem fora da
+PoC; os contratos simulam entradas sem afirmar equivalência com endpoints oficiais.
