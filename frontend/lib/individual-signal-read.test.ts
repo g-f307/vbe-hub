@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   buildIndividualSignalSearch,
+  getInvestigation,
   getIndividualSignal,
   listIndividualSignals,
   listRelatedSignals,
@@ -153,5 +154,38 @@ describe('contrato de sinais individuais', () => {
       `http://api:8000/v1/signals/${card.id}/audit-events`,
       expect.objectContaining({ cache: 'no-store' }),
     )
+  })
+
+  it('lê a ficha ativa preservando membros e eventos individualizados', async () => {
+    const fileId = '048f6d5d-9c44-7b10-8000-000000000004'
+    const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      id: fileId,
+      version: 2,
+      created_at: '2026-11-08T10:00:00Z',
+      updated_at: '2026-11-08T10:05:00Z',
+      members: [{
+        added_at: '2026-11-08T10:00:00Z',
+        added_by: 'analista-demo',
+        signal: {
+          ...card,
+          contract_version: 'individual-signal-v1',
+          source: { ...card.source, external_id: null, body: 'Descrição individual.', source_url: null, language: 'pt-BR' },
+          provenance: { adapter_name: 'test', adapter_version: '1', generator_name: null, generator_version: null, seed: null, scenario_id: null, collected_at: '2026-11-08T09:00:00Z' },
+          technical_sheet: null,
+          active_investigation_id: fileId,
+        },
+      }],
+      events: [{ sequence: 1, action: 'add', signal_id: card.id, actor_id: 'analista-demo', occurred_at: '2026-11-08T10:00:00Z', reason_code: null }],
+    }), { status: 200 }))
+    vi.stubGlobal('fetch', fetch)
+
+    const investigation = await getInvestigation(fileId)
+
+    expect(investigation).toMatchObject({
+      id: fileId,
+      version: 2,
+      members: [{ signal: { id: card.id, source: { body: 'Descrição individual.' } } }],
+      events: [{ action: 'add', actorId: 'analista-demo' }],
+    })
   })
 })

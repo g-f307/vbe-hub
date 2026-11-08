@@ -63,6 +63,21 @@ export type SignalAuditEvent = {
   reasonCode: string | null
   comment: string | null
 }
+export type InvestigationDetail = {
+  id: string
+  version: number
+  createdAt: string
+  updatedAt: string
+  members: Array<{ addedAt: string; addedBy: string; signal: IndividualSignalDetail }>
+  events: Array<{
+    sequence: number
+    action: 'add' | 'remove' | 'reject'
+    signalId: string
+    actorId: string
+    occurredAt: string
+    reasonCode: string | null
+  }>
+}
 
 export type IndividualSignalFilters = {
   state?: IndividualSignalState
@@ -169,6 +184,67 @@ export async function listSignalAuditEvents(signalId: string): Promise<SignalAud
       comment: nullableString(item.comment),
     }
   })
+}
+
+export async function getInvestigation(fileId: string): Promise<InvestigationDetail> {
+  const payload = await request(`/v1/investigations/${encodeURIComponent(fileId)}`)
+  if (!isRecord(payload) || !Array.isArray(payload.members) || !Array.isArray(payload.events)) {
+    invalid('A ficha de investigação é inválida.')
+  }
+  return {
+    id: requiredString(payload.id),
+    version: requiredInteger(payload.version),
+    createdAt: requiredString(payload.created_at),
+    updatedAt: requiredString(payload.updated_at),
+    members: payload.members.map((member) => {
+      if (!isRecord(member)) invalid('Um membro da ficha é inválido.')
+      return {
+        addedAt: requiredString(member.added_at),
+        addedBy: requiredString(member.added_by),
+        signal: mapDetail(member.signal),
+      }
+    }),
+    events: payload.events.map((event) => {
+      if (!isRecord(event)) invalid('Um evento da ficha é inválido.')
+      const action = requiredString(event.action)
+      if (!['add', 'remove', 'reject'].includes(action)) invalid('A ação da ficha é inválida.')
+      return {
+        sequence: requiredInteger(event.sequence),
+        action: action as InvestigationDetail['events'][number]['action'],
+        signalId: requiredString(event.signal_id),
+        actorId: requiredString(event.actor_id),
+        occurredAt: requiredString(event.occurred_at),
+        reasonCode: nullableString(event.reason_code),
+      }
+    }),
+  }
+}
+
+function mapDetail(payload: unknown): IndividualSignalDetail {
+  if (!isRecord(payload) || !isRecord(payload.source) || !isRecord(payload.provenance)) {
+    invalid('O detalhe de um membro é inválido.')
+  }
+  const card = mapCard(payload)
+  return {
+    ...card,
+    contractVersion: requiredString(payload.contract_version),
+    source: {
+      externalId: nullableString(payload.source.external_id),
+      body: requiredString(payload.source.body),
+      url: nullableString(payload.source.source_url),
+      language: requiredString(payload.source.language),
+    },
+    provenance: {
+      adapterName: requiredString(payload.provenance.adapter_name),
+      adapterVersion: requiredString(payload.provenance.adapter_version),
+      generatorName: nullableString(payload.provenance.generator_name),
+      generatorVersion: nullableString(payload.provenance.generator_version),
+      seed: nullableNumber(payload.provenance.seed),
+      scenarioId: nullableString(payload.provenance.scenario_id),
+      collectedAt: requiredString(payload.provenance.collected_at),
+    },
+    technicalSheet: isRecord(payload.technical_sheet) ? payload.technical_sheet : null,
+  }
 }
 
 function mapCard(value: unknown): IndividualSignalCard {
