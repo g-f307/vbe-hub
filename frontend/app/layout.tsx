@@ -1,24 +1,16 @@
 import type { Metadata, Viewport } from 'next'
-import { AppShell } from '@/components/app-shell'
-import { Toaster } from '@/components/ui/sonner'
-import { TooltipProvider } from '@/components/ui/tooltip'
 import 'leaflet/dist/leaflet.css'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: {
-    default: 'VBE Hub — Vigilância Baseada em Eventos',
-    template: '%s · VBE Hub',
-  },
-  description:
-    'Ferramenta interna para triagem e revisão humana de sinais de vigilância baseada em eventos a partir de notícias e relatos comunitários sintéticos.',
+  title: 'VBEHub | Hub de Vigilância Epidemiológica',
+  description: 'Sistema integrado para captação e gerenciamento de sinais de saúde pública',
   generator: 'v0.app',
   robots: { index: false, follow: false },
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'light',
-  themeColor: '#102F3C',
+  themeColor: '#1e40af',
   width: 'device-width',
   initialScale: 1,
 }
@@ -30,11 +22,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className="antialiased">
-        <TooltipProvider delay={250}>
-          <AppShell>{children}</AppShell>
-        </TooltipProvider>
-        <Toaster theme="light" position="bottom-right" />
+      <body className="font-sans antialiased">
+        <a
+          href="#conteudo-principal"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[1000] focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-foreground focus:shadow-lg"
+        >
+          Pular para o conteúdo
+        </a>
+        {children}
       </body>
     </html>
   )

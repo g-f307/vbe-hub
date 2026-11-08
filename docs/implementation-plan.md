@@ -82,7 +82,10 @@ territorial também usa agregados canônicos e geometria local.
 7. **Concluída:** acrescentar Kanban como visão complementar dos cinco estados canônicos, com os
    mesmos filtros da fila, tabela acessível, limite explícito de 100 sinais e encaminhamento para a
    investigação; nenhuma transição ocorre por arrastar e soltar.
-8. Validar responsividade, acessibilidade, dados sintéticos, limites da IA e reprodução completa
+8. **Concluída na #73:** incorporar diretamente a nova fundação visual exportada, mantendo a
+   infraestrutura Docker, o lockfile, as rotas anteriores para rollback e marcação explícita da
+   carga local de demonstração.
+9. Validar responsividade, acessibilidade, dados sintéticos, limites da IA e reprodução completa
    em outro dispositivo via Docker Compose.
 
 ### Critérios de aceite do painel integrado

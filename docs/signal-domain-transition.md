@@ -22,9 +22,10 @@ related_docs:
 ## Situação
 
 A ADR-010 está aceita. As issues #69 a #72 implementam persistência, pré-cálculo OpenAI, API
-versionada e workflow-v2. O frontend ainda usa majoritariamente `consolidated_signals` e permanece
-em transição nas issues #73 a #77. Este documento não deve ser usado para alegar que a troca
-completa do modelo já ocorreu.
+versionada e workflow-v2. A #73 migra a fundação visual, mas sua rota principal ainda usa dados
+locais de demonstração; as rotas anteriores permanecem como referência. A integração funcional
+continua nas issues #74 a #77. Este documento não deve ser usado para alegar que a troca completa
+do modelo já ocorreu.
 
 ## Glossário normativo
 

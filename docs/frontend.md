@@ -15,30 +15,49 @@ related_docs:
 
 # Fundação do frontend
 
-> **Fundação atual:** esta página documenta o frontend executável antes da ADR-010. A nova base
-> visual será inventariada e migrada de forma reversível na #73; Detectados, relacionados e
-> composição de fichas serão integrados nas #74 e #75. A pasta funcional atual não deve ser
-> removida antes de equivalência, testes e rollback documentados.
+> **Fundação atual:** a issue #73 incorporou diretamente o código aprovado do export v0. Detectados,
+> relacionados e composição de fichas serão integrados nas #74 e #75. Os adaptadores e as rotas
+> anteriores continuam versionados até essa equivalência funcional.
 
 ## Propósito e limite atual
 
-`frontend/` contém o painel versionado do VBE Hub, construído em Next.js/React a partir da
-exportação do protótipo v0. A fundação torna a interface reproduzível por Docker Compose e preserva
-a linguagem visual, navegação responsiva e componentes de evidência enquanto lê dados persistidos.
+`frontend/` contém o painel versionado do VBE Hub em Next.js/React. O código efetivamente exportado
+pelo v0 foi incorporado em `frontend/v0/`; `app/page.tsx` apenas o compõe como aplicação principal.
+Essa separação evita reconstruir o desenho e, ao mesmo tempo, preserva Dockerfile, lockfile, health
+check, testes e proxy interno já validados no repositório.
+
+A raiz `/` ainda usa `frontend/v0/lib/mock-data.ts`, identificada visualmente como “Dados locais de
+demonstração”. Isso é um estágio temporário e explícito da migração, não fallback silencioso. A
+substituição pelo contrato `/v1/signals` pertence à #74. Criar, editar, excluir e arrastar sinais
+nessa base ainda são interações locais do protótipo e não representam comandos do backend.
 
 As rotas atuais são deliberadamente demonstrativas:
 
 | Rota | Papel na fundação | Estado de dados |
 | --- | --- | --- |
+| `/` | fundação visual aprovada importada do v0 | carga local de demonstração, até #74 |
 | `/triagem` | fila, filtros, indicadores e paginação | consulta `GET /signals` no servidor Next |
 | `/kanban` | quadro complementar dos cinco estágios e tabela acessível | consulta até 100 itens de `GET /signals` com os mesmos filtros; não altera estado |
 | `/sinais/[slug]` | ficha técnica, fontes, relações, auditoria e revisão | consulta `GET /signals/{id}` no servidor Next; submete decisões confirmadas por rotas internas; o segmento é o UUID canônico |
 | `/panorama` | leitura territorial agregada, mapa local e lista acessível | consulta `GET /signals/geographic-summary` no servidor Next |
 | `/api/health` | health check do contêiner do painel | retorna somente o estado do serviço |
 
-Os dados de `lib/mock-data.ts` não alimentam triagem, fluxo, investigação nem panorama. Permanecem apenas
+Os dados de `lib/mock-data.ts` não alimentam triagem, fluxo, investigação nem panorama legados. Permanecem apenas
 como legado do protótipo enquanto outros componentes deixam de depender deles; não representam
 situação epidemiológica e não implicam decisão humana.
+
+## Estratégia de migração e rollback
+
+- Fonte local original ignorada: `vbe-hub-frontend/`.
+- Código incorporado e versionado: `frontend/v0/`, com imports apenas ajustados ao namespace.
+- Infraestrutura preservada: `frontend/Dockerfile`, Compose, health check, proxy, Vitest e ESLint.
+- Rotas anteriores preservadas: `/triagem`, `/kanban`, `/sinais/[slug]` e `/panorama`.
+- Rollback antes do merge: trocar para `main` ou excluir a branch da issue.
+- Rollback depois do merge: reverter o commit/PR da #73; não há migration de banco nem alteração de
+  contrato do backend nesta entrega.
+
+A pasta local original não é necessária para build ou execução. Um clone limpo usa somente os
+arquivos versionados sob `frontend/`.
 
 ## Princípios de apresentação
 
@@ -95,6 +114,7 @@ Abra `http://localhost:3000`. Para verificar isoladamente a fundação no mesmo 
 ```bash
 docker compose --profile tools run --rm frontend-lint
 docker compose --profile tools run --rm frontend-test
+docker compose build frontend
 ```
 
 O modo de desenvolvimento é opcional e usa recarga automática sem Node.js instalado no host:
