@@ -4,7 +4,7 @@ type: data
 status: active
 title: Modelo persistente inicial
 created: 2026-09-28
-updated: 2026-10-06
+updated: 2026-11-08
 owner: VBE Hub
 implemented_code:
   - backend/migrations/
@@ -21,9 +21,16 @@ related_docs:
   - ADR-007
   - API-007
   - ADR-008
+  - ADR-010
 ---
 
 # Modelo persistente inicial
+
+> **Estado de transição:** esta página descreve o schema implementado antes da ADR-010. As tabelas
+> de consolidação continuam ativas no código, mas serão substituídas por sinais individuais,
+> sugestões e fichas de investigação pelo processo expand/contract da issue #69. Nenhuma tabela
+> legada será removida nesta etapa documental. Consulte o
+> [mapa de transição](signal-domain-transition.md).
 
 ## Fronteiras
 
@@ -86,3 +93,17 @@ identidade da sugestão. Correções são novos eventos; o histórico existente 
 Usuários reais, autenticação, autorização e retenção de dados reais não pertencem a este schema.
 Backup também não está previsto nesta etapa; volumes Docker são persistência de desenvolvimento,
 não estratégia de recuperação.
+
+## Modelo alvo aprovado
+
+O desenho lógico futuro adicionará, sem remover imediatamente o legado:
+
+- um sinal individual idempotente para cada registro normalizado elegível;
+- uma sugestão versionada para cada par canônico avaliado;
+- uma ficha de investigação criada pelo analista;
+- membros que referenciam sinais sem copiar conteúdo;
+- eventos append-only de inclusão, remoção e transição;
+- prioridade ligada à ficha, não ao consolidado automático.
+
+Nomes físicos, constraints e índices serão definidos e testados na #69; este documento não antecipa
+uma migration ainda inexistente.

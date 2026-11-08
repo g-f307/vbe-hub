@@ -4,7 +4,7 @@ type: design
 status: active
 title: Fundação do frontend
 created: 2026-10-07
-updated: 2026-10-26
+updated: 2026-11-08
 owner: VBE Hub
 related_docs:
   - DES-001
@@ -14,6 +14,11 @@ related_docs:
 ---
 
 # Fundação do frontend
+
+> **Fundação atual:** esta página documenta o frontend executável antes da ADR-010. A nova base
+> visual será inventariada e migrada de forma reversível na #73; Detectados, relacionados e
+> composição de fichas serão integrados nas #74 e #75. A pasta funcional atual não deve ser
+> removida antes de equivalência, testes e rollback documentados.
 
 ## Propósito e limite atual
 

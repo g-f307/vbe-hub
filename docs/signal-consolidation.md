@@ -1,10 +1,10 @@
 ---
 id: API-005
 type: api
-status: active
+status: superseded
 title: Consolidação de sinais de alerta
 created: 2026-10-02
-updated: 2026-10-07
+updated: 2026-11-08
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/application/correlation/signals.py
@@ -17,6 +17,11 @@ related_docs:
 ---
 
 # Consolidação de sinais de alerta
+
+> **Contrato legado:** este comportamento continua implementado e reproduzível, mas foi substituído
+> como direção do produto pela ADR-010. No modelo futuro, cada fonte será um sinal e somente o
+> analista formará uma ficha de investigação. Este documento permanece como evidência histórica e
+> referência para a migração; não orienta novas funcionalidades.
 
 ## Finalidade e limite
 

@@ -4,17 +4,41 @@ type: release
 status: active
 title: Plano de implementação
 created: 2026-09-28
-updated: 2026-10-26
+updated: 2026-11-08
 owner: VBE Hub
-review_after: 2026-11-07
+review_after: 2026-11-08
 related_docs:
   - REQ-001
   - DES-001
   - API-001
   - ADR-004
+  - ADR-010
 ---
 
 # Plano de implementação
+
+## Milestone 7: redefinição de sinais e investigação assistida
+
+Em 8 de novembro de 2026, a ADR-010 alterou a unidade central do produto. O cronograma original
+abaixo permanece como registro das entregas realizadas, mas não descreve a próxima implementação.
+
+A ordem linear aprovada para a transição é:
+
+1. #68 — definir domínio e estratégia de migração;
+2. #69 — expandir persistência para sinais e fichas;
+3. #70 — preparar relacionados assincronamente com OpenAI;
+4. #72 — adaptar workflow e auditoria;
+5. #71 — expor contratos da API;
+6. #73 — migrar a fundação do frontend de forma reversível;
+7. #74 — implementar Detectados e aba de relacionados;
+8. #75 — compor ficha por decisão humana;
+9. #76 — migrar dados sintéticos e n8n;
+10. #77 — validar latência, custo e qualidade;
+11. #23 — atualizar método e resultados acadêmicos;
+12. #24 — preparar a demonstração final.
+
+Retirar tabelas ou endpoints legados exige validação posterior e decisão explícita; não faz parte
+da issue #68.
 
 ## Marco de validação
 

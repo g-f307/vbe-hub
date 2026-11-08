@@ -4,7 +4,7 @@ type: api
 status: active
 title: Revisão humana e trilha de auditoria
 created: 2026-10-06
-updated: 2026-10-10
+updated: 2026-11-08
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/application/workflow.py
@@ -18,6 +18,23 @@ related_docs:
 ---
 
 # Revisão humana e trilha de auditoria
+
+> **Compatibilidade:** as rotas e a máquina `workflow-v1` abaixo descrevem o comportamento
+> implementado para sinais consolidados. A ADR-010 aprovou `workflow-v2`, que será implementado nas
+> issues #69, #71 e #72. Até lá, o texto abaixo continua sendo o contrato executável.
+
+## Direção aprovada para workflow-v2
+
+- o sinal individual nasce em `detected` e entra em `triage` somente por comando explícito;
+- abrir detalhe ou aba não muda estado;
+- a seleção humana cria uma ficha com um ou mais sinais;
+- a partir de `verification`, a ficha possui o workflow compartilhado;
+- sinais membros preservam histórico, URL e conteúdo, mas não mantêm máquinas posteriores
+  concorrentes;
+- inclusão, remoção e reatribuição são eventos append-only, idempotentes e sujeitos a versão;
+- um sinal não pode pertencer a duas fichas ativas.
+
+A forma exata dos endpoints será contratada na #71, sem alterar silenciosamente as rotas abaixo.
 
 ## Finalidade e limite
 
