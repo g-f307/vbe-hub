@@ -1,0 +1,23 @@
+{
+  "mode": "recorded",
+  "dataset_identity": "related-signals-contract-fixture-v1",
+  "dataset_size": 20,
+  "positive_pairs": 10,
+  "candidate_recall": 1.0,
+  "macro_f1": 0.8,
+  "samples": [
+    {"queue_ms": 12, "extraction_ms": 110, "embedding_ms": 35, "candidate_search_ms": 18, "judgment_ms": 220, "persisted_read_ms": 8, "input_tokens": 100, "output_tokens": 20, "cache_hit": false},
+    {"queue_ms": 20, "extraction_ms": 140, "embedding_ms": 45, "candidate_search_ms": 25, "judgment_ms": 300, "persisted_read_ms": 10, "input_tokens": 120, "output_tokens": 30, "cache_hit": false},
+    {"queue_ms": 8, "extraction_ms": 0, "embedding_ms": 0, "candidate_search_ms": 12, "judgment_ms": 0, "persisted_read_ms": 7, "input_tokens": 0, "output_tokens": 0, "cache_hit": true}
+  ],
+  "failure_probes": [
+    {"scenario": "timeout", "visible_status": "failed", "recoverable": true},
+    {"scenario": "rate_limited", "visible_status": "failed", "recoverable": true},
+    {"scenario": "quota_exhausted", "visible_status": "failed", "recoverable": false},
+    {"scenario": "reprocessing", "visible_status": "ready", "recoverable": true},
+    {"scenario": "backlog", "visible_status": "pending", "recoverable": true}
+  ],
+  "cache_invalidated_after_prompt_change": true,
+  "input_usd_per_million": 0.10,
+  "output_usd_per_million": 0.50
+}

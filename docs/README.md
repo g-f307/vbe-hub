@@ -24,6 +24,7 @@ Voltar ao [contexto do projeto](../AGENTS.md).
    - [API versionada de sinais individuais e fichas](individual-signal-api.md)
 16. [Consolidação de sinais de alerta — legado](signal-consolidation.md)
    - [Pré-cálculo assíncrono de sinais relacionados](related-signal-precomputation.md)
+   - [Avaliação dos sinais relacionados](related-signals-evaluation.md)
 17. [Prioridade sugerida e explicável](suggested-priority.md)
 18. [Revisão humana e trilha de auditoria](human-review-workflow.md)
 19. [Avaliação dos agrupamentos e da revisão](grouping-evaluation.md)
