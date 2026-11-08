@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 
 from vbe_hub.api.demo import DemoRunService, get_demo_service
 from vbe_hub.api.demo import router as demo_router
+from vbe_hub.api.individual_signals import router as individual_signals_router
 from vbe_hub.api.metrics import router as metrics_router
 from vbe_hub.api.signals import router as signals_router
 from vbe_hub.api.workflow import (
@@ -40,6 +41,7 @@ def create_app(
 ) -> FastAPI:
     app = FastAPI(title="VBE Hub API", version="0.1.0")
     app.include_router(signals_router)
+    app.include_router(individual_signals_router)
     app.include_router(metrics_router)
     app.include_router(workflow_router)
     app.include_router(demo_router)

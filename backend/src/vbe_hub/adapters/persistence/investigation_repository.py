@@ -23,6 +23,7 @@ from vbe_hub.domain.investigations import (
     InvestigationConcurrencyConflict,
     InvestigationFile,
     InvestigationMember,
+    InvestigationMemberNotFound,
     InvestigationMembershipEvent,
     InvestigationOperationConflict,
     LastInvestigationMemberError,
@@ -48,9 +49,7 @@ class SqlAlchemyInvestigationRepository:
                 contract_version=contract_version,
                 created_at=created_at,
             )
-            .on_conflict_do_nothing(
-                index_elements=["normalized_record_id", "contract_version"]
-            )
+            .on_conflict_do_nothing(index_elements=["normalized_record_id", "contract_version"])
         )
         row = await self._session.scalar(
             select(IndividualSignalModel).where(
@@ -61,7 +60,6 @@ class SqlAlchemyInvestigationRepository:
         if row is None:  # pragma: no cover - guarded by the insert/FK transaction
             raise RuntimeError("individual signal was not persisted")
         return self._signal(row)
-
 
     async def get_signal(self, signal_id: UUID) -> IndividualSignal | None:
         row = await self._session.get(IndividualSignalModel, signal_id)
@@ -169,6 +167,21 @@ class SqlAlchemyInvestigationRepository:
         occurred_at: datetime,
         reason_code: str,
     ) -> InvestigationFile:
+        fingerprint = self._fingerprint(
+            "remove", signal_id, actor_id, reason_code, investigation_file_id
+        )
+        replay = await self._replay(operation_key, fingerprint)
+        if replay is not None:
+            return replay
+        active_member = await self._session.scalar(
+            select(InvestigationFileMemberModel.id).where(
+                InvestigationFileMemberModel.investigation_file_id == investigation_file_id,
+                InvestigationFileMemberModel.signal_id == signal_id,
+                InvestigationFileMemberModel.removed_at.is_(None),
+            )
+        )
+        if active_member is None:
+            raise InvestigationMemberNotFound(signal_id)
         active_count = await self._session.scalar(
             select(func.count())
             .select_from(InvestigationFileMemberModel)
@@ -190,16 +203,13 @@ class SqlAlchemyInvestigationRepository:
             reason_code=reason_code,
         )
 
-    async def list_active_members(
-        self, investigation_file_id: UUID
-    ) -> list[InvestigationMember]:
+    async def list_active_members(self, investigation_file_id: UUID) -> list[InvestigationMember]:
         rows = list(
             (
                 await self._session.scalars(
                     select(InvestigationFileMemberModel)
                     .where(
-                        InvestigationFileMemberModel.investigation_file_id
-                        == investigation_file_id,
+                        InvestigationFileMemberModel.investigation_file_id == investigation_file_id,
                         InvestigationFileMemberModel.removed_at.is_(None),
                     )
                     .order_by(
@@ -211,9 +221,7 @@ class SqlAlchemyInvestigationRepository:
         )
         return [self._member(row) for row in rows]
 
-    async def list_events(
-        self, investigation_file_id: UUID
-    ) -> list[InvestigationMembershipEvent]:
+    async def list_events(self, investigation_file_id: UUID) -> list[InvestigationMembershipEvent]:
         rows = list(
             (
                 await self._session.scalars(
@@ -283,8 +291,7 @@ class SqlAlchemyInvestigationRepository:
             await self._session.execute(
                 update(InvestigationFileMemberModel)
                 .where(
-                    InvestigationFileMemberModel.investigation_file_id
-                    == investigation_file_id,
+                    InvestigationFileMemberModel.investigation_file_id == investigation_file_id,
                     InvestigationFileMemberModel.signal_id == signal_id,
                     InvestigationFileMemberModel.removed_at.is_(None),
                 )
@@ -316,9 +323,7 @@ class SqlAlchemyInvestigationRepository:
         await self._session.flush()
         return self._file(file_row)
 
-    async def _replay(
-        self, operation_key: str, fingerprint: str
-    ) -> InvestigationFile | None:
+    async def _replay(self, operation_key: str, fingerprint: str) -> InvestigationFile | None:
         event = await self._session.scalar(
             select(InvestigationMembershipEventModel).where(
                 InvestigationMembershipEventModel.operation_key == operation_key
@@ -411,9 +416,7 @@ class SqlAlchemySignalSuggestionRepository:
         self._session = session
         self._now = now
 
-    async def mark_pending(
-        self, left: UUID, right: UUID, contract_version: str
-    ) -> None:
+    async def mark_pending(self, left: UUID, right: UUID, contract_version: str) -> None:
         left, right = sorted((left, right))
         timestamp = self._now()
         values = {
