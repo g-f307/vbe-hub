@@ -530,6 +530,55 @@ services:
         "--output", "/data/reports",
       ]
 
+  related-signals-evaluate:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+      target: runtime
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    environment:
+      UV_CACHE_DIR: /tmp/uv-cache
+      DATABASE_URL: postgresql://evaluation:not-used@not-used:5432/evaluation
+      REDIS_URL: redis://not-used:6379/0
+    volumes:
+      - ./data/reports:/data/reports
+    command:
+      [
+        "uv", "run", "--no-sync", "python", "-m",
+        "vbe_hub.evaluation.related_signals_command",
+        "--capture", "/app/src/vbe_hub/evaluation/assets/related-signals-recorded-v1.json",
+        "--commit", "${EVALUATION_COMMIT:-working-tree}",
+        "--output", "/data/reports",
+      ]
+
+  related-signals-evaluate-openai:
+    profiles: ["live"]
+    build:
+      context: ./backend
+      target: runtime
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    environment:
+      UV_CACHE_DIR: /tmp/uv-cache
+      DATABASE_URL: postgresql://evaluation:not-used@not-used:5432/evaluation
+      REDIS_URL: redis://not-used:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-6-luna}
+      OPENAI_TIMEOUT_SECONDS: ${OPENAI_TIMEOUT_SECONDS:-15}
+      OPENAI_MAX_ATTEMPTS: ${OPENAI_MAX_ATTEMPTS:-3}
+      OPENAI_MAX_INPUT_CHARS: ${OPENAI_MAX_INPUT_CHARS:-12000}
+      OPENAI_INPUT_USD_PER_MILLION: ${OPENAI_INPUT_USD_PER_MILLION:-0.10}
+      OPENAI_OUTPUT_USD_PER_MILLION: ${OPENAI_OUTPUT_USD_PER_MILLION:-0.50}
+    volumes:
+      - ./data/reports:/data/reports
+    command:
+      [
+        "uv", "run", "--no-sync", "python", "-m",
+        "vbe_hub.evaluation.related_signals_live",
+        "--cases-per-relation", "${RELATED_EVALUATION_CASES_PER_RELATION:-1}",
+        "--seed", "${RELATED_EVALUATION_SEED:-4040}",
+        "--output", "/data/reports",
+      ]
+
   n8n-import:
     profiles: ["demo"]
     image: n8nio/n8n:2.46.6
