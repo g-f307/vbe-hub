@@ -1,9 +1,7 @@
 import Link from 'next/link'
 import {
-  AlertTriangle,
   ArrowLeft,
   CalendarClock,
-  CheckCircle2,
   Clock3,
   ExternalLink,
   FileText,
@@ -17,10 +15,11 @@ import {
 import type {
   IndividualSignalDetail,
   IndividualSignalState,
-  RelatedSignal,
+  InvestigationDetail,
   RelatedSignalPage,
   SignalAuditEvent,
 } from '@/lib/individual-signal-read'
+import { InvestigationComposer } from '@/components/investigation-composer'
 import { Badge } from '@/v0/components/ui/badge'
 import { Card } from '@/v0/components/ui/card'
 
@@ -32,12 +31,14 @@ export function IndividualSignalDetailView({
   audit = [],
   returnTo,
   activeTab,
+  initialInvestigation = null,
 }: {
   signal: IndividualSignalDetail
   related: RelatedSignalPage
   audit?: SignalAuditEvent[]
   returnTo: string
   activeTab: DetailTab
+  initialInvestigation?: InvestigationDetail | null
 }) {
   return (
     <main id="conteudo-principal" className="mx-auto w-full max-w-screen-xl px-4 py-6 sm:px-6 lg:px-8">
@@ -84,7 +85,7 @@ export function IndividualSignalDetailView({
 
         <div className="p-5 sm:p-7">
           {activeTab === 'overview' ? <Overview signal={signal} /> : null}
-          {activeTab === 'related' ? <RelatedSignals signal={signal} related={related} returnTo={returnTo} /> : null}
+          {activeTab === 'related' ? <RelatedSignals signal={signal} related={related} returnTo={returnTo} initialInvestigation={initialInvestigation} /> : null}
           {activeTab === 'provenance' ? <Provenance signal={signal} audit={audit} /> : null}
         </div>
       </section>
@@ -182,10 +183,12 @@ function RelatedSignals({
   signal,
   related,
   returnTo,
+  initialInvestigation,
 }: {
   signal: IndividualSignalDetail
   related: RelatedSignalPage
   returnTo: string
+  initialInvestigation: InvestigationDetail | null
 }) {
   return (
     <section aria-labelledby="relacionados-heading">
@@ -198,47 +201,10 @@ function RelatedSignals({
 
       {related.items.length === 0 ? (
         <div className="mt-6"><EmptyMessage title="Nenhum sinal relacionado sugerido" description="O sinal principal pode continuar sendo investigado individualmente." /></div>
-      ) : (
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          {related.items.map((item) => (
-            <RelatedCard key={item.suggestionId} item={item} originSignalId={signal.id} returnTo={returnTo} />
-          ))}
-        </div>
-      )}
+      ) : null}
+      <div className="mt-6"><InvestigationComposer signal={signal} related={related} returnTo={returnTo} initialInvestigation={initialInvestigation} /></div>
     </section>
   )
-}
-
-function RelatedCard({ item, originSignalId, returnTo }: { item: RelatedSignal; originSignalId: string; returnTo: string }) {
-  const relatedReturn = `/sinais/${originSignalId}?${new URLSearchParams({ tab: 'related', returnTo })}`
-  return (
-    <article className="rounded-xl border border-border bg-background p-5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <Badge variant="outline">{SOURCE_LABEL[item.candidate.sourceKind]}</Badge>
-        <SuggestionState item={item} />
-      </div>
-      <h3 className="mt-3 text-base font-semibold leading-snug">{item.candidate.title}</h3>
-      <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{item.candidate.excerpt}</p>
-      {item.status === 'ready' ? (
-        <div className="mt-4 rounded-lg bg-muted/50 p-3 text-sm">
-          <p className="font-medium">{relationLabel(item.relation)}{item.confidence === null ? '' : ` · ${Math.round(item.confidence * 100)}% de confiança técnica`}</p>
-          <p className="mt-1 leading-relaxed text-muted-foreground">{item.justification ?? 'Justificativa não informada.'}</p>
-        </div>
-      ) : null}
-      <Link
-        href={`/sinais/${item.candidate.id}?${new URLSearchParams({ returnTo: relatedReturn })}`}
-        className="mt-4 inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline"
-      >
-        Abrir este sinal
-      </Link>
-    </article>
-  )
-}
-
-function SuggestionState({ item }: { item: RelatedSignal }) {
-  if (item.status === 'pending') return <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Clock3 className="size-3.5" aria-hidden /> Processamento em andamento</span>
-  if (item.status === 'failed') return <span className="inline-flex items-center gap-1.5 text-xs text-destructive"><AlertTriangle className="size-3.5" aria-hidden /> Não foi possível preparar esta sugestão</span>
-  return <span className="inline-flex items-center gap-1.5 text-xs text-andiroba"><CheckCircle2 className="size-3.5" aria-hidden /> Sugestão disponível</span>
 }
 
 function Provenance({ signal, audit }: { signal: IndividualSignalDetail; audit: SignalAuditEvent[] }) {
@@ -318,17 +284,6 @@ function formatFieldValue(value: unknown): string {
     .join(' · ') || 'Não informado'
   if (typeof value === 'boolean') return value ? 'Sim' : 'Não'
   return String(value)
-}
-
-function relationLabel(value: string | null): string {
-  const labels: Record<string, string> = {
-    duplicate: 'Possível duplicata',
-    corroborates: 'Possível corroboração',
-    updates: 'Possível atualização',
-    related_context: 'Contexto possivelmente relacionado',
-    unrelated: 'Provavelmente não relacionado',
-  }
-  return value ? labels[value] ?? value : 'Relação não informada'
 }
 
 const SOURCE_LABEL: Record<'media' | 'community', string> = {

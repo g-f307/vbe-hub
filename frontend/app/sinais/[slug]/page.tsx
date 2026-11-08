@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { IndividualSignalDetailView } from '@/components/individual-signal-detail'
 import {
   getIndividualSignal,
+  getInvestigation,
   IndividualSignalReadError,
   listRelatedSignals,
   listSignalAuditEvents,
@@ -24,6 +25,7 @@ export default async function SignalPage({
   let signal
   let related
   let audit
+  let investigation = null
   try {
     ;[signal, related, audit] = await Promise.all([
       getIndividualSignal(slug),
@@ -34,13 +36,14 @@ export default async function SignalPage({
     if (error instanceof IndividualSignalReadError && error.kind === 'not-found') notFound()
     throw error
   }
+  if (signal.activeInvestigationId) investigation = await getInvestigation(signal.activeInvestigationId)
   const activeTab = first(query.tab) === 'related' ? 'related' : first(query.tab) === 'provenance' ? 'provenance' : 'overview'
   const returnTo = safeInternalReturnTo(first(query.returnTo))
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <IndividualSignalDetailView signal={signal} related={related} audit={audit} returnTo={returnTo} activeTab={activeTab} />
+      <IndividualSignalDetailView signal={signal} related={related} audit={audit} returnTo={returnTo} activeTab={activeTab} initialInvestigation={investigation} />
     </div>
   )
 }

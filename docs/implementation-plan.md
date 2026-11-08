@@ -88,7 +88,10 @@ territorial também usa agregados canônicos e geometria local.
 9. **Implementada na #74:** substituir a carga local da raiz por sinais individuais de `/v1`,
    trocar o modal por `/sinais/{id}`, preservar o retorno à fila e ler relacionados persistidos sem
    chamada síncrona à IA.
-10. Validar responsividade, acessibilidade, dados sintéticos, limites da IA e reprodução completa
+10. **Implementada na branch da #75:** permitir selecionar sugestões prontas, comparar fontes e IDs,
+    confirmar explicitamente a criação ou ampliação da ficha e corrigir vínculos com motivo,
+    versão otimista e histórico, sem enviar identidade de ator pelo navegador.
+11. Validar responsividade, acessibilidade, dados sintéticos, limites da IA e reprodução completa
    em outro dispositivo via Docker Compose.
 
 ### Critérios de aceite do painel integrado

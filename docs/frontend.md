@@ -16,8 +16,9 @@ related_docs:
 # Fundação do frontend
 
 > **Fundação atual:** a issue #73 incorporou diretamente o código aprovado do export v0. A #74
-> conecta detectados e relacionados ao contrato `/v1`; a composição humana de fichas permanece na
-> #75. Os adaptadores e as rotas anteriores continuam versionados durante a transição.
+> conecta detectados e relacionados ao contrato `/v1`; a #75 acrescenta seleção, confirmação,
+> composição e correção humana de fichas. Os adaptadores e as rotas anteriores continuam
+> versionados durante a transição.
 
 ## Propósito e limite atual
 
@@ -39,7 +40,9 @@ As rotas atuais são deliberadamente demonstrativas:
 | `/` | fila de sinais individuais detectados | consulta `GET /v1/signals`; um card por fonte |
 | `/triagem` | fila, filtros, indicadores e paginação | consulta `GET /signals` no servidor Next |
 | `/kanban` | quadro complementar dos cinco estágios e tabela acessível | consulta até 100 itens de `GET /signals` com os mesmos filtros; não altera estado |
-| `/sinais/[slug]` | página dedicada do sinal, ficha técnica, relacionados, proveniência e auditoria | consulta em paralelo `GET /v1/signals/{id}`, `/related` e `/audit-events`; o segmento é o UUID canônico |
+| `/sinais/[slug]` | página dedicada do sinal, ficha técnica, relacionados, composição humana, proveniência e auditoria | consulta `GET /v1/signals/{id}`, `/related` e `/audit-events`; quando houver ficha ativa, também lê `/v1/investigations/{id}` |
+| `/api/investigations/compositions` | BFF da confirmação humana | inicia triagem quando necessário, cria/inclui membros e inicializa a ficha em verificação; aceita somente IDs e chave idempotente |
+| `/api/investigations/[fileId]/members/[signalId]/removals` | BFF da correção de vínculo | encaminha somente chave, versão esperada e motivo estruturado |
 | `/panorama` | leitura territorial agregada, mapa local e lista acessível | consulta `GET /signals/geographic-summary` no servidor Next |
 | `/api/health` | health check do contêiner do painel | retorna somente o estado do serviço |
 
@@ -79,8 +82,9 @@ valida a resposta mínima, aplica timeout e distingue indisponibilidade, respost
 inexistente. `VBE_API_INTERNAL_URL` é lida somente no servidor Next e usa `http://api:8000` no
 Compose; não há URL interna ou segredo em variável `NEXT_PUBLIC`.
 
-Para escrita, a investigação usa somente `POST /api/signals/{id}/reviews` e
-`POST /api/signals/{id}/workflow/transitions`, rotas do próprio Next que validam o UUID, mantêm a
+Para escrita, as rotas legadas usam `POST /api/signals/{id}/reviews` e
+`POST /api/signals/{id}/workflow/transitions`. A composição nova usa os dois endpoints BFF de
+investigação listados acima. As rotas do próprio Next validam UUIDs, mantêm a
 URL interna no servidor e encaminham apenas os campos permitidos. Em particular, o navegador não
 envia `actor_id`. O backend continua sendo a autoridade para alvo revisável, transição, versão,
 idempotência e ator sintético. Erros de validação, indisponibilidade, 404 e conflito de versão são
@@ -88,7 +92,10 @@ mostrados no painel; no conflito, a atualização explícita dos dados preserva 
 
 Abrir `Sinais relacionados` lê apenas sugestões persistidas. Os estados `pending`, `ready` e
 `failed` são exibidos sem iniciar chamada à OpenAI; confiança e justificativa são rotuladas como
-sugestão técnica. A URL da página e das abas é compartilhável. O parâmetro `returnTo` aceita apenas
+sugestão técnica. Marcar candidatos também não escreve: a confirmação mostra o sinal principal,
+os candidatos e seus IDs, preserva cada texto separadamente e só então inicia triagem e composição
+com chaves idempotentes. Uma ficha ativa exibe membros e eventos; retirar um membro exige motivo,
+controle de versão e mantém o evento corretivo. A URL da página e das abas é compartilhável. O parâmetro `returnTo` aceita apenas
 destinos internos e preserva filtros, busca e cursor ao voltar para a fila.
 
 O frontend não acessa PostgreSQL, Redis, provedores de IA ou conectores diretamente. A API já
