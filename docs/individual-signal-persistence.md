@@ -30,8 +30,9 @@ Sugestões de relação e decisões humanas ocupam entidades diferentes. Uma lin
 `failed`) e pode apontar para a avaliação versionada da IA. Somente ações humanas criam vínculos em
 `investigation_file_members` e eventos em `investigation_membership_events`.
 
-Esta entrega cria a base persistente. O pipeline assíncrono, os endpoints e a nova interface serão
-implementados nas issues seguintes da milestone 7.
+Esta entrega cria a base persistente. O pipeline assíncrono e a [API versionada de sinais
+individuais](individual-signal-api.md) já usam essas tabelas; workflow completo e nova interface
+serão implementados nas issues seguintes da milestone 7.
 
 ## Diagrama lógico
 

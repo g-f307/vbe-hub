@@ -60,3 +60,7 @@ class InvestigationOperationConflict(Exception):
 
 class LastInvestigationMemberError(Exception):
     pass
+
+
+class InvestigationMemberNotFound(Exception):
+    pass

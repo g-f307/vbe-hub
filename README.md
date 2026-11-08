@@ -16,10 +16,11 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-> **Transição em andamento em 08/11/2026:** o contrato público ainda usa sinais consolidados. A
+> **Transição em andamento em 08/11/2026:** o frontend ainda usa sinais consolidados. A
 > [ADR-010](docs/decisions/ADR-010-individual-signals-human-investigation.md) redefine cada fonte
-> como sinal individual. As tabelas novas e o worker assíncrono já existem; API e interface serão
-> migradas nas issues seguintes. Nenhuma sugestão da IA associa fontes automaticamente.
+> como sinal individual. As tabelas, o worker assíncrono e a [API `/v1`](docs/individual-signal-api.md)
+> já existem; workflow e interface serão migrados nas issues seguintes. Nenhuma sugestão da IA
+> associa fontes automaticamente.
 
 Fundação, dados sintéticos, funil auditável de correlação, consolidação versionada, prioridade
 sugerida explicável e revisão humana auditável estão implementados. O agrupamento automático e o
@@ -51,7 +52,8 @@ Em 04/11/2026, uma [avaliação alternativa com OpenAI](docs/openai-technical-sh
 gerou oito fichas sintéticas sem falhas e atendeu às metas dos campos centrais da correlação. A
 evidência é exploratória, baseada em amostra pequena, e não substitui validação clínica ou
 epidemiológica.
-Consulte o [contrato de leitura](docs/signal-read-api.md). Autenticação institucional e
+Consulte os contratos de leitura [legado](docs/signal-read-api.md) e de [sinais
+individuais](docs/individual-signal-api.md). Autenticação institucional e
 integrações reais com EIOS e Guardiões da Saúde permanecem fora desta etapa. A consolidação atual
 organiza evidências rastreáveis, mas não confirma ocorrências nem substitui a triagem de um
 profissional de saúde. Ela será preservada como evidência histórica enquanto o novo modelo é
