@@ -60,6 +60,9 @@ Endpoints do novo contrato, ainda não consumidos pelo painel legado:
 - `GET /v1/signals`: fila com uma fonte por sinal;
 - `GET /v1/signals/{signal_id}/related`: sugestões pré-calculadas;
 - `POST /v1/investigations`: decisão humana de iniciar uma ficha.
+- `POST /v1/signals/{signal_id}/workflow/transitions`: início explícito da triagem;
+- `POST /v1/investigations/{file_id}/workflow/transitions`: verificação e etapas posteriores;
+- `GET /v1/metrics/summary`: sinais, sugestões e fichas contabilizados separadamente.
 
 Consulte a [API de sinais individuais](individual-signal-api.md) para os demais comandos.
 

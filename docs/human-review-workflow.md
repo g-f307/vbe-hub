@@ -19,11 +19,11 @@ related_docs:
 
 # Revisão humana e trilha de auditoria
 
-> **Compatibilidade:** as rotas e a máquina `workflow-v1` abaixo descrevem o comportamento
-> implementado para sinais consolidados. A ADR-010 aprovou `workflow-v2`, que será implementado nas
-> issues #69, #71 e #72. Até lá, o texto abaixo continua sendo o contrato executável.
+> **Compatibilidade:** `workflow-v1` continua disponível para sinais consolidados históricos. O
+> contrato canônico novo é `workflow-v2`, descrito abaixo, com uma fonte por sinal e workflow da
+> ficha a partir da verificação.
 
-## Direção aprovada para workflow-v2
+## Workflow-v2 implementado
 
 - o sinal individual nasce em `detected` e entra em `triage` somente por comando explícito;
 - abrir detalhe ou aba não muda estado;
@@ -31,10 +31,29 @@ related_docs:
 - a partir de `verification`, a ficha possui o workflow compartilhado;
 - sinais membros preservam histórico, URL e conteúdo, mas não mantêm máquinas posteriores
   concorrentes;
-- inclusão, remoção e reatribuição são eventos append-only, idempotentes e sujeitos a versão;
+- inclusão e remoção são eventos append-only, idempotentes e sujeitos a versão;
+- transferência entre fichas é atômica, idempotente e verifica as duas versões;
 - um sinal não pode pertencer a duas fichas ativas.
 
-A forma exata dos endpoints será contratada na #71, sem alterar silenciosamente as rotas abaixo.
+Um sinal é associado somente depois de `detected → triage`. Sua remoção de uma ficha mantém o
+workflow próprio em `triage`; o estado posterior da ficha nunca é copiado sobre esse histórico.
+A primeira transição da ficha é `triage → verification`, versão `0 → 1`, registrada no mesmo commit
+do evento. Depois, a ficha aceita `verification → risk_assessment`, retorno para `verification` e
+encerramento explícito com motivo.
+
+| Método e caminho | Finalidade |
+| --- | --- |
+| `GET /v1/signals/{id}/workflow` | Estado próprio do sinal. |
+| `POST /v1/signals/{id}/workflow/transitions` | Iniciar triagem ou encerrar durante a triagem. |
+| `GET /v1/signals/{id}/audit-events` | Histórico próprio do sinal. |
+| `GET /v1/investigations/{id}/workflow` | Estado da ficha após iniciar verificação. |
+| `POST /v1/investigations/{id}/workflow/transitions` | Iniciar/avançar/encerrar investigação. |
+| `GET /v1/investigations/{id}/audit-events` | Histórico do workflow compartilhado. |
+| `GET /v1/metrics/summary` | Contagens separadas de sinais, sugestões e fichas. |
+
+Toda escrita recebe `operation_key`, `expected_version`, ator do servidor, motivo quando necessário
+e comentário opcional. Repetição idêntica devolve o evento original; versão concorrente retorna
+`409 workflow_version_conflict`. A IA não possui rota nem permissão para alterar estados.
 
 ## Finalidade e limite
 

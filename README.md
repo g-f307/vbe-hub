@@ -18,9 +18,9 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 > **Transição em andamento em 08/11/2026:** o frontend ainda usa sinais consolidados. A
 > [ADR-010](docs/decisions/ADR-010-individual-signals-human-investigation.md) redefine cada fonte
-> como sinal individual. As tabelas, o worker assíncrono e a [API `/v1`](docs/individual-signal-api.md)
-> já existem; workflow e interface serão migrados nas issues seguintes. Nenhuma sugestão da IA
-> associa fontes automaticamente.
+> como sinal individual. As tabelas, o worker assíncrono, a [API `/v1`](docs/individual-signal-api.md)
+> e o workflow-v2 já existem; a interface será migrada nas issues seguintes. Nenhuma sugestão da
+> IA associa fontes automaticamente.
 
 Fundação, dados sintéticos, funil auditável de correlação, consolidação versionada, prioridade
 sugerida explicável e revisão humana auditável estão implementados. O agrupamento automático e o

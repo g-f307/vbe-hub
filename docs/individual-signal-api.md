@@ -39,6 +39,7 @@ fora da PoC; `REVIEW_ACTOR_ID` identifica somente o ator demonstrativo registrad
 | `GET /v1/investigations/{file_id}` | Retorna membros individualizados e histórico. |
 | `POST /v1/investigations/{file_id}/members/{signal_id}` | Adiciona um sinal por decisão humana. |
 | `POST /v1/investigations/{file_id}/members/{signal_id}/removals` | Remove o vínculo por novo evento auditável. |
+| `POST /v1/investigations/{file_id}/members/{signal_id}/transfers` | Transfere o sinal atomicamente para outra ficha. |
 
 O OpenAPI navegável permanece em `/docs` e contém os schemas completos.
 
@@ -48,10 +49,10 @@ As coleções usam cursor opaco e ordenação determinística, em vez de `offset
 a 100 itens e vale 25 por padrão. Envie `next_cursor` como `cursor` na chamada seguinte. Cursor
 inválido retorna `422` com `invalid_cursor`.
 
-`GET /v1/signals` aceita `state` e `source_kind`. Nesta etapa, um sinal sem ficha ativa é
-`detected`; após inclusão humana, é `triage`. Os demais estados já fazem parte do contrato, mas a
-persistência de suas transições será entregue pelo workflow individual da issue #72; até lá, seus
-filtros retornam coleção vazia em vez de inferir decisões.
+`GET /v1/signals` aceita `state` e `source_kind`. A ingestão cria o sinal em `detected`; somente um
+comando explícito o move para `triage`. Depois que a ficha inicia `verification`, sua leitura é
+projetada sobre os membros para navegação, sem reescrever o workflow próprio dos sinais. Os filtros
+aceitam os cinco estados e consultam a unidade proprietária de cada etapa.
 
 `GET /related` aceita `suggestion_status=pending|ready|failed`. Cada item informa o estado do
 processamento, candidato e data. Em `ready`, pode informar relação, justificativa e confiança; em
@@ -68,6 +69,15 @@ Adicionar ou remover membro exige `expected_version`. Versão antiga retorna
 duas fichas ativas; o conflito é `signal_already_assigned`. A última fonte de uma ficha não pode
 ser removida. Inclusão, atualização de versão e evento são confirmados ou revertidos juntos na
 mesma transação PostgreSQL.
+
+A transferência recebe as versões esperadas da origem e do destino. A remoção, a inclusão e os
+dois eventos são uma única transação: qualquer conflito reverte toda a operação. Repetir a mesma
+`operation_key` devolve as duas fichas no estado já registrado, sem duplicar eventos. Origem e
+destino iguais retornam `409 investigation_transfer_same_file`.
+
+Criar ficha ou adicionar membro exige que o sinal esteja em `triage`; caso contrário, a API retorna
+`409 signal_not_in_triage`. Prosseguir para verificação usa o workflow da ficha documentado em
+[revisão humana e auditoria](human-review-workflow.md).
 
 Exemplo sanitizado de criação:
 

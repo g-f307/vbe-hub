@@ -8,6 +8,7 @@ updated: 2026-11-08
 owner: VBE Hub
 implemented_code:
   - backend/migrations/versions/20261108_0008_individual_signals.py
+  - backend/migrations/versions/20261108_0009_individual_workflow.py
   - backend/src/vbe_hub/adapters/persistence/investigation_models.py
   - backend/src/vbe_hub/adapters/persistence/investigation_repository.py
 related_docs:
@@ -29,6 +30,12 @@ Sugestões de relação e decisões humanas ocupam entidades diferentes. Uma lin
 `signal_relation_suggestions` informa o estado antecipado da análise (`pending`, `ready` ou
 `failed`) e pode apontar para a avaliação versionada da IA. Somente ações humanas criam vínculos em
 `investigation_file_members` e eventos em `investigation_membership_events`.
+
+A migration `20261108_0009` adiciona as máquinas `workflow-v2`. Um gatilho cria
+`individual_signal_workflows` em `detected` na mesma transação do sinal; o backfill cobre sinais já
+existentes. `investigation_workflows` só nasce quando o analista confirma a passagem para
+`verification`. `workflow_v2_events` preserva as duas trilhas com chave idempotente global,
+sequência por unidade, versão otimista e bloqueio de `UPDATE`/`DELETE`.
 
 Esta entrega cria a base persistente. O pipeline assíncrono e a [API versionada de sinais
 individuais](individual-signal-api.md) já usam essas tabelas; workflow completo e nova interface
@@ -62,6 +69,8 @@ erDiagram
   adicionar na mesma transação.
 - As tabelas `consolidated_signals`, `signal_members`, `signal_workflows` e `review_events`
   permanecem intactas e legíveis durante a transição.
+- Estados iniciais e eventos de workflow-v2 são criados na mesma transação de suas mudanças; abrir
+  detalhes não materializa nem avança workflow.
 
 ## Backfill não destrutivo
 
