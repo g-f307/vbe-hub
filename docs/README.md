@@ -22,6 +22,7 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 14. [Transição para sinais individuais e fichas de investigação](signal-domain-transition.md)
 15. [Persistência de sinais individuais e fichas](individual-signal-persistence.md)
 16. [Consolidação de sinais de alerta — legado](signal-consolidation.md)
+   - [Pré-cálculo assíncrono de sinais relacionados](related-signal-precomputation.md)
 17. [Prioridade sugerida e explicável](suggested-priority.md)
 18. [Revisão humana e trilha de auditoria](human-review-workflow.md)
 19. [Avaliação dos agrupamentos e da revisão](grouping-evaluation.md)
@@ -41,9 +42,9 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 
 O comportamento executável ainda usa sinais consolidados e permanece reproduzível como evidência
 histórica. Em 2026-11-08, a ADR-010 aprovou a transição para um sinal individual por fonte,
-sugestões de relação pré-calculadas pela OpenAI e fichas formadas somente por decisão humana. Essa
-A etapa de expansão persistente da issue #69 está implementada sem retirar o modelo legado. O
-pipeline, a API, o workflow completo e a interface ainda serão migrados nas issues seguintes pelo
+sugestões de relação pré-calculadas pela OpenAI e fichas formadas somente por decisão humana. A
+expansão persistente da issue #69 e o worker da issue #70 estão implementados sem retirar o modelo
+legado. A API, o workflow completo e a interface ainda serão migrados nas issues seguintes pelo
 caminho expand/contract descrito em [Transição para sinais individuais](signal-domain-transition.md).
 
 Autenticação institucional e integrações reais com EIOS e Guardiões da Saúde permanecem fora da

@@ -4,7 +4,7 @@ type: api
 status: active
 title: Seleção de pares candidatos
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-11-08
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/application/correlation/candidates.py
@@ -19,6 +19,10 @@ related_docs:
 A seleção reduz os vizinhos semânticos aos pares plausíveis que poderão seguir para julgamento de
 relação. Ela é determinística, explicável e não confirma que dois registros representam o mesmo
 evento.
+
+No worker operacional, a busca recupera no máximo 20 vizinhos compatíveis e os filtros enviam no
+máximo três candidatos por sinal ao `RelationJudge`. Esses tetos podem ser reduzidos por
+configuração, mas não removidos, impedindo comparação quadrática de todos contra todos.
 
 ## Política inicial
 

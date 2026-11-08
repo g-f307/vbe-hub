@@ -1,7 +1,7 @@
 ---
 id: DES-002
 type: design
-status: proposed
+status: active
 title: Transição para sinais individuais e fichas de investigação
 created: 2026-11-08
 updated: 2026-11-08
@@ -21,10 +21,10 @@ related_docs:
 
 ## Situação
 
-A ADR-010 está aceita e a expansão persistente da issue #69 está implementada. O comportamento
-público ainda usa `consolidated_signals`; pipeline, API, workflow e frontend permanecem em
-transição nas issues #70 a #77. Este documento não deve ser usado para alegar que a troca completa
-do modelo já ocorreu.
+A ADR-010 está aceita, a expansão persistente da issue #69 está implementada e a issue #70 adiciona
+fila limitada, extração/indexação OpenAI e pré-cálculo persistente. O comportamento público ainda
+usa `consolidated_signals`; API, workflow e frontend permanecem em transição nas issues #71 a #77.
+Este documento não deve ser usado para alegar que a troca completa do modelo já ocorreu.
 
 ## Glossário normativo
 
@@ -114,7 +114,7 @@ decisão necessária para a PoC. A leitura nunca inicia fan-out de chamadas ao p
 
 1. **Definir:** ADR-010 e contratos conceituais (#68).
 2. **Expandir:** adicionar novas tabelas e índices sem remover legados (#69, concluída no código).
-3. **Preparar:** processar sugestões assíncronas com OpenAI (#70).
+3. **Preparar:** processar sugestões assíncronas com OpenAI (#70, implementada no código).
 4. **Controlar:** implementar workflow e eventos novos (#72).
 5. **Expor:** adicionar API nova mantendo compatibilidade temporária (#71).
 6. **Migrar interface:** importar a fundação aprovada e integrar o fluxo (#73–#75).
