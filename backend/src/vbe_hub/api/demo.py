@@ -42,6 +42,8 @@ class DemoRunResponse(BaseModel):
     signal_ids: list[UUID]
     created: dict[str, int]
     sources: list[DemoSourceResponse]
+    evidence_mode: Literal["live_openai", "recorded_fixture"]
+    association_status: Literal["unassociated"]
     review_notice: str
 
 
