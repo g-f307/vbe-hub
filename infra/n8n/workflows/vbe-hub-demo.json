@@ -1,6 +1,6 @@
 {
   "id": "vbeHubDemo64",
-  "name": "VBE Hub — lote manual de 10 sinais",
+  "name": "VBE Hub — lote manual de 20 sinais individuais",
   "active": false,
   "nodes": [
     {
@@ -94,7 +94,7 @@
         "options": {"timeout": 60000}
       },
       "id": "run-vbe-hub",
-      "name": "VBE Hub — persistir e consolidar",
+      "name": "VBE Hub — persistir sinais e sugerir relação",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [440, 300]
@@ -119,8 +119,8 @@
       "parameters": {
         "assignments": {
           "assignments": [
-            {"id": "status", "name": "status", "value": "Lote concluído. Confira os cards no painel.", "type": "string"},
-            {"id": "panel", "name": "abrir_painel", "value": "http://localhost:3000/triagem", "type": "string"},
+            {"id": "status", "name": "status", "value": "Lote concluído. Confira os 20 sinais individuais no painel.", "type": "string"},
+            {"id": "panel", "name": "abrir_painel", "value": "http://localhost:3000/", "type": "string"},
             {"id": "review", "name": "revisao_humana", "value": "Obrigatória antes de qualquer interpretação sanitária.", "type": "string"}
           ]
         },
@@ -139,8 +139,8 @@
     "Catálogo fechado de 10 casos": {"main": [[{"node": "Processar um caso por vez", "type": "main", "index": 0}]]},
     "Processar um caso por vez": {"main": [[{"node": "Fim — abrir painel e revisar", "type": "main", "index": 0}], [{"node": "Fonte 1 — notícia local", "type": "main", "index": 0}]]},
     "Fonte 1 — notícia local": {"main": [[{"node": "Fonte 2 — relato comunitário", "type": "main", "index": 0}]]},
-    "Fonte 2 — relato comunitário": {"main": [[{"node": "VBE Hub — persistir e consolidar", "type": "main", "index": 0}]]},
-    "VBE Hub — persistir e consolidar": {"main": [[{"node": "Resultado do caso para revisão", "type": "main", "index": 0}]]},
+    "Fonte 2 — relato comunitário": {"main": [[{"node": "VBE Hub — persistir sinais e sugerir relação", "type": "main", "index": 0}]]},
+    "VBE Hub — persistir sinais e sugerir relação": {"main": [[{"node": "Resultado do caso para revisão", "type": "main", "index": 0}]]},
     "Resultado do caso para revisão": {"main": [[{"node": "Processar um caso por vez", "type": "main", "index": 0}]]}
   },
   "settings": {"executionOrder": "v1", "saveManualExecutions": true},
