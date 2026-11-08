@@ -29,6 +29,17 @@ class PrecomputationResult:
     failed: int
 
 
+@dataclass(frozen=True, slots=True)
+class SignalRelationSuggestion:
+    id: UUID
+    left_signal_id: UUID
+    right_signal_id: UUID
+    relation_assessment_id: UUID | None
+    status: str
+    contract_version: str
+    error_code: str | None
+
+
 class PreparedSignalSource(Protocol):
     async def anchor(self, signal_id: UUID) -> PreparedSignal | None: ...
 

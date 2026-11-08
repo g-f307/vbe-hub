@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy import text
@@ -8,7 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from vbe_hub.adapters.persistence.investigation_repository import (
     SqlAlchemyInvestigationRepository,
+    SqlAlchemySignalSuggestionRepository,
 )
+from vbe_hub.adapters.persistence.relation_models import RelationAssessmentModel
 from vbe_hub.adapters.persistence.repositories import SqlAlchemyRawRecordRepository
 from vbe_hub.domain.investigations import InvestigationConcurrencyConflict
 from vbe_hub.domain.records import (
@@ -189,3 +191,61 @@ async def test_investigation_rejects_stale_version_and_double_active_membership(
                 expected_version=1,
                 occurred_at=NOW,
             )
+
+
+@pytest.mark.integration
+async def test_relation_suggestion_transitions_are_idempotent_and_indexed(
+    db_session: AsyncSession,
+) -> None:
+    first_source = await stored_normalized(db_session, 7)
+    second_source = await stored_normalized(db_session, 8)
+    investigations = SqlAlchemyInvestigationRepository(db_session)
+    first = await investigations.get_or_create_signal(first_source.id, "individual-signal-v1", NOW)
+    second = await investigations.get_or_create_signal(second_source.id, "individual-signal-v1", NOW)
+    left, right = sorted((first.id, second.id))
+    repository = SqlAlchemySignalSuggestionRepository(db_session, now=lambda: NOW)
+
+    await repository.mark_pending(left, right, "related-signal-v1")
+    await repository.mark_pending(left, right, "related-signal-v1")
+    await repository.mark_failed(left, right, "related-signal-v1", "timeout")
+
+    failed = await repository.list_for_signal(first.id, status="failed")
+    assert len(failed) == 1
+    assert failed[0].error_code == "timeout"
+
+    assessment_id = UUID(int=99)
+    db_session.add(
+        RelationAssessmentModel(
+            id=assessment_id,
+            cache_key="f" * 64,
+            left_id=first_source.id,
+            right_id=second_source.id,
+            relation="corroborates",
+            method="provider",
+            confidence=0.9,
+            justification="Fontes independentes convergem.",
+            updating_record_id=None,
+            rules_version="relation-rules-v1",
+            provider="openai",
+            model="gpt-6-luna",
+            contract_version="relation-v1",
+            prompt_version="relate-v2.1",
+            state="succeeded",
+            started_at=NOW,
+            duration_ms=20,
+            input_units=50,
+            output_units=10,
+            cache_hit=False,
+            error_code=None,
+            retryable=None,
+            sanitized_error=None,
+            created_at=NOW,
+        )
+    )
+    await db_session.flush()
+    await repository.mark_pending(left, right, "related-signal-v1")
+    await repository.mark_ready(left, right, "related-signal-v1", assessment_id)
+
+    ready = await repository.list_for_signal(second.id, status="ready")
+    assert len(ready) == 1
+    assert ready[0].relation_assessment_id == assessment_id

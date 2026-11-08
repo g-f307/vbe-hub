@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Callable
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import func, select, update
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,7 +15,9 @@ from vbe_hub.adapters.persistence.investigation_models import (
     InvestigationFileMemberModel,
     InvestigationFileModel,
     InvestigationMembershipEventModel,
+    SignalRelationSuggestionModel,
 )
+from vbe_hub.application.correlation.precompute import SignalRelationSuggestion
 from vbe_hub.domain.investigations import (
     IndividualSignal,
     InvestigationConcurrencyConflict,
@@ -58,6 +61,7 @@ class SqlAlchemyInvestigationRepository:
         if row is None:  # pragma: no cover - guarded by the insert/FK transaction
             raise RuntimeError("individual signal was not persisted")
         return self._signal(row)
+
 
     async def get_signal(self, signal_id: UUID) -> IndividualSignal | None:
         row = await self._session.get(IndividualSignalModel, signal_id)
@@ -397,4 +401,135 @@ class SqlAlchemyInvestigationRepository:
             row.actor_id,
             row.occurred_at,
             row.reason_code,
+        )
+
+
+class SqlAlchemySignalSuggestionRepository:
+    def __init__(
+        self, session: AsyncSession, *, now: Callable[[], datetime] = datetime.now
+    ) -> None:
+        self._session = session
+        self._now = now
+
+    async def mark_pending(
+        self, left: UUID, right: UUID, contract_version: str
+    ) -> None:
+        left, right = sorted((left, right))
+        timestamp = self._now()
+        values = {
+            "id": uuid4(),
+            "left_signal_id": left,
+            "right_signal_id": right,
+            "relation_assessment_id": None,
+            "status": "pending",
+            "contract_version": contract_version,
+            "error_code": None,
+            "created_at": timestamp,
+            "updated_at": timestamp,
+        }
+        await self._session.execute(
+            insert(SignalRelationSuggestionModel)
+            .values(**values)
+            .on_conflict_do_update(
+                index_elements=["left_signal_id", "right_signal_id", "contract_version"],
+                set_={
+                    "relation_assessment_id": None,
+                    "status": "pending",
+                    "error_code": None,
+                    "updated_at": timestamp,
+                },
+            )
+        )
+        await self._session.flush()
+
+    async def mark_ready(
+        self,
+        left: UUID,
+        right: UUID,
+        contract_version: str,
+        assessment_id: UUID,
+    ) -> None:
+        await self._set_result(
+            left,
+            right,
+            contract_version,
+            status="ready",
+            assessment_id=assessment_id,
+            error_code=None,
+        )
+
+    async def mark_failed(
+        self, left: UUID, right: UUID, contract_version: str, error_code: str
+    ) -> None:
+        await self._set_result(
+            left,
+            right,
+            contract_version,
+            status="failed",
+            assessment_id=None,
+            error_code=error_code,
+        )
+
+    async def list_for_signal(
+        self, signal_id: UUID, *, status: str = "ready"
+    ) -> list[SignalRelationSuggestion]:
+        rows = list(
+            (
+                await self._session.scalars(
+                    select(SignalRelationSuggestionModel)
+                    .where(
+                        or_(
+                            SignalRelationSuggestionModel.left_signal_id == signal_id,
+                            SignalRelationSuggestionModel.right_signal_id == signal_id,
+                        ),
+                        SignalRelationSuggestionModel.status == status,
+                    )
+                    .order_by(
+                        SignalRelationSuggestionModel.updated_at.desc(),
+                        SignalRelationSuggestionModel.id,
+                    )
+                )
+            ).all()
+        )
+        return [self._to_suggestion(row) for row in rows]
+
+    async def _set_result(
+        self,
+        left: UUID,
+        right: UUID,
+        contract_version: str,
+        *,
+        status: str,
+        assessment_id: UUID | None,
+        error_code: str | None,
+    ) -> None:
+        left, right = sorted((left, right))
+        result = await self._session.execute(
+            update(SignalRelationSuggestionModel)
+            .where(
+                SignalRelationSuggestionModel.left_signal_id == left,
+                SignalRelationSuggestionModel.right_signal_id == right,
+                SignalRelationSuggestionModel.contract_version == contract_version,
+            )
+            .values(
+                status=status,
+                relation_assessment_id=assessment_id,
+                error_code=error_code,
+                updated_at=self._now(),
+            )
+        )
+        if result.rowcount != 1:
+            raise RuntimeError("relation suggestion must be pending before completion")
+        await self._session.flush()
+
+    @staticmethod
+    def _to_suggestion(row: SignalRelationSuggestionModel) -> SignalRelationSuggestion:
+        return SignalRelationSuggestion(
+            id=row.id,
+            left_signal_id=row.left_signal_id,
+            right_signal_id=row.right_signal_id,
+            relation_assessment_id=row.relation_assessment_id,
+            status=row.status,
+            contract_version=row.contract_version,
+            error_code=row.error_code,
         )
