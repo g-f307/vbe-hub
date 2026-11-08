@@ -15,36 +15,37 @@ related_docs:
 
 # Fundação do frontend
 
-> **Fundação atual:** a issue #73 incorporou diretamente o código aprovado do export v0. Detectados,
-> relacionados e composição de fichas serão integrados nas #74 e #75. Os adaptadores e as rotas
-> anteriores continuam versionados até essa equivalência funcional.
+> **Fundação atual:** a issue #73 incorporou diretamente o código aprovado do export v0. A #74
+> conecta detectados e relacionados ao contrato `/v1`; a composição humana de fichas permanece na
+> #75. Os adaptadores e as rotas anteriores continuam versionados durante a transição.
 
 ## Propósito e limite atual
 
 `frontend/` contém o painel versionado do VBE Hub em Next.js/React. O código efetivamente exportado
-pelo v0 foi incorporado em `frontend/v0/`; `app/page.tsx` apenas o compõe como aplicação principal.
+pelo v0 foi incorporado em `frontend/v0/`; a fila atual preserva sua identidade visual e reutiliza
+os componentes compatíveis, sem manter uma segunda aplicação paralela.
 Essa separação evita reconstruir o desenho e, ao mesmo tempo, preserva Dockerfile, lockfile, health
 check, testes e proxy interno já validados no repositório.
 
-A raiz `/` ainda usa `frontend/v0/lib/mock-data.ts`, identificada visualmente como “Dados locais de
-demonstração”. Isso é um estágio temporário e explícito da migração, não fallback silencioso. A
-substituição pelo contrato `/v1/signals` pertence à #74. Criar, editar, excluir e arrastar sinais
-nessa base ainda são interações locais do protótipo e não representam comandos do backend.
+A raiz `/` consulta `GET /v1/signals` no servidor Next. Cada notícia ou relato aparece como card
+independente; busca no lote, filtros de estado/fonte e cursor permanecem na URL. Os cards não são
+arrastáveis e nenhuma abertura altera workflow. `frontend/v0/lib/mock-data.ts` permanece somente
+como artefato transitório de componentes ainda não integrados, nunca como fallback da fila.
 
 As rotas atuais são deliberadamente demonstrativas:
 
 | Rota | Papel na fundação | Estado de dados |
 | --- | --- | --- |
-| `/` | fundação visual aprovada importada do v0 | carga local de demonstração, até #74 |
+| `/` | fila de sinais individuais detectados | consulta `GET /v1/signals`; um card por fonte |
 | `/triagem` | fila, filtros, indicadores e paginação | consulta `GET /signals` no servidor Next |
 | `/kanban` | quadro complementar dos cinco estágios e tabela acessível | consulta até 100 itens de `GET /signals` com os mesmos filtros; não altera estado |
-| `/sinais/[slug]` | ficha técnica, fontes, relações, auditoria e revisão | consulta `GET /signals/{id}` no servidor Next; submete decisões confirmadas por rotas internas; o segmento é o UUID canônico |
+| `/sinais/[slug]` | página dedicada do sinal, ficha técnica, relacionados, proveniência e auditoria | consulta em paralelo `GET /v1/signals/{id}`, `/related` e `/audit-events`; o segmento é o UUID canônico |
 | `/panorama` | leitura territorial agregada, mapa local e lista acessível | consulta `GET /signals/geographic-summary` no servidor Next |
 | `/api/health` | health check do contêiner do painel | retorna somente o estado do serviço |
 
-Os dados de `lib/mock-data.ts` não alimentam triagem, fluxo, investigação nem panorama legados. Permanecem apenas
-como legado do protótipo enquanto outros componentes deixam de depender deles; não representam
-situação epidemiológica e não implicam decisão humana.
+Os dados de `lib/mock-data.ts` não alimentam detectados, detalhe, triagem, fluxo, investigação nem
+panorama. Permanecem apenas como legado do protótipo enquanto outros componentes deixam de depender
+deles; não representam situação epidemiológica e não implicam decisão humana.
 
 ## Estratégia de migração e rollback
 
@@ -72,7 +73,8 @@ arquivos versionados sob `frontend/`.
 
 ## Fronteira com a API
 
-`lib/signal-read.ts` é a fronteira única de leitura. Ela separa tipos de transporte e apresentação,
+`lib/individual-signal-read.ts` é a fronteira da fila e do detalhe novos; `lib/signal-read.ts`
+permanece como fronteira das rotas legadas. Ambas separam tipos de transporte e apresentação,
 valida a resposta mínima, aplica timeout e distingue indisponibilidade, resposta inválida e sinal
 inexistente. `VBE_API_INTERNAL_URL` é lida somente no servidor Next e usa `http://api:8000` no
 Compose; não há URL interna ou segredo em variável `NEXT_PUBLIC`.
@@ -83,6 +85,11 @@ URL interna no servidor e encaminham apenas os campos permitidos. Em particular,
 envia `actor_id`. O backend continua sendo a autoridade para alvo revisável, transição, versão,
 idempotência e ator sintético. Erros de validação, indisponibilidade, 404 e conflito de versão são
 mostrados no painel; no conflito, a atualização explícita dos dados preserva o formulário local.
+
+Abrir `Sinais relacionados` lê apenas sugestões persistidas. Os estados `pending`, `ready` e
+`failed` são exibidos sem iniciar chamada à OpenAI; confiança e justificativa são rotuladas como
+sugestão técnica. A URL da página e das abas é compartilhável. O parâmetro `returnTo` aceita apenas
+destinos internos e preserva filtros, busca e cursor ao voltar para a fila.
 
 O frontend não acessa PostgreSQL, Redis, provedores de IA ou conectores diretamente. A API já
 oferece leitura e revisão descritas nos [contratos de leitura](signal-read-api.md) e de [revisão

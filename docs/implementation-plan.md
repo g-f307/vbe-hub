@@ -85,7 +85,10 @@ territorial também usa agregados canônicos e geometria local.
 8. **Concluída na #73:** incorporar diretamente a nova fundação visual exportada, mantendo a
    infraestrutura Docker, o lockfile, as rotas anteriores para rollback e marcação explícita da
    carga local de demonstração.
-9. Validar responsividade, acessibilidade, dados sintéticos, limites da IA e reprodução completa
+9. **Implementada na #74:** substituir a carga local da raiz por sinais individuais de `/v1`,
+   trocar o modal por `/sinais/{id}`, preservar o retorno à fila e ler relacionados persistidos sem
+   chamada síncrona à IA.
+10. Validar responsividade, acessibilidade, dados sintéticos, limites da IA e reprodução completa
    em outro dispositivo via Docker Compose.
 
 ### Critérios de aceite do painel integrado

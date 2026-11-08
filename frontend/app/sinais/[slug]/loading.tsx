@@ -1,5 +1,15 @@
-import { Skeleton } from '@/components/ui/skeleton'
+import { Header } from '@/v0/components/header'
 
-export default function SignalLoading() {
-  return <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-5 px-4 py-5 md:px-6 md:py-6 lg:px-8" aria-label="Carregando investigação do sinal"><Skeleton className="h-28 w-full" /><Skeleton className="h-16 w-full" /><Skeleton className="h-80 w-full" /></div>
+export default function Loading() {
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main id="conteudo-principal" aria-label="Carregando página do sinal" className="mx-auto max-w-screen-xl animate-pulse px-4 py-6 sm:px-6 lg:px-8">
+        <div className="h-11 w-52 rounded bg-muted" />
+        <div className="mt-4 h-48 rounded-xl bg-muted" />
+        <div className="mt-4 h-12 rounded bg-muted" />
+        <div className="mt-6 h-80 rounded-xl bg-muted" />
+      </main>
+    </div>
+  )
 }

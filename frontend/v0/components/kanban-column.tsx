@@ -77,6 +77,7 @@ export function KanbanColumn({
             <SignalCard
               key={signal.id}
               signal={signal}
+              href={`/sinais/${signal.id}`}
               onClick={() => onSignalClick(signal)}
               onDragStart={onDragStart}
             />
