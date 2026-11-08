@@ -5,6 +5,11 @@ from alembic import context
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from vbe_hub.adapters.persistence.embedding_models import EmbeddingModel  # noqa: F401
+from vbe_hub.adapters.persistence.individual_workflow_models import (  # noqa: F401
+    IndividualSignalWorkflowModel,
+    InvestigationWorkflowModel,
+    WorkflowV2EventModel,
+)
 from vbe_hub.adapters.persistence.investigation_models import (  # noqa: F401
     IndividualSignalModel,
     InvestigationFileMemberModel,
