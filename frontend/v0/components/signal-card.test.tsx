@@ -24,13 +24,18 @@ const signal: Signal = {
 }
 
 describe('SignalCard', () => {
-  it('expõe o cartão como controle acessível por teclado', () => {
+  it('navega para a página dedicada do sinal por um link acessível', () => {
     const html = renderToStaticMarkup(
-      <SignalCard signal={signal} onClick={vi.fn()} onDragStart={vi.fn()} />,
+      <SignalCard
+        signal={signal}
+        href="/sinais/signal-1?returnTo=%2F%3Fsource_kind%3Dcommunity"
+        onClick={vi.fn()}
+        onDragStart={vi.fn()}
+      />,
     )
 
-    expect(html).toContain('role="button"')
-    expect(html).toContain('tabindex="0"')
+    expect(html).toContain('<a')
+    expect(html).toContain('href="/sinais/signal-1?returnTo=%2F%3Fsource_kind%3Dcommunity"')
     expect(html).toContain('aria-label="Abrir sinal Relato comunitário de síndrome febril"')
   })
 })

@@ -2,6 +2,7 @@
 
 import React from "react"
 
+import Link from "next/link";
 import { MapPin, Calendar, GripVertical } from "lucide-react";
 import { Card } from "@/v0/components/ui/card";
 import { Badge } from "@/v0/components/ui/badge";
@@ -12,11 +13,12 @@ import { ptBR } from "date-fns/locale";
 
 interface SignalCardProps {
   signal: Signal;
-  onClick: () => void;
+  href: string;
+  onClick?: () => void;
   onDragStart: (e: React.DragEvent, signal: Signal) => void;
 }
 
-export function SignalCard({ signal, onClick, onDragStart }: SignalCardProps) {
+export function SignalCard({ signal, href, onClick, onDragStart }: SignalCardProps) {
   const riskConfig = RISK_CONFIG[signal.riskLevel];
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -24,22 +26,16 @@ export function SignalCard({ signal, onClick, onDragStart }: SignalCardProps) {
     onDragStart(e, signal);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      onClick();
-    }
-  };
-
   return (
-    <Card
-      role="button"
-      tabIndex={0}
+    <Link
+      href={href}
       aria-label={`Abrir sinal ${signal.title}`}
+      onClick={onClick}
+      className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+    >
+    <Card
       draggable
       onDragStart={handleDragStart}
-      onClick={onClick}
-      onKeyDown={handleKeyDown}
       className="signal-card p-4 cursor-pointer bg-card hover:bg-accent/50 border border-border group"
     >
       <div className="flex items-start gap-2">
@@ -85,6 +81,7 @@ export function SignalCard({ signal, onClick, onDragStart }: SignalCardProps) {
         </div>
       </div>
     </Card>
+    </Link>
   );
 }
 

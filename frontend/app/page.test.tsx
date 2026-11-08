@@ -1,22 +1,26 @@
-import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
-import Home from './page'
+import { parseDetectedFilters } from './page'
 
-describe('fundação visual aprovada', () => {
-  it('renderiza o código do protótipo com as três visualizações principais', () => {
-    let html = ''
-    try {
-      html = renderToStaticMarkup(<Home />)
-    } catch {
-      // A fundação anterior redireciona a raiz e, portanto, não produz a interface aprovada.
-    }
+describe('filtros da fila de detectados', () => {
+  it('restaura filtros válidos da URL e usa detected como entrada padrão', () => {
+    expect(parseDetectedFilters({
+      state: 'triage',
+      source_kind: 'community',
+      query: '  febre  ',
+      cursor: 'cursor-2',
+    })).toEqual({
+      state: 'triage',
+      sourceKind: 'community',
+      query: 'febre',
+      cursor: 'cursor-2',
+    })
 
-    expect(html).toContain('Hub de Vigilância Epidemiológica')
-    expect(html).toContain('Fluxo de Trabalho')
-    expect(html).toContain('Visão Geoespacial')
-    expect(html).toContain('Indicadores')
-    expect(html).toContain('Dados locais de demonstração')
-    expect(html).toContain('aria-pressed="true"')
+    expect(parseDetectedFilters({ state: 'invalido', source_kind: 'invalida' })).toEqual({
+      state: 'detected',
+      sourceKind: 'all',
+      query: undefined,
+      cursor: undefined,
+    })
   })
 })

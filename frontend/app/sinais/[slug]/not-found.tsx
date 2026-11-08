@@ -1,7 +1,18 @@
 import Link from 'next/link'
 import { SearchX } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+
+import { Header } from '@/v0/components/header'
 
 export default function SignalNotFound() {
-  return <div className="mx-auto flex w-full max-w-[720px] flex-col gap-4 px-4 py-12 md:px-6"><div className="rounded-md border border-agua bg-mineral p-5"><SearchX className="size-6 text-ardosia" aria-hidden /><h1 className="mt-3 text-lg font-semibold text-encontro">Sinal não encontrado</h1><p className="mt-1 text-sm leading-relaxed text-grafite">O identificador não existe na consulta atual ou o sinal não está acessível. Nenhum conteúdo foi inventado para esta tela.</p><Button className="mt-4" render={<Link href="/triagem" />} nativeButton={false}>Voltar para a triagem</Button></div></div>
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main id="conteudo-principal" className="mx-auto max-w-2xl px-4 py-16 text-center">
+        <SearchX className="mx-auto size-9 text-muted-foreground" aria-hidden />
+        <h1 className="mt-4 text-xl font-semibold">Sinal não encontrado</h1>
+        <p className="mt-2 text-sm text-muted-foreground">O identificador não existe ou o sinal não está acessível. Nenhum conteúdo foi inventado para esta página.</p>
+        <Link href="/" className="mt-6 inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">Voltar para detectados</Link>
+      </main>
+    </div>
+  )
 }
