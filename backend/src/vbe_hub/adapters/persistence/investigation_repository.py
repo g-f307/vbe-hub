@@ -203,6 +203,38 @@ class SqlAlchemyInvestigationRepository:
             reason_code=reason_code,
         )
 
+    async def transfer_member(
+        self,
+        source_file_id: UUID,
+        destination_file_id: UUID,
+        signal_id: UUID,
+        actor_id: str,
+        operation_key: str,
+        source_expected_version: int,
+        destination_expected_version: int,
+        occurred_at: datetime,
+        reason_code: str,
+    ) -> tuple[InvestigationFile, InvestigationFile]:
+        """Move one signal between files in the caller's database transaction."""
+        source = await self.remove_member(
+            source_file_id,
+            signal_id,
+            actor_id,
+            f"{operation_key}:remove",
+            source_expected_version,
+            occurred_at,
+            reason_code,
+        )
+        destination = await self.add_member(
+            destination_file_id,
+            signal_id,
+            actor_id,
+            f"{operation_key}:add",
+            destination_expected_version,
+            occurred_at,
+        )
+        return source, destination
+
     async def list_active_members(self, investigation_file_id: UUID) -> list[InvestigationMember]:
         rows = list(
             (

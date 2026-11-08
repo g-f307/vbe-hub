@@ -137,6 +137,16 @@ async def test_v1_human_commands_are_atomic_idempotent_and_versioned(
     create_key = f"create-{uuid4()}"
     add_key = f"add-{uuid4()}"
     async with AsyncClient(transport=transport, base_url="http://test") as client:
+        for signal in signals:
+            triaged = await client.post(
+                f"/v1/signals/{signal.id}/workflow/transitions",
+                json={
+                    "operation_key": f"triage-{signal.id}",
+                    "expected_version": 0,
+                    "target_state": "triage",
+                },
+            )
+            assert triaged.status_code == 200
         created = await client.post(
             "/v1/investigations",
             json={"signal_id": str(signals[0].id), "operation_key": create_key},

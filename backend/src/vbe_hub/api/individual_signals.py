@@ -9,10 +9,14 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from vbe_hub.adapters.persistence.individual_workflow_models import (
+    IndividualSignalWorkflowModel,
+    InvestigationWorkflowModel,
+)
 from vbe_hub.adapters.persistence.investigation_models import (
     IndividualSignalModel,
     InvestigationFileMemberModel,
@@ -127,6 +131,14 @@ class RemoveMemberRequest(ChangeMemberRequest):
     reason_code: str = Field(min_length=1, max_length=100, pattern=r"^[A-Za-z0-9._:-]+$")
 
 
+class TransferMemberRequest(StrictRequest):
+    operation_key: str = Field(min_length=1, max_length=115, pattern=r"^[A-Za-z0-9._:-]+$")
+    destination_file_id: UUID
+    source_expected_version: int = Field(ge=1)
+    destination_expected_version: int = Field(ge=1)
+    reason_code: str = Field(min_length=1, max_length=100, pattern=r"^[A-Za-z0-9._:-]+$")
+
+
 class InvestigationEventResponse(BaseModel):
     sequence: int
     action: Literal["add", "remove", "reject"]
@@ -149,6 +161,11 @@ class InvestigationDetailResponse(BaseModel):
     updated_at: datetime
     members: list[InvestigationMemberResponse]
     events: list[InvestigationEventResponse]
+
+
+class InvestigationTransferResponse(BaseModel):
+    source: InvestigationDetailResponse
+    destination: InvestigationDetailResponse
 
 
 async def get_individual_signal_session() -> AsyncIterator[AsyncSession]:
@@ -186,14 +203,10 @@ def _decode_cursor(value: str) -> tuple[datetime, UUID]:
         ) from error
 
 
-def _state(file_id: UUID | None) -> SignalState:
-    return "triage" if file_id is not None else "detected"
-
-
-def _card(signal, raw, file_id: UUID | None) -> SignalCard:
+def _card(signal, raw, file_id: UUID | None, workflow_state: str) -> SignalCard:
     return SignalCard(
         id=signal.id,
-        state=_state(file_id),
+        state=workflow_state,
         created_at=signal.created_at,
         source=SourceSummary(
             kind=raw.source_kind,
@@ -213,6 +226,10 @@ def _base_signal_query():
             RawRecordModel,
             ProvenanceModel,
             InvestigationFileMemberModel.investigation_file_id,
+            func.coalesce(
+                InvestigationWorkflowModel.state,
+                IndividualSignalWorkflowModel.state,
+            ).label("workflow_state"),
         )
         .join(
             NormalizedRecordModel,
@@ -220,12 +237,21 @@ def _base_signal_query():
         )
         .join(RawRecordModel, RawRecordModel.id == NormalizedRecordModel.raw_record_id)
         .join(ProvenanceModel, ProvenanceModel.raw_record_id == RawRecordModel.id)
+        .join(
+            IndividualSignalWorkflowModel,
+            IndividualSignalWorkflowModel.signal_id == IndividualSignalModel.id,
+        )
         .outerjoin(
             InvestigationFileMemberModel,
             and_(
                 InvestigationFileMemberModel.signal_id == IndividualSignalModel.id,
                 InvestigationFileMemberModel.removed_at.is_(None),
             ),
+        )
+        .outerjoin(
+            InvestigationWorkflowModel,
+            InvestigationWorkflowModel.investigation_file_id
+            == InvestigationFileMemberModel.investigation_file_id,
         )
     )
 
@@ -252,12 +278,14 @@ async def list_individual_signals(
         )
     if source_kind:
         query = query.where(RawRecordModel.source_kind == source_kind)
-    if state == "detected":
-        query = query.where(InvestigationFileMemberModel.id.is_(None))
-    elif state == "triage":
-        query = query.where(InvestigationFileMemberModel.id.is_not(None))
-    elif state is not None:
-        return SignalPage(items=[], next_cursor=None)
+    if state is not None:
+        query = query.where(
+            func.coalesce(
+                InvestigationWorkflowModel.state,
+                IndividualSignalWorkflowModel.state,
+            )
+            == state
+        )
     rows = (
         await session.execute(
             query.order_by(
@@ -271,7 +299,10 @@ async def list_individual_signals(
         last_signal = page[-1][0]
         next_cursor = _encode_cursor(last_signal.created_at, last_signal.id)
     return SignalPage(
-        items=[_card(signal, raw, file_id) for signal, raw, _provenance, file_id in page],
+        items=[
+            _card(signal, raw, file_id, workflow_state)
+            for signal, raw, _provenance, file_id, workflow_state in page
+        ],
         next_cursor=next_cursor,
     )
 
@@ -304,10 +335,10 @@ async def _signal_details(
     ).all()
     sheets = dict(extraction_rows)
     details: dict[UUID, SignalDetail] = {}
-    for signal, raw, provenance, file_id in rows:
+    for signal, raw, provenance, file_id, workflow_state in rows:
         details[signal.id] = SignalDetail(
             id=signal.id,
-            state=_state(file_id),
+            state=workflow_state,
             contract_version=signal.contract_version,
             created_at=signal.created_at,
             source=SourceDetail(
@@ -510,12 +541,22 @@ def _raise_write_error(error: Exception) -> None:
     raise error
 
 
+async def _require_triage(session: AsyncSession, signal_id: UUID) -> None:
+    workflow = await session.get(IndividualSignalWorkflowModel, signal_id)
+    if workflow is None:
+        raise HTTPException(status_code=404, detail={"code": "individual_signal_not_found"})
+    if workflow.state != "triage":
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "signal_not_in_triage", "current_state": workflow.state},
+        )
+
+
 @router.post("/investigations", response_model=InvestigationDetailResponse, status_code=201)
 async def create_investigation(
     request: CreateInvestigationRequest, session: Session, actor: Actor
 ) -> InvestigationDetailResponse:
-    if await session.get(IndividualSignalModel, request.signal_id) is None:
-        raise HTTPException(status_code=404, detail={"code": "individual_signal_not_found"})
+    await _require_triage(session, request.signal_id)
     repository = SqlAlchemyInvestigationRepository(session)
     try:
         file = await repository.create_file(
@@ -532,8 +573,7 @@ async def create_investigation(
 async def add_investigation_member(
     file_id: UUID, signal_id: UUID, request: ChangeMemberRequest, session: Session, actor: Actor
 ) -> InvestigationDetailResponse:
-    if await session.get(IndividualSignalModel, signal_id) is None:
-        raise HTTPException(status_code=404, detail={"code": "individual_signal_not_found"})
+    await _require_triage(session, signal_id)
     try:
         await SqlAlchemyInvestigationRepository(session).add_member(
             file_id,
@@ -568,3 +608,40 @@ async def remove_investigation_member(
     except Exception as error:
         _raise_write_error(error)
     return await _investigation_detail(session, file_id)
+
+
+@router.post(
+    "/investigations/{file_id}/members/{signal_id}/transfers",
+    response_model=InvestigationTransferResponse,
+)
+async def transfer_investigation_member(
+    file_id: UUID,
+    signal_id: UUID,
+    request: TransferMemberRequest,
+    session: Session,
+    actor: Actor,
+) -> InvestigationTransferResponse:
+    if file_id == request.destination_file_id:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "investigation_transfer_same_file"},
+        )
+    await _require_triage(session, signal_id)
+    try:
+        await SqlAlchemyInvestigationRepository(session).transfer_member(
+            file_id,
+            request.destination_file_id,
+            signal_id,
+            actor,
+            request.operation_key,
+            request.source_expected_version,
+            request.destination_expected_version,
+            datetime.now(UTC),
+            request.reason_code,
+        )
+    except Exception as error:
+        _raise_write_error(error)
+    return InvestigationTransferResponse(
+        source=await _investigation_detail(session, file_id),
+        destination=await _investigation_detail(session, request.destination_file_id),
+    )
