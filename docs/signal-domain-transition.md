@@ -22,9 +22,10 @@ related_docs:
 ## Situação
 
 A ADR-010 está aceita. As issues #69 a #72 implementam persistência, pré-cálculo OpenAI, API
-versionada e workflow-v2. A #73 migra a fundação visual e a #74 conecta a rota principal e a página
-dedicada ao contrato de sinais individuais. As rotas anteriores permanecem como referência. A
-composição humana de fichas, demonstração e validação continuam nas issues #75 a #77; portanto, a
+versionada e workflow-v2. A #73 migra a fundação visual, a #74 conecta a rota principal e a página
+dedicada ao contrato de sinais individuais e a #75 implementa seleção, confirmação, composição e
+correção humana de fichas. As rotas anteriores permanecem como referência. Demonstração e validação
+continuam nas issues #76 e #77; portanto, a
 troca completa do modelo ainda não deve ser alegada.
 
 ## Glossário normativo
@@ -119,7 +120,8 @@ decisão necessária para a PoC. A leitura nunca inicia fan-out de chamadas ao p
 3. **Preparar:** processar sugestões assíncronas com OpenAI (#70, implementada no código).
 4. **Controlar:** implementar workflow e eventos novos (#72, concluída no código).
 5. **Expor:** adicionar API nova mantendo compatibilidade temporária (#71, concluída no código).
-6. **Migrar interface:** importar a fundação aprovada e integrar o fluxo (#73–#75).
+6. **Migrar interface:** importar a fundação aprovada e integrar o fluxo (#73–#75, implementado no
+   código e pendente de aceite/merge da #75).
 7. **Migrar demonstração:** adaptar fixtures e n8n (#76).
 8. **Validar:** medir qualidade, custo, latência e reconciliação (#77).
 9. **Contrair:** retirar contratos legados somente após evidência e decisão explícita em issue

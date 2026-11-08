@@ -18,8 +18,10 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 > **Transição em andamento em 08/11/2026:** a fundação visual nova já executa na rota `/` e lê um
 > sinal individual por fonte no contrato `/v1`. O detalhe usa uma página dedicada, com ficha
-> técnica, proveniência, auditoria e sugestões relacionadas pré-calculadas. As rotas legadas
-> continuam disponíveis como referência até a composição funcional de fichas na issue #75. A
+> técnica, proveniência, auditoria e sugestões relacionadas pré-calculadas. O analista pode
+> selecionar candidatos, conferir os IDs e textos lado a lado e somente então criar ou ampliar uma
+> ficha auditável; nenhuma abertura ou marcação associa fontes. As rotas legadas continuam
+> disponíveis como referência durante a transição. A
 > [ADR-010](docs/decisions/ADR-010-individual-signals-human-investigation.md) redefine cada fonte
 > como sinal individual. As tabelas, o worker assíncrono, a [API `/v1`](docs/individual-signal-api.md)
 > e o workflow-v2 já existem. Nenhuma sugestão da
@@ -135,7 +137,7 @@ Para preparar novas sugestões de relacionados, configure `OPENAI_API_KEY` somen
 e reinicie `relation-worker`. O worker executa extração, embedding, pré-seleção limitada e
 julgamento de relação fora da requisição da interface. A fila aceita no máximo 1.000 sinais por
 padrão, consulta 20 vizinhos e envia no máximo três candidatos por sinal ao modelo; todos os
-limites são configuráveis pelas variáveis `RELATED_*`. Abrir a futura aba de relacionados apenas
+limites são configuráveis pelas variáveis `RELATED_*`. Abrir a aba de relacionados apenas
 lerá os estados persistidos `pending`, `ready` ou `failed`.
 
 ### Avaliações históricas opcionais
