@@ -4,7 +4,7 @@ type: adr
 status: active
 title: "ADR-007: Calcular prioridade sugerida com regras versionadas"
 created: 2026-10-03
-updated: 2026-10-03
+updated: 2026-11-08
 owner: VBE Hub
 related_docs:
   - API-005
@@ -16,7 +16,11 @@ related_docs:
 
 ## Status
 
-Aceita em 2026-10-03.
+Aceita em 2026-10-03. Parcialmente substituída pela ADR-010 quanto à unidade priorizada.
+
+As regras explicáveis e versionadas permanecem válidas. No modelo futuro, a prioridade referencia
+a ficha de investigação, inclusive quando ela possui um único sinal, e não um consolidado criado
+automaticamente. A implementação atual permanece legada até a migração.
 
 ## Contexto
 

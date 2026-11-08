@@ -17,6 +17,10 @@ related_docs:
 
 # Prioridade sugerida e explicável
 
+> **Contrato atual em transição:** `priority-v1` está implementada para sinais consolidados. A
+> ADR-010 preserva as regras explicáveis, mas muda a unidade futura para a ficha de investigação,
+> inclusive quando ela tiver um único sinal. Essa alteração será implementada depois do novo schema.
+
 ## Finalidade e limite
 
 `priority-v1` sugere uma ordem de triagem para sinais consolidados. O resultado não é avaliação de

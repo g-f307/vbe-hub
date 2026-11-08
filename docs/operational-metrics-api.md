@@ -18,6 +18,10 @@ related_docs:
 
 # Métricas operacionais e evidências sintéticas
 
+> **Contrato atual em transição:** as métricas abaixo contam o modelo consolidado implementado. A
+> ADR-010 exige que a versão futura separe sinais coletados, sugestões processadas, fichas ativas e
+> membros; esses números não poderão ser somados como uma única unidade.
+
 ## Finalidade
 
 `GET /metrics/summary` oferece um contrato reconciliável para indicadores do painel. Ele separa

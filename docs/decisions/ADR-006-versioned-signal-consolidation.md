@@ -1,10 +1,10 @@
 ---
 id: ADR-006
 type: adr
-status: active
+status: superseded
 title: "ADR-006: Consolidar sinais com política determinística e versionada"
 created: 2026-10-02
-updated: 2026-10-02
+updated: 2026-11-08
 owner: VBE Hub
 related_docs:
   - API-004
@@ -16,7 +16,11 @@ related_docs:
 
 ## Status
 
-Aceita em 2026-10-02.
+Aceita em 2026-10-02. Substituída em 2026-11-08 pela ADR-010 para o modelo operacional futuro.
+
+Esta ADR continua registrando o motivo e o comportamento da consolidação já implementada. Ela não
+deve orientar novas funcionalidades: a migração passa a tratar cada fonte como sinal individual e
+somente o analista forma fichas de investigação.
 
 ## Contexto
 

@@ -4,20 +4,25 @@ type: requirements
 status: active
 title: Requisitos e escopo
 created: 2026-09-28
-updated: 2026-09-28
+updated: 2026-11-08
 owner: VBE Hub
 related_docs:
   - DES-001
+  - DES-002
   - API-001
   - REL-001
   - ADR-004
+  - ADR-010
 ---
 
 # Requisitos e escopo
 
 ## Objetivo
 
-Demonstrar uma prova de conceito que recebe registros sintéticos equivalentes, em nível semântico, a notícias de saúde e relatos comunitários; extrai uma ficha técnica; identifica relações entre registros; e apresenta sinais consolidados para revisão humana.
+Demonstrar uma prova de conceito que recebe registros sintéticos equivalentes, em nível semântico,
+a notícias de saúde e relatos comunitários; representa cada fonte como sinal individual; extrai uma
+ficha técnica; sugere relações entre sinais; e permite que o analista forme fichas de investigação
+sem perder as descrições e proveniências individuais.
 
 ## Dentro do escopo da validação
 
@@ -25,7 +30,8 @@ Demonstrar uma prova de conceito que recebe registros sintéticos equivalentes, 
 - Normalização dos formatos de entrada em um registro comum.
 - Extração estruturada por IA de doença/síndrome, sintomas, tempo, lugar, magnitude e contexto.
 - Correlação de registros como duplicata, corroboração, atualização, contexto relacionado ou sem relação.
-- Agrupamento, prioridade sugerida explicável e painel de revisão.
+- Sugestões de relação pré-calculadas e seleção humana dos membros da ficha de investigação.
+- Prioridade sugerida explicável para a ficha e painel de revisão.
 - Métricas de qualidade e de desempenho sobre um conjunto de referência rotulado.
 
 ## Fora do escopo da validação
@@ -67,10 +73,18 @@ A máquina hospedeira não pode precisar de Python, Node.js, PostgreSQL, Redis, 
 
 - Importar um lote sintético reprodutível e processar todos os registros sem intervenção manual.
 - Exibir, para cada registro, texto de origem, ficha técnica extraída, confiança e origem sintética.
-- Exibir, para cada sinal consolidado, fontes vinculadas, relação entre registros, justificativa, prioridade sugerida e status do fluxo.
-- Permitir ao avaliador aceitar, corrigir ou rejeitar a sugestão de relação/agrupamento.
+- Exibir cada notícia ou relato como sinal individual inicialmente em `detected`.
+- Exibir, para cada sinal, texto de origem, ficha técnica, proveniência e sugestões relacionadas já
+  processadas ou seu estado de preparação.
+- Permitir ao avaliador selecionar sinais relacionados e formar uma ficha de investigação, sem
+  fundir descrições individuais.
+- Exibir justificativa da IA, decisão humana, prioridade sugerida da ficha e status do fluxo.
 - Gerar relatório com precisão, revocação, F1, falsos positivos e tempo de processamento.
 
 ## Fundamentação operacional
 
-O fluxo implementado seguirá a separação proposta pelo Africa CDC: detecção, triagem, verificação, avaliação de risco e alerta/resposta. A PoC automatiza detecção, pré-triagem e sugestão de correlação; verificação e avaliação de risco permanecem humanas.
+O fluxo seguirá a separação proposta pelo Africa CDC: detecção, triagem, verificação, avaliação de
+risco e alerta/resposta. A PoC automatiza detecção e sugestão de correlação. A composição da ficha,
+verificação e avaliação de risco permanecem humanas. A implementação atual ainda usa consolidados;
+a transição aprovada está documentada na ADR-010 e em
+[sinais individuais e fichas](signal-domain-transition.md).

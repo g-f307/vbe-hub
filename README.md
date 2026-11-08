@@ -6,13 +6,21 @@ Nesta etapa, o projeto usa dados sintéticos em formatos inspirados nas fontes E
 
 ## Objetivo da validação
 
-Até o fim de outubro/início de novembro de 2026, demonstrar que registros heterogêneos podem ser normalizados, correlacionados e consolidados em sinais de alerta revisáveis por um analista.
+Demonstrar que fontes heterogêneas podem ser normalizadas como sinais individuais, relacionadas por
+IA e organizadas pelo analista em fichas de investigação auditáveis, sem apagar ou fundir as
+descrições de origem.
 
 ## Documentação
 
 Comece por [docs/README.md](docs/README.md). As decisões importantes estão em [docs/decisions/README.md](docs/decisions/README.md).
 
 ## Estado atual
+
+> **Transição aprovada em 08/11/2026:** o comportamento executável descrito abaixo ainda usa sinais
+> consolidados. A [ADR-010](docs/decisions/ADR-010-individual-signals-human-investigation.md)
+> redefine cada fonte como sinal individual, limita a IA a sugerir relacionados e reserva ao
+> analista a composição da ficha de investigação. A migração será feita nas issues #69 a #77 por
+> expand/contract; nenhum dado ou contrato legado será removido nesta etapa documental.
 
 Fundação, dados sintéticos, funil auditável de correlação, consolidação versionada, prioridade
 sugerida explicável e revisão humana auditável estão implementados. O agrupamento automático e o
@@ -45,8 +53,10 @@ gerou oito fichas sintéticas sem falhas e atendeu às metas dos campos centrais
 evidência é exploratória, baseada em amostra pequena, e não substitui validação clínica ou
 epidemiológica.
 Consulte o [contrato de leitura](docs/signal-read-api.md). Autenticação institucional e
-integrações reais com EIOS e Guardiões da Saúde permanecem fora desta etapa. A consolidação organiza evidências rastreáveis, mas não confirma
-ocorrências nem substitui a triagem de um profissional de saúde.
+integrações reais com EIOS e Guardiões da Saúde permanecem fora desta etapa. A consolidação atual
+organiza evidências rastreáveis, mas não confirma ocorrências nem substitui a triagem de um
+profissional de saúde. Ela será preservada como evidência histórica enquanto o novo modelo é
+implementado.
 
 ## Início rápido
 

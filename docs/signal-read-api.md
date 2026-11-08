@@ -4,7 +4,7 @@ type: api
 status: active
 title: Consulta canônica de sinais para o painel
 created: 2026-10-08
-updated: 2026-10-26
+updated: 2026-11-08
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/api/signals.py
@@ -17,6 +17,24 @@ related_docs:
 ---
 
 # Consulta canônica de sinais para o painel
+
+> **Contrato atual em transição:** os endpoints abaixo ainda retornam sinais consolidados. A
+> ADR-010 aprovou uma nova leitura com um item por fonte/sinal, sugestões relacionadas persistidas
+> e ficha ativa separada. A API nova será adicionada na #71 com compatibilidade temporária; não se
+> deve programar o frontend novo assumindo que este contrato já mudou.
+
+## Contratos conceituais da próxima versão
+
+A versão futura deverá expor, sem chamada síncrona ao provedor:
+
+- fila paginada de sinais individuais;
+- detalhe do sinal e de sua fonte original;
+- estado `pending`, `ready` ou `failed` das sugestões relacionadas;
+- lista paginada de candidatos com justificativa e confiança da IA;
+- comando humano idempotente para criar ou atualizar ficha;
+- detalhe da ficha com todos os membros preservados individualmente.
+
+Paths, schemas e estratégia de versionamento serão definidos na #71.
 
 ## Finalidade e limite
 
