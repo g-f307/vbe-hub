@@ -4,11 +4,12 @@ type: api
 status: active
 title: Indexação semântica
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-11-08
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/application/ai/embeddings.py
   - backend/src/vbe_hub/adapters/ai/gemini_embeddings.py
+  - backend/src/vbe_hub/adapters/ai/openai_embeddings.py
   - backend/src/vbe_hub/adapters/persistence/embedding_repository.py
 related_docs:
   - API-003
@@ -28,10 +29,11 @@ se dois sinais pertencem ao mesmo evento e não atribui prioridade sanitária.
 doença/agravo, patógeno, síndrome, sintomas, estimativas de casos e óbitos, grupo afetado,
 ambiente, período e localização. Confiança e evidências de auditoria não entram no vetor.
 
-O contrato inicial usa `gemini-embedding-2`, tarefa `RETRIEVAL_DOCUMENT` e 768 dimensões. O
-adapter impõe limite de entrada, timeout e nenhuma repetição interna do SDK. Uma resposta com
-quantidade inesperada de vetores, dimensão incorreta ou valores inválidos falha de forma fechada
-e expõe somente uma mensagem sanitizada.
+O contrato usa 768 dimensões. O caminho operacional usa OpenAI com
+`text-embedding-3-small` por padrão e dimensão explicitamente fixada; o adapter Gemini permanece
+somente para reprodução histórica. O adapter impõe limite de entrada e timeout. Uma resposta com
+quantidade inesperada de vetores, dimensão incorreta ou valores inválidos falha de forma fechada e
+expõe somente uma mensagem sanitizada.
 
 ## Persistência e compatibilidade
 
@@ -58,6 +60,7 @@ docker compose run --rm test uv run --no-sync pytest \
   tests/unit/application/ai/test_embedding_text.py \
   tests/unit/application/ai/test_embedding_service.py \
   tests/unit/adapters/ai/test_gemini_embeddings.py \
+  tests/unit/adapters/ai/test_openai_embeddings.py \
   tests/integration/persistence/test_embedding_repository.py
 ```
 

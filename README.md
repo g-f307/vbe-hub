@@ -16,12 +16,10 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-> **Transição aprovada em 08/11/2026:** o comportamento executável descrito abaixo ainda usa sinais
-> consolidados. A [ADR-010](docs/decisions/ADR-010-individual-signals-human-investigation.md)
-> redefine cada fonte como sinal individual, limita a IA a sugerir relacionados e reserva ao
-> analista a composição da ficha de investigação. A issue #69 já adiciona o novo esquema de forma
-> expand/contract, mantendo o modelo legado; pipeline, API e interface serão migrados nas issues
-> seguintes.
+> **Transição em andamento em 08/11/2026:** o contrato público ainda usa sinais consolidados. A
+> [ADR-010](docs/decisions/ADR-010-individual-signals-human-investigation.md) redefine cada fonte
+> como sinal individual. As tabelas novas e o worker assíncrono já existem; API e interface serão
+> migradas nas issues seguintes. Nenhuma sugestão da IA associa fontes automaticamente.
 
 Fundação, dados sintéticos, funil auditável de correlação, consolidação versionada, prioridade
 sugerida explicável e revisão humana auditável estão implementados. O agrupamento automático e o
@@ -61,7 +59,7 @@ implementado.
 
 ## Início rápido
 
-### Execução básica sem Gemini
+### Execução básica sem provedor externo
 
 Com Git, Docker e Docker Compose v2:
 
@@ -79,7 +77,9 @@ Copy-Item .env.example .env
 docker compose up --build --detach --wait
 ```
 
-A API estará em `http://localhost:8000` e o painel em `http://localhost:3000`. Triagem e ficha
+A API estará em `http://localhost:8000` e o painel em `http://localhost:3000`. Sem
+`OPENAI_API_KEY`, o worker permanece ocioso e a aplicação continua disponível para dados
+pré-carregados. Triagem e ficha
 técnica usam leitura servidor-a-servidor pela rede interna do Compose; o navegador não recebe URL
 interna, credenciais ou acesso direto ao banco. Se ainda não houver sinais consolidados, a fila
 mostrará o estado vazio canônico. O resumo técnico pode ser consultado sem ferramenta adicional em
@@ -124,10 +124,20 @@ docker compose --profile tools run --rm synthetic-validate
 docker compose --profile tools run --rm synthetic-import
 ```
 
-### Avaliação opcional com provedores externos
+### Processamento opcional com OpenAI
 
-A execução básica, os testes e os dados sintéticos não exigem chave externa. Para repetir a
-avaliação de correlação com o Gemini, configure `GEMINI_API_KEY` somente no `.env` local e siga o
+Para preparar novas sugestões de relacionados, configure `OPENAI_API_KEY` somente no `.env` local
+e reinicie `relation-worker`. O worker executa extração, embedding, pré-seleção limitada e
+julgamento de relação fora da requisição da interface. A fila aceita no máximo 1.000 sinais por
+padrão, consulta 20 vizinhos e envia no máximo três candidatos por sinal ao modelo; todos os
+limites são configuráveis pelas variáveis `RELATED_*`. Abrir a futura aba de relacionados apenas
+lerá os estados persistidos `pending`, `ready` ou `failed`.
+
+### Avaliações históricas opcionais
+
+A execução básica, os testes e os dados sintéticos não exigem chave externa. Gemini não participa
+do fluxo operacional. Para repetir a avaliação histórica de correlação, configure
+`GEMINI_API_KEY` somente no `.env` local e siga o
 [guia de execução local](docs/development.md#avaliação-live-da-correlação). Essa etapa consome
 cota do provider e não é necessária para iniciar a aplicação.
 

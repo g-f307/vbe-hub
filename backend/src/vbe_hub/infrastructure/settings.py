@@ -58,6 +58,11 @@ class Settings(BaseSettings):
     openai_model: str = Field(
         default="gpt-6-luna", validation_alias="OPENAI_MODEL", min_length=1
     )
+    openai_embedding_model: str = Field(
+        default="text-embedding-3-small",
+        validation_alias="OPENAI_EMBEDDING_MODEL",
+        min_length=1,
+    )
     openai_timeout_seconds: float = Field(
         default=15, gt=0, le=60, validation_alias="OPENAI_TIMEOUT_SECONDS"
     )
@@ -75,6 +80,15 @@ class Settings(BaseSettings):
     )
     openai_output_usd_per_million: float = Field(
         default=0.5, ge=0, validation_alias="OPENAI_OUTPUT_USD_PER_MILLION"
+    )
+    related_queue_capacity: int = Field(
+        default=1_000, ge=1, le=10_000, validation_alias="RELATED_QUEUE_CAPACITY"
+    )
+    related_neighbor_limit: int = Field(
+        default=20, ge=1, le=100, validation_alias="RELATED_NEIGHBOR_LIMIT"
+    )
+    related_candidate_limit: int = Field(
+        default=3, ge=1, le=10, validation_alias="RELATED_CANDIDATE_LIMIT"
     )
 
     @property

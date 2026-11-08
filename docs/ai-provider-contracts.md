@@ -4,7 +4,7 @@ type: api
 status: active
 title: Contratos de provedores de inteligência artificial
 created: 2026-09-29
-updated: 2026-11-04
+updated: 2026-11-08
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/application/ai/
@@ -66,9 +66,10 @@ usam `ProviderError`, com mensagem sanitizada, indicação de repetibilidade e u
 - falha permanente não classificada.
 
 Adapters não propagam respostas brutas, credenciais, prompts completos ou detalhes internos do
-fornecedor. Os adapters Gemini e OpenAI aplicam timeout, tentativas, backoff, entrada e saída
-limitados por configuração. Nesta etapa, OpenAI implementa somente `StructuredExtractor`; isso
-não muda o provedor de embeddings ou o julgamento de relações.
+fornecedor. OpenAI implementa as três portas do caminho operacional: extração estruturada,
+embedding e julgamento de relações. Tamanho, timeout, tentativas e candidatos por sinal possuem
+limites configurados. Gemini permanece apenas para reprodução de evidências históricas e não é
+necessário para executar o fluxo oficial.
 
 ## Fronteiras de confiança
 

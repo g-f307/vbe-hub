@@ -18,7 +18,10 @@ class SqlAlchemyRelationAssessmentRepository:
 
     async def get(self, cache_key: str) -> RelationAssessmentRecord | None:
         row = await self._session.scalar(
-            select(RelationAssessmentModel).where(RelationAssessmentModel.cache_key == cache_key)
+            select(RelationAssessmentModel).where(
+                RelationAssessmentModel.cache_key == cache_key,
+                RelationAssessmentModel.state == ExecutionStatus.SUCCEEDED.value,
+            )
         )
         return None if row is None else self._to_record(row)
 

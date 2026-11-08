@@ -68,12 +68,16 @@ def test_openai_is_optional_with_cost_bounded_defaults() -> None:
 
     assert settings.openai_api_key is None
     assert settings.openai_model == "gpt-6-luna"
+    assert settings.openai_embedding_model == "text-embedding-3-small"
     assert settings.openai_timeout_seconds == 15
     assert settings.openai_max_attempts == 3
     assert settings.openai_max_input_chars == 12_000
     assert settings.openai_max_output_tokens == 2_048
     assert settings.openai_input_usd_per_million == 0.1
     assert settings.openai_output_usd_per_million == 0.5
+    assert settings.related_queue_capacity == 1_000
+    assert settings.related_neighbor_limit == 20
+    assert settings.related_candidate_limit == 3
 
 
 def test_openai_limits_reject_unbounded_configuration() -> None:
