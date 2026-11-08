@@ -201,7 +201,9 @@ async def test_relation_suggestion_transitions_are_idempotent_and_indexed(
     second_source = await stored_normalized(db_session, 8)
     investigations = SqlAlchemyInvestigationRepository(db_session)
     first = await investigations.get_or_create_signal(first_source.id, "individual-signal-v1", NOW)
-    second = await investigations.get_or_create_signal(second_source.id, "individual-signal-v1", NOW)
+    second = await investigations.get_or_create_signal(
+        second_source.id, "individual-signal-v1", NOW
+    )
     left, right = sorted((first.id, second.id))
     repository = SqlAlchemySignalSuggestionRepository(db_session, now=lambda: NOW)
 

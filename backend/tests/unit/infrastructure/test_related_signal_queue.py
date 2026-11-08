@@ -19,7 +19,7 @@ class RedisDouble:
         self.items.append(payload)
         return 1
 
-    async def blpop(self, key, timeout):
+    async def blpop(self, key, timeout):  # noqa: ASYNC109
         if not self.items:
             return None
         return key.encode(), self.items.pop(0).encode()

@@ -85,6 +85,33 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  relation-worker:
+    build:
+      context: ./backend
+      target: runtime
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_APP_USER}:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-6-luna}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      OPENAI_TIMEOUT_SECONDS: ${OPENAI_TIMEOUT_SECONDS:-15}
+      OPENAI_MAX_ATTEMPTS: ${OPENAI_MAX_ATTEMPTS:-3}
+      OPENAI_MAX_INPUT_CHARS: ${OPENAI_MAX_INPUT_CHARS:-12000}
+      OPENAI_MAX_OUTPUT_TOKENS: ${OPENAI_MAX_OUTPUT_TOKENS:-2048}
+      RELATED_QUEUE_CAPACITY: ${RELATED_QUEUE_CAPACITY:-1000}
+      RELATED_NEIGHBOR_LIMIT: ${RELATED_NEIGHBOR_LIMIT:-20}
+      RELATED_CANDIDATE_LIMIT: ${RELATED_CANDIDATE_LIMIT:-3}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["uv", "run", "--no-sync", "python", "-m", "vbe_hub.related_worker"]
+    restart: unless-stopped
+
   frontend:
     build:
       context: ./frontend
