@@ -27,9 +27,8 @@ related_docs:
 # Modelo persistente inicial
 
 > **Estado de transição:** esta página descreve o schema implementado antes da ADR-010. As tabelas
-> de consolidação continuam ativas no código, mas serão substituídas por sinais individuais,
-> sugestões e fichas de investigação pelo processo expand/contract da issue #69. Nenhuma tabela
-> legada será removida nesta etapa documental. Consulte o
+> de consolidação continuam ativas no código. A etapa expand da issue #69 adicionou sinais
+> individuais, sugestões e fichas de investigação sem remover tabelas legadas. Consulte o
 > [mapa de transição](signal-domain-transition.md).
 
 ## Fronteiras
@@ -53,6 +52,11 @@ As entidades em `vbe_hub.domain` não dependem do banco. Interfaces de repositó
 | `suggested_priorities` | Cálculo explicável e versionado para ordenar a triagem. | FK para o sinal; identidade única; score, confiança e faixa controlados; componentes e lacunas em JSONB. |
 | `signal_workflows` | Estado e versão concorrente da triagem de cada sinal. | FK 1:1 para o sinal; estado e versão controlados. |
 | `review_events` | Transições e decisões humanas auditáveis. | FK para o fluxo; sequência e chave de operação únicas; eventos protegidos contra alteração e exclusão. |
+| `individual_signals` | Identidade individual de cada fonte normalizada elegível. | Unicidade por registro e versão contratual; conteúdo permanece na origem. |
+| `signal_relation_suggestions` | Estado e resultado versionado da sugestão da IA entre um par canônico. | FKs para os dois sinais e avaliação; índices simétricos por sinal e estado. |
+| `investigation_files` | Unidade de trabalho formada pelo analista. | Versão otimista e timestamps; não contém descrição consolidada. |
+| `investigation_file_members` | Vínculo corrigível entre ficha e sinais individuais. | Apenas um vínculo ativo por sinal; remoção preserva a linha histórica. |
+| `investigation_membership_events` | Inclusões, remoções e rejeições humanas. | Sequência por ficha, chave idempotente e proteção append-only. |
 
 Todos os identificadores de tabela e coluna usam `snake_case`. Datas são `timestamptz`; payloads e erros estruturados usam `jsonb`. FKs usadas em consulta possuem índices explícitos.
 
@@ -84,6 +88,12 @@ O fluxo usa versão otimista para impedir sobrescritas concorrentes. Cada evento
 uma impressão SHA-256 do comando associado à chave idempotente, os valores anterior e novo e a
 identidade da sugestão. Correções são novos eventos; o histórico existente não é atualizado.
 
+O sinal individual usa `(normalized_record_id, contract_version)` como identidade natural. A ficha
+referencia os sinais sem copiar conteúdo, usa versão otimista e registra cada mudança de composição
+em evento append-only. A sugestão da IA é persistida separadamente; nenhuma linha de sugestão cria
+um membro. Detalhes de migration, backfill e reversão estão em
+[Persistência de sinais individuais e fichas](individual-signal-persistence.md).
+
 ## Isolamento do gabarito
 
 `gold_event_id` existe somente em `EvaluationLabel` e `evaluation_labels`. `RawRecord`, `StoredRawRecord` e o repositório entregue ao pipeline não possuem esse atributo. Acesso ao gabarito exige o adapter de avaliação separado.
@@ -94,16 +104,15 @@ Usuários reais, autenticação, autorização e retenção de dados reais não 
 Backup também não está previsto nesta etapa; volumes Docker são persistência de desenvolvimento,
 não estratégia de recuperação.
 
-## Modelo alvo aprovado
+## Modelo alvo em transição
 
-O desenho lógico futuro adicionará, sem remover imediatamente o legado:
+O schema já adiciona, sem remover o legado:
 
 - um sinal individual idempotente para cada registro normalizado elegível;
 - uma sugestão versionada para cada par canônico avaliado;
 - uma ficha de investigação criada pelo analista;
 - membros que referenciam sinais sem copiar conteúdo;
-- eventos append-only de inclusão, remoção e transição;
-- prioridade ligada à ficha, não ao consolidado automático.
+- eventos append-only de inclusão, remoção e rejeição.
 
-Nomes físicos, constraints e índices serão definidos e testados na #69; este documento não antecipa
-uma migration ainda inexistente.
+O workflow completo da ficha, a prioridade ligada à investigação e a troca das leituras públicas
+continuam planejados para as issues seguintes da milestone 7.

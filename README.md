@@ -19,8 +19,9 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 > **Transição aprovada em 08/11/2026:** o comportamento executável descrito abaixo ainda usa sinais
 > consolidados. A [ADR-010](docs/decisions/ADR-010-individual-signals-human-investigation.md)
 > redefine cada fonte como sinal individual, limita a IA a sugerir relacionados e reserva ao
-> analista a composição da ficha de investigação. A migração será feita nas issues #69 a #77 por
-> expand/contract; nenhum dado ou contrato legado será removido nesta etapa documental.
+> analista a composição da ficha de investigação. A issue #69 já adiciona o novo esquema de forma
+> expand/contract, mantendo o modelo legado; pipeline, API e interface serão migrados nas issues
+> seguintes.
 
 Fundação, dados sintéticos, funil auditável de correlação, consolidação versionada, prioridade
 sugerida explicável e revisão humana auditável estão implementados. O agrupamento automático e o

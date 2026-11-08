@@ -21,10 +21,10 @@ related_docs:
 
 ## Situação
 
-A ADR-010 está aceita, mas o comportamento descrito neste documento ainda não está implementado.
-O modelo em produção local continua usando `consolidated_signals`. Este documento é a fronteira
-entre o legado executável e o alvo das issues #69 a #77; não deve ser usado para alegar que a
-migração já ocorreu.
+A ADR-010 está aceita e a expansão persistente da issue #69 está implementada. O comportamento
+público ainda usa `consolidated_signals`; pipeline, API, workflow e frontend permanecem em
+transição nas issues #70 a #77. Este documento não deve ser usado para alegar que a troca completa
+do modelo já ocorreu.
 
 ## Glossário normativo
 
@@ -113,7 +113,7 @@ decisão necessária para a PoC. A leitura nunca inicia fan-out de chamadas ao p
 ## Sequência expand/contract
 
 1. **Definir:** ADR-010 e contratos conceituais (#68).
-2. **Expandir:** adicionar novas tabelas e índices sem remover legados (#69).
+2. **Expandir:** adicionar novas tabelas e índices sem remover legados (#69, concluída no código).
 3. **Preparar:** processar sugestões assíncronas com OpenAI (#70).
 4. **Controlar:** implementar workflow e eventos novos (#72).
 5. **Expor:** adicionar API nova mantendo compatibilidade temporária (#71).
