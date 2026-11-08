@@ -74,8 +74,8 @@ permanecem apenas porque as avaliações históricas ainda são reproduzíveis.
 ## Integração e validação
 
 `IndividualSignalDetectionService` materializa idempotentemente um sinal e agenda seu UUID na fila.
-A API pública chamará esse caso de uso na issue #71; até lá, o contrato e o consumidor estão
-prontos, mas não existe endpoint novo.
+A [API versionada](individual-signal-api.md) lê os resultados persistidos sem chamar o provedor;
+a conexão do caso de uso aos futuros adaptadores de ingestão permanece separada da leitura HTTP.
 
 Validação sem consumir API real:
 

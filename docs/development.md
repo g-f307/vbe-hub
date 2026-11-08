@@ -55,6 +55,14 @@ Endpoints de leitura usados pelo painel:
 - `GET /signals`: fila sintética paginada e filtrável;
 - `GET /signals/{signal_id}`: investigação com proveniência, fichas técnicas disponíveis, relações e auditoria.
 
+Endpoints do novo contrato, ainda não consumidos pelo painel legado:
+
+- `GET /v1/signals`: fila com uma fonte por sinal;
+- `GET /v1/signals/{signal_id}/related`: sugestões pré-calculadas;
+- `POST /v1/investigations`: decisão humana de iniciar uma ficha.
+
+Consulte a [API de sinais individuais](individual-signal-api.md) para os demais comandos.
+
 Consulte o [contrato de leitura canônica](signal-read-api.md). Falha, vazio, carregamento e 404
 são exibidos explicitamente e não há fallback silencioso para mocks.
 
