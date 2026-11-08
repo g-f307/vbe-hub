@@ -21,10 +21,10 @@ related_docs:
 
 ## Situação
 
-A ADR-010 está aceita, a expansão persistente da issue #69 está implementada e a issue #70 adiciona
-fila limitada, extração/indexação OpenAI e pré-cálculo persistente. O comportamento público ainda
-usa `consolidated_signals`; API, workflow e frontend permanecem em transição nas issues #71 a #77.
-Este documento não deve ser usado para alegar que a troca completa do modelo já ocorreu.
+A ADR-010 está aceita. As issues #69 a #72 implementam persistência, pré-cálculo OpenAI, API
+versionada e workflow-v2. O frontend ainda usa majoritariamente `consolidated_signals` e permanece
+em transição nas issues #73 a #77. Este documento não deve ser usado para alegar que a troca
+completa do modelo já ocorreu.
 
 ## Glossário normativo
 
@@ -64,14 +64,15 @@ ficha com o sinal principal e prosseguir.
 | --- | --- | --- |
 | Após coleta | Sinal | `detected` |
 | Análise inicial | Sinal | `triage` |
-| Composição confirmada | Ficha | transição atômica para `verification` |
+| Composição confirmada | Ficha | primeira transição atômica para `verification`, versão 1 |
 | Investigação conjunta | Ficha | `verification` ou `risk_assessment` |
 | Fim | Ficha | `closed` |
 
 O sinal associado mantém referência à ficha ativa e o histórico anterior. Ele deixa a fila de
-detectados, mas não é excluído nem perde URL própria. A modelagem exata da transição será entregue
-em #69 e #72 com controle de versão e eventos append-only. Remover um membro o devolve à triagem;
-uma ficha não pode ficar vazia. Transferência entre fichas deve ser uma operação atômica.
+detectados, mas não é excluído nem perde URL própria. As issues #69 e #72 implementam controle de
+versão e eventos append-only. Remover um membro o devolve à triagem; uma ficha não pode ficar
+vazia. A transferência direta entre fichas recebe as versões da origem e do destino e confirma ou
+reverte remoção, inclusão e eventos como uma única transação PostgreSQL.
 
 ## Leitura rápida de relacionados
 
@@ -115,8 +116,8 @@ decisão necessária para a PoC. A leitura nunca inicia fan-out de chamadas ao p
 1. **Definir:** ADR-010 e contratos conceituais (#68).
 2. **Expandir:** adicionar novas tabelas e índices sem remover legados (#69, concluída no código).
 3. **Preparar:** processar sugestões assíncronas com OpenAI (#70, implementada no código).
-4. **Controlar:** implementar workflow e eventos novos (#72).
-5. **Expor:** adicionar API nova mantendo compatibilidade temporária (#71).
+4. **Controlar:** implementar workflow e eventos novos (#72, concluída no código).
+5. **Expor:** adicionar API nova mantendo compatibilidade temporária (#71, concluída no código).
 6. **Migrar interface:** importar a fundação aprovada e integrar o fluxo (#73–#75).
 7. **Migrar demonstração:** adaptar fixtures e n8n (#76).
 8. **Validar:** medir qualidade, custo, latência e reconciliação (#77).

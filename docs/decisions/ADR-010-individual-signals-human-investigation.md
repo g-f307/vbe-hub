@@ -22,8 +22,9 @@ related_docs:
 
 ## Status
 
-Aceita em 2026-11-08. A implementação será feita nas issues #69 a #77. Até essa migração terminar,
-o código e alguns contratos ainda refletem o modelo legado de sinal consolidado.
+Aceita em 2026-11-08. Persistência, pré-cálculo, API e workflow-v2 foram implementados nas issues
+#69 a #72. Interface, demonstração e validação ainda serão migradas nas issues #73 a #77; por
+isso, o modelo legado de sinal consolidado permanece disponível temporariamente.
 
 Esta decisão substitui a ADR-006 como modelo operacional futuro de agrupamento. A ADR-007 continua
 válida quanto ao uso de regras explicáveis, mas a prioridade passará a referenciar a ficha de
@@ -95,6 +96,13 @@ verificação sempre exige uma ficha, ainda que com um único membro.
 O fluxo permanece `detected → triage → verification → risk_assessment → closed`. Detecção e início
 da triagem referem-se ao sinal; verificação, avaliação de risco e encerramento referem-se à ficha.
 A transição entre esses limites deve ser atômica, idempotente e auditável.
+
+Na implementação de `workflow-v2`, cada sinal possui uma linha criada junto com sua ingestão e
+restrita a `detected`, `triage` ou `closed`. A ficha não recebe uma máquina concorrente durante sua
+composição: sua primeira transição explícita cria atomicamente o workflow em `verification` e o
+respectivo evento. Depois disso, somente a ficha avança para `risk_assessment` ou `closed`. As
+leituras podem projetar o estado da ficha sobre seus membros, mas o histórico próprio do sinal não
+é reescrito.
 
 ### Relações sugeridas e latência
 
