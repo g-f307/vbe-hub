@@ -16,10 +16,12 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-> **Transição em andamento em 08/11/2026:** o frontend ainda usa sinais consolidados. A
+> **Transição em andamento em 08/11/2026:** a fundação visual nova já executa na rota `/`, mas
+> ainda usa a carga local explicitamente marcada como demonstração. As rotas legadas continuam
+> disponíveis como referência de integração até a migração funcional das issues #74 e #75. A
 > [ADR-010](docs/decisions/ADR-010-individual-signals-human-investigation.md) redefine cada fonte
 > como sinal individual. As tabelas, o worker assíncrono, a [API `/v1`](docs/individual-signal-api.md)
-> e o workflow-v2 já existem; a interface será migrada nas issues seguintes. Nenhuma sugestão da
+> e o workflow-v2 já existem. Nenhuma sugestão da
 > IA associa fontes automaticamente.
 
 Fundação, dados sintéticos, funil auditável de correlação, consolidação versionada, prioridade
