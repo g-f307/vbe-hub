@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+import pytest
 from fastapi.testclient import TestClient
 
 from vbe_hub.api.app import create_app
@@ -60,3 +61,28 @@ def test_demo_run_rejects_unknown_scenario_and_mode_before_service_call() -> Non
     assert scenario.status_code == 422
     assert mode.status_code == 422
     assert service.calls == []
+
+
+@pytest.mark.parametrize(
+    "case_id",
+    [
+        "dengue-compensa",
+        "sarampo-cidade-nova",
+        "leptospirose-jorge-teixeira",
+        "malaria-taruma",
+        "doenca-diarreica-educandos",
+        "influenza-parque-dez",
+        "hepatite-a-colonia-antonio-aleixo",
+        "chikungunya-ponta-negra",
+        "meningite-zumbi",
+        "febre-amarela-reserva-ducke",
+    ],
+)
+def test_demo_run_accepts_each_allowlisted_batch_case(case_id: str) -> None:
+    service = StubDemoService(calls=[])
+    client = TestClient(create_app(demo_service=service))
+
+    response = client.post(f"/demo/scenarios/{case_id}/runs", json={"mode": "offline"})
+
+    assert response.status_code == 200
+    assert service.calls == [(case_id, "offline")]

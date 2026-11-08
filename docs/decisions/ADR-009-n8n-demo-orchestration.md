@@ -4,7 +4,7 @@ type: adr
 status: active
 title: "ADR-009: Restringir o n8n à orquestração demonstrativa"
 created: 2026-11-04
-updated: 2026-11-04
+updated: 2026-11-05
 owner: VBE Hub
 related_docs:
   - ADR-001
@@ -33,10 +33,10 @@ O backend permanece responsável por persistência, normalização, extração, 
 prioridade. O perfil `demo` do Docker Compose importa o workflow versionado e mantém os dados do n8n
 em volume próprio.
 
-O modo offline é o padrão reproduzível. O modo OpenAI é opcional, recebe a credencial exclusivamente
-no backend e limita a entrada aos dois registros sintéticos do cenário. A classificação de relação
-dos cenários é congelada para assegurar uma narrativa repetível e não deve ser apresentada como
-avaliação de acurácia.
+O catálogo manual é fechado em dez casos e o n8n os envia sequencialmente, um par de fontes por
+vez. O modo OpenAI é o percurso principal, recebe a credencial exclusivamente no backend, extrai as
+duas fichas e classifica a relação antes da consolidação. O modo offline conserva fixtures apenas
+como contingência e não deve ser apresentado como avaliação da IA.
 
 ## Alternativas consideradas
 
@@ -52,4 +52,5 @@ avaliação de acurácia.
 - O fluxo visual pode ser reproduzido integralmente por Docker Compose.
 - Uma rodada isolada permite comparar fila vazia e cards posteriores sem apagar o banco normal.
 - Alterações no contrato da rota demonstrativa e no workflow precisam permanecer sincronizadas.
+- Linguagem natural nos textos não remove a marcação sintética dos metadados e da demonstração.
 - n8n não passa a ser requisito da execução básica nem componente de decisão sanitária.

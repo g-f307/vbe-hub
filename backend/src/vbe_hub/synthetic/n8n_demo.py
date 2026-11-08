@@ -6,18 +6,34 @@ from collections.abc import Mapping
 from typing import Any
 
 from openai import AsyncOpenAI
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from vbe_hub.adapters.ai.openai_extractor import PROMPT_VERSION, OpenAIStructuredExtractor
+from vbe_hub.adapters.ai.openai_relations import (
+    PROMPT_VERSION as RELATION_PROMPT_VERSION,
+)
+from vbe_hub.adapters.ai.openai_relations import OpenAIRelationJudge
 from vbe_hub.adapters.ai.openai_responses_client import OpenAIResponsesClient
-from vbe_hub.adapters.persistence.models import NormalizedRecordModel, RawRecordModel
+from vbe_hub.adapters.persistence.relation_models import RelationAssessmentModel
+from vbe_hub.adapters.persistence.relation_repository import (
+    SqlAlchemyRelationAssessmentRepository,
+)
 from vbe_hub.adapters.persistence.repositories import SqlAlchemyExtractionRepository
-from vbe_hub.application.ai import RelationKind, StructuredExtractionRequest, StructuredExtractor
+from vbe_hub.application.ai import (
+    RelationJudge,
+    RelationKind,
+    StructuredExtractionRequest,
+    StructuredExtractor,
+)
 from vbe_hub.application.ai.extraction import StructuredExtractionService
 from vbe_hub.application.ai.technical_sheet import SCHEMA_VERSION
+from vbe_hub.application.correlation.relations import (
+    RelationAssessmentRecord,
+    RelationAssessmentService,
+)
 from vbe_hub.infrastructure.settings import get_settings
-from vbe_hub.synthetic.demo import load_demo_scenario
+from vbe_hub.synthetic.demo import DemoLoadResult, load_demo_scenario, prepare_demo_scenario
 
 _SCENARIOS = {
     "related": {
@@ -37,6 +53,24 @@ _SCENARIOS = {
     },
 }
 
+for _case_id in (
+    "dengue-compensa",
+    "sarampo-cidade-nova",
+    "leptospirose-jorge-teixeira",
+    "malaria-taruma",
+    "doenca-diarreica-educandos",
+    "influenza-parque-dez",
+    "hepatite-a-colonia-antonio-aleixo",
+    "chikungunya-ponta-negra",
+    "meningite-zumbi",
+    "febre-amarela-reserva-ducke",
+):
+    _SCENARIOS[_case_id] = {
+        "key": _case_id,
+        "relation": "corroborates",
+        "explanation": "As duas fontes descrevem sinais compatíveis no mesmo local e período.",
+    }
+
 
 class N8nDemoService:
     def __init__(
@@ -44,10 +78,12 @@ class N8nDemoService:
         *,
         session: AsyncSession | None = None,
         extractor: StructuredExtractor | None = None,
+        relation_judge: RelationJudge | None = None,
         extraction_model: str | None = None,
     ) -> None:
         self._session = session
         self._extractor = extractor
+        self._relation_judge = relation_judge
         self._extraction_model = extraction_model
 
     async def run(self, *, scenario: str, mode: str) -> Mapping[str, Any]:
@@ -73,19 +109,26 @@ class N8nDemoService:
         mode: str,
         definition: Mapping[str, str],
     ) -> Mapping[str, Any]:
-        result = await load_demo_scenario(
-            session,
-            scenario_keys=frozenset({definition["key"]}),
-            store_fixture_sheets=mode == "offline",
-            relation_overrides={definition["key"]: RelationKind(definition["relation"])},
-        )
         if mode == "online":
-            result = await self._extract_online(session, definition["key"], result)
+            result, assessment = await self._analyze_online(session, definition["key"])
+            relation = assessment.relation
+            explanation = assessment.justification
+        else:
+            result = await load_demo_scenario(
+                session,
+                scenario_keys=frozenset({definition["key"]}),
+                store_fixture_sheets=True,
+                relation_overrides={definition["key"]: RelationKind(definition["relation"])},
+            )
+            relation = RelationKind(definition["relation"])
+            explanation = definition["explanation"]
+        if relation is None or explanation is None:
+            raise RuntimeError("demo relation analysis did not succeed")
         return {
             "scenario": scenario,
             "mode": mode,
-            "relation": definition["relation"],
-            "relation_explanation": definition["explanation"],
+            "relation": relation.value,
+            "relation_explanation": explanation,
             "signal_ids": list(result.signal_ids),
             "created": dict(result.created),
             "sources": [
@@ -101,17 +144,18 @@ class N8nDemoService:
             "review_notice": "Sugestão de IA; requer revisão humana.",
         }
 
-    async def _extract_online(
+    async def _analyze_online(
         self,
         session: AsyncSession,
         scenario_key: str,
-        result: Any,
-    ) -> Any:
+    ) -> tuple[DemoLoadResult, RelationAssessmentRecord]:
+        prepared = await prepare_demo_scenario(session, scenario_key=scenario_key)
         extractor = self._extractor
+        relation_judge = self._relation_judge
         root_client = None
         settings = get_settings()
         model = self._extraction_model or settings.openai_model
-        if extractor is None:
+        if extractor is None or relation_judge is None:
             if settings.openai_api_key is None or not settings.openai_api_key.get_secret_value():
                 raise ValueError("OPENAI_API_KEY is required for online demo mode")
             root_client = AsyncOpenAI(
@@ -119,33 +163,35 @@ class N8nDemoService:
                 timeout=settings.openai_timeout_seconds,
                 max_retries=0,
             )
-            extractor = OpenAIStructuredExtractor(
-                client=OpenAIResponsesClient(responses=root_client.responses, model=model),
-                model=model,
-                timeout_seconds=settings.openai_timeout_seconds,
-                max_attempts=settings.openai_max_attempts,
-                max_input_chars=settings.openai_max_input_chars,
-                max_output_tokens=settings.openai_max_output_tokens,
-            )
+            client = OpenAIResponsesClient(responses=root_client.responses, model=model)
+            if extractor is None:
+                extractor = OpenAIStructuredExtractor(
+                    client=client,
+                    model=model,
+                    timeout_seconds=settings.openai_timeout_seconds,
+                    max_attempts=settings.openai_max_attempts,
+                    max_input_chars=settings.openai_max_input_chars,
+                    max_output_tokens=settings.openai_max_output_tokens,
+                )
+            if relation_judge is None:
+                relation_judge = OpenAIRelationJudge(
+                    client=client,
+                    model=model,
+                    timeout_seconds=settings.openai_timeout_seconds,
+                    max_input_chars=settings.openai_max_input_chars,
+                )
+        if extractor is None or relation_judge is None:
+            raise RuntimeError("online demo providers were not configured")
         service = StructuredExtractionService(
             extractor=extractor,
             repository=SqlAlchemyExtractionRepository(session),
             provider="openai",
             model=model,
         )
-        rows = list(
-            (
-                await session.execute(
-                    select(NormalizedRecordModel)
-                    .join(RawRecordModel, RawRecordModel.id == NormalizedRecordModel.raw_record_id)
-                    .where(RawRecordModel.external_id.like(f"demo:{scenario_key}:%"))
-                    .order_by(RawRecordModel.source_kind.desc())
-                )
-            ).scalars()
-        )
-        created = 0
+        extraction_created = 0
+        sheets: dict[Any, Mapping[str, Any]] = {}
         try:
-            for row in rows:
+            for row in prepared.records:
                 canonical = json.dumps(
                     row.normalized_data,
                     ensure_ascii=False,
@@ -163,13 +209,41 @@ class N8nDemoService:
                     )
                 )
                 if not response.metadata.cache_hit:
-                    created += 1
+                    extraction_created += 1
+                sheets[row.id] = response.technical_sheet
+            relation_repository = SqlAlchemyRelationAssessmentRepository(session)
+            relation_count_before = await session.scalar(
+                select(func.count()).select_from(RelationAssessmentModel)
+            )
+            assessment = await RelationAssessmentService(
+                judge=relation_judge,
+                repository=relation_repository,
+                relation_prompt_version=RELATION_PROMPT_VERSION,
+            ).assess(
+                left_id=prepared.records[0].id,
+                right_id=prepared.records[1].id,
+                left=sheets[prepared.records[0].id],
+                right=sheets[prepared.records[1].id],
+            )
+            relation_count_after = await session.scalar(
+                select(func.count()).select_from(RelationAssessmentModel)
+            )
+            result = await load_demo_scenario(
+                session,
+                scenario_keys=frozenset({scenario_key}),
+                store_fixture_sheets=False,
+                technical_sheet_overrides={scenario_key: sheets},
+                relation_assessment_overrides={scenario_key: assessment},
+            )
         finally:
             if root_client is not None:
                 await root_client.close()
-        counts = dict(result.created)
-        counts["technical_sheets"] = created
-        return type(result)(created=counts, signal_ids=result.signal_ids)
+        counts = {
+            key: prepared.created[key] + result.created[key] for key in prepared.created
+        }
+        counts["technical_sheets"] = extraction_created
+        counts["relations"] = (relation_count_after or 0) - (relation_count_before or 0)
+        return DemoLoadResult(created=counts, signal_ids=result.signal_ids), assessment
 
 
 def build_demo_service() -> N8nDemoService:
