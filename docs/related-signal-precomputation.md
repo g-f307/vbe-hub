@@ -9,6 +9,7 @@ owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/related_worker/
   - backend/src/vbe_hub/application/correlation/precompute.py
+  - backend/src/vbe_hub/application/correlation/detection.py
   - backend/src/vbe_hub/infrastructure/related_queue.py
   - backend/src/vbe_hub/adapters/persistence/related_signal_repository.py
 related_docs:
@@ -72,9 +73,9 @@ permanecem apenas porque as avaliações históricas ainda são reproduzíveis.
 
 ## Integração e validação
 
-O caso de uso que materializa um novo sinal deve chamar `RelatedSignalQueue.enqueue(signal.id)`
-depois que a transação do sinal for confirmada. A API pública de detecção será conectada a esse
-ponto na issue #71; até lá, o contrato e o consumidor estão prontos, mas não existe endpoint novo.
+`IndividualSignalDetectionService` materializa idempotentemente um sinal e agenda seu UUID na fila.
+A API pública chamará esse caso de uso na issue #71; até lá, o contrato e o consumidor estão
+prontos, mas não existe endpoint novo.
 
 Validação sem consumir API real:
 
