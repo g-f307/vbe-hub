@@ -4,18 +4,21 @@ import { describe, expect, it } from 'vitest'
 import { Header } from './header'
 
 describe('Header', () => {
-  it('usa a assinatura clara sobre o header azul e expõe as visões previstas', () => {
+  it('usa a assinatura clara sobre o header azul e expõe a navegação centralizada sem textos auxiliares', () => {
     const html = renderToStaticMarkup(<Header />)
 
     expect(html).toContain('src="/brand/vbehub-horizontal-fundo-escuro.svg"')
     expect(html).toContain('alt="VBE Hub"')
-    expect(html).toContain('Hub de Vigilância Baseada em Eventos')
+    expect(html).not.toContain('Hub de Vigilância Baseada em Eventos')
+    expect(html).not.toContain('Dados locais de demonstração')
     expect(html).toContain('href="/"')
     expect(html).toContain('Detectados')
     expect(html).toContain('href="/panorama"')
     expect(html).toContain('Visão geoespacial')
     expect(html).toContain('Indicadores')
-    expect(html).toContain('Implementação futura')
+    expect(html).not.toContain('Implementação futura')
+    expect(html).toContain('justify-center')
+    expect(html).toContain('rounded-b-')
     expect(html).not.toContain('data-lucide="activity"')
   })
 })

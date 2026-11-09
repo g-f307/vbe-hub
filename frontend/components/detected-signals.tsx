@@ -33,13 +33,12 @@ export function DetectedSignalsView({
     <main id="conteudo-principal" className="mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-primary">Entrada da vigilância</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Sinais detectados</h1>
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          <h1 className="text-[26px] font-semibold tracking-tight text-foreground">Sinais detectados</h1>
+          <p className="mt-2 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
             Cada card corresponde a uma única notícia ou relato comunitário. Abra o sinal para conferir a fonte e as sugestões relacionadas.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
           <Inbox className="size-4 text-primary" aria-hidden />
           <strong className="font-semibold text-foreground">{visibleItems.length}</strong> sinais nesta página
         </div>
@@ -53,12 +52,12 @@ export function DetectedSignalsView({
             name="query"
             defaultValue={filters.query ?? ''}
             placeholder="Buscar no lote carregado"
-            className="h-11 w-full rounded-md border border-input bg-background pl-10 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-11 w-full rounded-md border border-input bg-background pl-10 pr-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </label>
         <label>
           <span className="sr-only">Estado do fluxo</span>
-          <select name="state" defaultValue={filters.state ?? 'detected'} className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <select name="state" defaultValue={filters.state ?? 'detected'} className="h-11 w-full rounded-md border border-input bg-background px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <option value="all">Todos os estados</option>
             <option value="detected">Detectados</option>
             <option value="triage">Em triagem</option>
@@ -69,13 +68,13 @@ export function DetectedSignalsView({
         </label>
         <label>
           <span className="sr-only">Tipo de fonte</span>
-          <select name="source_kind" defaultValue={filters.sourceKind ?? 'all'} className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <select name="source_kind" defaultValue={filters.sourceKind ?? 'all'} className="h-11 w-full rounded-md border border-input bg-background px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <option value="all">Todas as fontes</option>
             <option value="media">Mídia</option>
             <option value="community">Relato comunitário</option>
           </select>
         </label>
-        <button type="submit" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-[var(--brand-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+        <button type="submit" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary px-4 text-[13px] font-medium text-primary-foreground hover:bg-[var(--brand-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
           <Filter className="size-4" aria-hidden /> Aplicar
         </button>
       </form>
@@ -126,8 +125,8 @@ function DetectedCard({ signal, returnTo }: { signal: IndividualSignalCard; retu
         <Badge variant="outline" className="gap-1.5 bg-background"><Icon className="size-3.5" aria-hidden />{SOURCE_LABEL[signal.sourceKind]}</Badge>
         <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATE_STYLE[signal.state]}`}>{STATE_LABEL[signal.state]}</span>
       </div>
-      <h2 className="mt-4 text-base font-semibold leading-snug text-card-foreground group-hover:text-primary">{signal.title}</h2>
-      <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{signal.excerpt}</p>
+      <h2 className="mt-4 text-sm font-medium leading-snug text-card-foreground group-hover:text-primary">{signal.title}</h2>
+      <p className="mt-2 line-clamp-3 text-[13px] leading-relaxed text-muted-foreground">{signal.excerpt}</p>
       <div className="mt-auto border-t border-border pt-4 text-xs text-muted-foreground">
         <p className="truncate font-medium text-foreground">{signal.sourceName}</p>
         <p className="mt-1 flex items-center gap-1.5"><CalendarClock className="size-3.5" aria-hidden />{formatDate(signal.publishedAt)}</p>

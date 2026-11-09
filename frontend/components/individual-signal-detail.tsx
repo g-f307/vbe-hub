@@ -63,8 +63,8 @@ export function IndividualSignalDetailView({
           <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-4xl">
               <p className="font-mono text-xs text-primary-foreground/70">{signal.id}</p>
-              <h1 className="mt-1 text-balance text-2xl font-semibold leading-tight sm:text-3xl">{signal.title}</h1>
-              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-primary-foreground/80">{signal.excerpt}</p>
+              <h1 className="mt-1 text-balance text-[26px] font-semibold leading-tight">{signal.title}</h1>
+              <p className="mt-2 max-w-3xl text-[13px] leading-relaxed text-primary-foreground/80">{signal.excerpt}</p>
             </div>
             <StateBadge state={signal.state} />
           </div>

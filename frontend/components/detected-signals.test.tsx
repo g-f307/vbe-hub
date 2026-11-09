@@ -40,6 +40,8 @@ describe('DetectedSignalsView', () => {
     )
 
     expect(html).toContain('Sinais detectados')
+    expect(html).not.toContain('Entrada da vigilância')
+    expect(html).toContain('text-[26px]')
     expect(html).toContain('Jornal relata aumento de casos de sarampo')
     expect(html).toContain('Moradores relatam febre e manchas vermelhas')
     expect(html).toContain('>2</strong> sinais nesta página')
