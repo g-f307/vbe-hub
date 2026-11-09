@@ -61,10 +61,16 @@ deles; não representam situação epidemiológica e não implicam decisão huma
   contrato do backend nesta entrega.
 
 A pasta local original não é necessária para build ou execução. Um clone limpo usa somente os
-arquivos versionados sob `frontend/`.
+arquivos versionados sob `frontend/`. Os ativos aprovados necessários à aplicação ficam em
+`frontend/public/brand/`; o diretório local do brand kit permanece apenas como fonte de trabalho e
+continua fora do rastreamento.
 
 ## Princípios de apresentação
 
+- A identidade visual usa a assinatura vetorial aprovada da VBE Hub, Geist com fallback Inter,
+  azul-petróleo `#155E75`, títulos `#123245`, acento `#0F766E`, fundo `#F6F8FA`, superfícies brancas
+  e bordas `#DEE6EA`. Cores de prioridade permanecem reservadas aos respectivos níveis e sempre
+  aparecem acompanhadas de texto.
 - O painel usa a marcação visível de ambiente de demonstração. Em triagem, fluxo, investigação e panorama,
   sinais, prioridades, decisões e agregados vêm da API e continuam sintéticos.
 - A IA continuará sendo apresentada como sugestão auditável. A revisão, justificativa e decisão
