@@ -71,6 +71,9 @@ continua fora do rastreamento.
   azul-petróleo `#155E75`, títulos `#123245`, acento `#0F766E`, fundo `#F6F8FA`, superfícies brancas
   e bordas `#DEE6EA`. Cores de prioridade permanecem reservadas aos respectivos níveis e sempre
   aparecem acompanhadas de texto.
+- O header azul-petróleo usa a assinatura clara aprovada e concentra a navegação horizontal para
+  Detectados e Visão geoespacial. Indicadores aparece como destino futuro, explicitamente inativo,
+  até que sua rota e seus dados sejam implementados.
 - O painel usa a marcação visível de ambiente de demonstração. Em triagem, fluxo, investigação e panorama,
   sinais, prioridades, decisões e agregados vêm da API e continuam sintéticos.
 - A IA continuará sendo apresentada como sugestão auditável. A revisão, justificativa e decisão
