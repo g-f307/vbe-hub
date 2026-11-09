@@ -71,8 +71,9 @@ continua fora do rastreamento.
   azul-petróleo `#155E75`, títulos `#123245`, acento `#0F766E`, fundo `#F6F8FA`, superfícies brancas
   e bordas `#DEE6EA`. Cores de prioridade permanecem reservadas aos respectivos níveis e sempre
   aparecem acompanhadas de texto.
-- O header azul-petróleo usa a assinatura clara aprovada, termina em cantos inferiores arredondados
-  e centraliza a navegação horizontal para Detectados, Visão geoespacial e Indicadores. Indicadores
+- O header azul-petróleo usa a assinatura clara aprovada; sua navegação centralizada se projeta para
+  baixo sobre o body e termina em cantos inferiores arredondados. Ela reúne Detectados, Visão
+  geoespacial e Indicadores. Indicadores
   permanece inativo até que sua rota e seus dados sejam implementados, sem badge auxiliar.
 - A hierarquia segue o contrato visual: título de página em 26 px/600, títulos compactos de cards em
   14 px/500, descrições e controles em 13 px e metadados em 12 px. Em triagem, fluxo, investigação e
