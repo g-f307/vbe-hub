@@ -14,6 +14,7 @@ class IndividualSignal:
 @dataclass(frozen=True)
 class InvestigationFile:
     id: UUID
+    head_signal_id: UUID
     version: int
     created_at: datetime
     updated_at: datetime
@@ -59,6 +60,10 @@ class InvestigationOperationConflict(Exception):
 
 
 class LastInvestigationMemberError(Exception):
+    pass
+
+
+class HeadInvestigationMemberError(Exception):
     pass
 
 

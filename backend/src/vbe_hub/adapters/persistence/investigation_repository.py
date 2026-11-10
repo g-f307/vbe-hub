@@ -19,6 +19,7 @@ from vbe_hub.adapters.persistence.investigation_models import (
 )
 from vbe_hub.application.correlation.precompute import SignalRelationSuggestion
 from vbe_hub.domain.investigations import (
+    HeadInvestigationMemberError,
     IndividualSignal,
     InvestigationConcurrencyConflict,
     InvestigationFile,
@@ -80,6 +81,7 @@ class SqlAlchemyInvestigationRepository:
         file_id = uuid4()
         file_row = InvestigationFileModel(
             id=file_id,
+            head_signal_id=signal_id,
             version=1,
             created_at=occurred_at,
             updated_at=occurred_at,
@@ -167,6 +169,9 @@ class SqlAlchemyInvestigationRepository:
         occurred_at: datetime,
         reason_code: str,
     ) -> InvestigationFile:
+        file = await self._session.get(InvestigationFileModel, investigation_file_id)
+        if file is not None and file.head_signal_id == signal_id:
+            raise HeadInvestigationMemberError(signal_id)
         fingerprint = self._fingerprint(
             "remove", signal_id, actor_id, reason_code, investigation_file_id
         )
@@ -410,7 +415,9 @@ class SqlAlchemyInvestigationRepository:
 
     @staticmethod
     def _file(row: InvestigationFileModel) -> InvestigationFile:
-        return InvestigationFile(row.id, row.version, row.created_at, row.updated_at)
+        return InvestigationFile(
+            row.id, row.head_signal_id, row.version, row.created_at, row.updated_at
+        )
 
     @staticmethod
     def _member(row: InvestigationFileMemberModel) -> InvestigationMember:

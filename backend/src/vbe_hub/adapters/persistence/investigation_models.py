@@ -103,9 +103,14 @@ class InvestigationFileModel(Base):
     __tablename__ = "investigation_files"
     __table_args__ = (
         CheckConstraint("version >= 0", name="investigation_files_version_nonnegative_check"),
+        Index("investigation_files_head_signal_uidx", "head_signal_id", unique=True),
     )
 
     id: Mapped[UUID] = mapped_column(PostgreSQLUUID(as_uuid=True), primary_key=True)
+    head_signal_id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("individual_signals.id", ondelete="RESTRICT"),
+    )
     version: Mapped[int] = mapped_column(BigInteger)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
