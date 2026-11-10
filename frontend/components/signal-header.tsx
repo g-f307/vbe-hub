@@ -32,10 +32,10 @@ export function SignalHeader({
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
           <p className="font-mono text-xs tracking-wide text-ardosia">{signal.code}</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-balance text-encontro md:text-[28px]">
+          <h1 className="mt-1 text-[26px] font-semibold tracking-tight text-balance text-encontro">
             {signal.title}
           </h1>
-          <p className="mt-1 text-sm text-pretty text-ardosia">{signal.subtitle}</p>
+          <p className="mt-1 text-[13px] text-pretty text-ardosia">{signal.subtitle}</p>
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <PriorityBadge priority={signal.priority} />

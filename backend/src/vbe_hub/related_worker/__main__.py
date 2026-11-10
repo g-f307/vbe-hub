@@ -118,7 +118,12 @@ async def process_job(
             repository=SqlAlchemyRelationAssessmentRepository(session),
             relation_prompt_version=RELATION_PROMPT_VERSION,
         ),
-        policy=CandidatePolicy(30, GeographicLevel.DISTRICT, 0.65, 0.65),
+        policy=CandidatePolicy(
+            30,
+            GeographicLevel.DISTRICT,
+            settings.related_minimum_semantic_score,
+            settings.related_minimum_total_score,
+        ),
         neighbor_limit=settings.related_neighbor_limit,
         candidate_limit=settings.related_candidate_limit,
         contract_version="related-signal-v1",

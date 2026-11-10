@@ -11,7 +11,7 @@ const signal: IndividualSignalDetail = {
   title: 'Relatos de febre e manchas no bairro',
   excerpt: 'Moradores relatam sintomas semelhantes.',
   sourceKind: 'community',
-  sourceName: 'Guardiões da Saúde',
+  sourceName: 'demo-community',
   publishedAt: '2026-11-08T08:00:00Z',
   activeInvestigationId: null,
   contractVersion: 'individual-signal-v1',
@@ -94,15 +94,79 @@ describe('IndividualSignalDetailView', () => {
 
     expect(overview).toContain('Texto original preservado do relato comunitário.')
     expect(overview).toContain('Ficha técnica')
-    expect(overview).toContain('Sinais relacionados')
+    expect(overview).toContain('Relacionar sinais')
+    expect(overview).toContain('data-detail-layout="investigation-workspace"')
+    expect(overview).toContain('data-detail-header="signal-record"')
+    expect(overview).toContain('data-signal-facts="true"')
+    expect(overview).toContain('data-overview-layout="reading-and-context"')
+    expect(overview).toContain('data-overview-dashboard="true"')
+    expect(overview).toContain('lg:grid-cols-12')
+    expect(overview).toContain('data-workspace-tabs="true"')
+    expect(overview).toContain('left-1/2 top-full w-fit')
+    expect(overview).toContain('w-max')
+    expect(overview).not.toContain('-translate-y-1/2')
+    expect(overview).toContain('data-detail-chrome="header-and-tabs"')
+    expect(overview).toContain('data-text-position="side"')
+    expect(overview).toContain('data-context-position="full"')
+    expect(overview).toContain('lg:col-span-4')
+    expect(overview).toContain('lg:col-span-12')
+    expect(overview).toContain('Analisar sinal')
+    expect(overview).toContain('Relacionar sinais')
+    expect(overview).not.toContain('Rastrear origem')
+    expect(overview).not.toContain('demo-community')
+    expect(overview.match(/Relato comunitário/g)).toHaveLength(1)
+    expect(overview.match(/Relacionar sinais/g)).toHaveLength(1)
+    expect(overview).not.toContain('Ver possíveis relações')
+    expect(overview).toContain('bg-card text-primary shadow-sm')
+    expect(overview).toContain('data-panel-tone="card"')
+    expect(overview).not.toContain('data-signal-state="detected"')
+    expect(overview).toContain('data-technical-state="detected"')
+    expect(overview).toContain('flex items-center gap-3')
+    expect(overview).not.toContain('items-center text-center')
+    expect(overview).not.toContain('data-context-badge="true"')
+    expect(overview).toContain('data-technical-item="true"')
+    expect(overview).not.toContain('data-technical-icon-tile="true"')
+    expect(overview).not.toContain('overflow-hidden rounded-xl border border-border bg-card shadow-sm')
+    expect(overview).not.toContain('Registro individual')
+    expect(overview).not.toContain(`ID ${signal.id}`)
+    expect(overview).not.toContain('Identificador externo')
+    expect(overview).not.toContain('Decisão humana')
+    expect(overview).not.toContain('Este registro apoia a investigação')
     expect(overview).toContain('href="/?state=detected&amp;source_kind=community"')
     expect(suggestions).toContain('Sugestões da IA não associam sinais automaticamente')
     expect(suggestions).toContain('Selecionar Notícia sobre sintomas em Flores')
-    expect(suggestions).toContain('Criar ficha apenas com o sinal principal')
-    expect(suggestions).toContain('A associação só será registrada após sua confirmação.')
+    expect(suggestions).not.toContain('Decisão de composição')
+    expect(suggestions).not.toContain('Criar ficha apenas com o sinal principal')
+    expect(suggestions).not.toContain('Revisar composição')
+    expect(suggestions).not.toContain('Confirmar composição da ficha')
     expect(suggestions).toContain('Mesmo local, período e sintomas.')
     expect(suggestions).toContain('Processamento em andamento')
     expect(suggestions).toContain('Não foi possível preparar esta sugestão')
     expect(suggestions).toContain('href="/sinais/candidate-ready?returnTo=')
+  })
+
+  it('omite campos internos da ficha técnica sem alterar os campos epidemiológicos úteis', () => {
+    const withInternalFields: IndividualSignalDetail = {
+      ...signal,
+      technicalSheet: {
+        ...(signal.technicalSheet ?? {}),
+        evidence: 'field: symptoms · excerpt: febre',
+        confidence: 0.98,
+        record_nature: 'community',
+        action_in_progress: null,
+        suggested_relevance: null,
+      },
+    }
+    const html = renderToStaticMarkup(
+      <IndividualSignalDetailView signal={withInternalFields} related={related} returnTo="/" activeTab="overview" />,
+    )
+
+    expect(html).toContain('Condição mencionada')
+    expect(html).toContain('Sintomas')
+    expect(html).not.toContain('field: symptoms')
+    expect(html).not.toContain('>confidence<')
+    expect(html).not.toContain('>record nature<')
+    expect(html).not.toContain('>action in progress<')
+    expect(html).not.toContain('>suggested relevance<')
   })
 })

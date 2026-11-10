@@ -7,6 +7,7 @@ import {
   type IndividualSourceKind,
 } from '@/lib/individual-signal-read'
 import { Header } from '@/v0/components/header'
+import { BodySurface } from '@/v0/components/body-surface'
 
 export const metadata: Metadata = { title: 'Detectados | VBE Hub' }
 
@@ -24,9 +25,11 @@ export default async function Home({
   })
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-primary">
       <Header />
-      <DetectedSignalsView items={page.items} nextCursor={page.nextCursor} filters={filters} />
+      <BodySurface>
+        <DetectedSignalsView items={page.items} nextCursor={page.nextCursor} filters={filters} />
+      </BodySurface>
     </div>
   )
 }
@@ -34,11 +37,13 @@ export default async function Home({
 export function parseDetectedFilters(params: Record<string, string | string[] | undefined>): DetectedFilters {
   const state = first(params.state)
   const sourceKind = first(params.source_kind)
+  const view = first(params.view)
   return {
     state: isState(state) ? state : state === 'all' ? 'all' : 'detected',
     sourceKind: isSourceKind(sourceKind) ? sourceKind : 'all',
     query: first(params.query)?.trim() || undefined,
     cursor: first(params.cursor)?.trim() || undefined,
+    view: view === 'list' || view === 'kanban' ? view : 'cards',
   }
 }
 

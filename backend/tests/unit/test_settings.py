@@ -78,6 +78,8 @@ def test_openai_is_optional_with_cost_bounded_defaults() -> None:
     assert settings.related_queue_capacity == 1_000
     assert settings.related_neighbor_limit == 20
     assert settings.related_candidate_limit == 3
+    assert settings.related_minimum_semantic_score == 0.65
+    assert settings.related_minimum_total_score == 0.55
 
 
 def test_openai_limits_reject_unbounded_configuration() -> None:

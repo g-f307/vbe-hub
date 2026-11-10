@@ -7,10 +7,14 @@ export const metadata: Metadata = {
   description: 'Sistema integrado para captação e gerenciamento de sinais de saúde pública',
   generator: 'v0.app',
   robots: { index: false, follow: false },
+  icons: {
+    icon: '/brand/favicon.svg',
+    shortcut: '/brand/favicon.svg',
+  },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#1e40af',
+  themeColor: '#155e75',
   width: 'device-width',
   initialScale: 1,
 }

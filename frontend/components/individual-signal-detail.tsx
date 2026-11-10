@@ -1,15 +1,21 @@
 import Link from 'next/link'
 import {
-  ArrowLeft,
+  Activity,
   CalendarClock,
+  CalendarRange,
+  ChevronRight,
+  ClipboardList,
   Clock3,
   ExternalLink,
   FileText,
-  Link2,
+  GitBranch,
+  Info,
   MapPin,
   Newspaper,
-  Radio,
-  ShieldCheck,
+  Stethoscope,
+  Thermometer,
+  UsersRound,
+  type LucideIcon,
 } from 'lucide-react'
 
 import type {
@@ -17,80 +23,83 @@ import type {
   IndividualSignalState,
   InvestigationDetail,
   RelatedSignalPage,
-  SignalAuditEvent,
 } from '@/lib/individual-signal-read'
 import { InvestigationComposer } from '@/components/investigation-composer'
-import { Badge } from '@/v0/components/ui/badge'
-import { Card } from '@/v0/components/ui/card'
 
-type DetailTab = 'overview' | 'related' | 'provenance'
+type DetailTab = 'overview' | 'related'
 
 export function IndividualSignalDetailView({
   signal,
   related,
-  audit = [],
   returnTo,
   activeTab,
   initialInvestigation = null,
 }: {
   signal: IndividualSignalDetail
   related: RelatedSignalPage
-  audit?: SignalAuditEvent[]
   returnTo: string
   activeTab: DetailTab
   initialInvestigation?: InvestigationDetail | null
 }) {
+  const SourceIcon = signal.sourceKind === 'media' ? Newspaper : UsersRound
   return (
-    <main id="conteudo-principal" className="mx-auto w-full max-w-screen-xl px-4 py-6 sm:px-6 lg:px-8">
-      <Link
-        href={returnTo}
-        className="mb-5 inline-flex min-h-11 items-center gap-2 rounded-md px-2 text-sm font-medium text-primary hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        Voltar para detectados
-      </Link>
+    <main id="conteudo-principal" data-detail-layout="investigation-workspace" className="mx-auto w-full max-w-screen-2xl px-4 pb-8 sm:px-6 lg:px-8">
+      <div data-detail-chrome="header-and-tabs" className="relative rounded-b-2xl border-x border-b border-border bg-card shadow-sm">
+        <header data-detail-header="signal-record" className="px-5 pb-6 pt-5 sm:px-8">
+          <nav aria-label="Trilha de navegação" className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+            <Link href={returnTo} className="shrink-0 rounded font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              Sinais detectados
+            </Link>
+            <ChevronRight className="size-3.5 shrink-0" aria-hidden />
+            <span className="truncate font-medium text-foreground">{signal.title}</span>
+          </nav>
 
-      <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        <div className="border-b border-border bg-primary px-5 py-5 text-primary-foreground sm:px-7">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-primary-foreground/80">
-            <Badge className="border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground">
-              {SOURCE_LABEL[signal.sourceKind]}
-            </Badge>
-            <span>{signal.sourceName}</span>
-            <span aria-hidden>•</span>
-            <span>{formatDate(signal.publishedAt)}</span>
-          </div>
-          <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-4xl">
-              <p className="font-mono text-xs text-primary-foreground/70">{signal.id}</p>
-              <h1 className="mt-1 text-balance text-2xl font-semibold leading-tight sm:text-3xl">{signal.title}</h1>
-              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-primary-foreground/80">{signal.excerpt}</p>
+          <div className="mt-5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex min-w-0 items-start gap-4">
+              <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/40 text-primary">
+                <SourceIcon className="size-5" aria-hidden />
+              </span>
+              <div className="min-w-0">
+                <h1 className="text-balance text-2xl font-semibold leading-tight tracking-tight text-foreground sm:text-[26px]">{signal.title}</h1>
+                <dl data-signal-facts="true" className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                  <InlineFact icon={SourceIcon} label="Fonte" value={displaySourceName(signal)} />
+                  <InlineFact icon={CalendarClock} label="Publicado em" value={formatDate(signal.publishedAt)} />
+                </dl>
+              </div>
             </div>
-            <StateBadge state={signal.state} />
+
+            <div className="flex shrink-0 flex-col gap-3 lg:items-end">
+              <p className="flex items-baseline gap-2 text-sm text-muted-foreground">
+                <Clock3 className="size-4 self-center" aria-hidden />
+                Detectado em <span className="text-base font-semibold text-foreground">{formatDate(signal.createdAt)}</span>
+              </p>
+            </div>
           </div>
-        </div>
+        </header>
 
-        <nav aria-label="Seções do sinal" className="flex overflow-x-auto border-b border-border px-3 sm:px-5">
-          <TabLink signalId={signal.id} returnTo={returnTo} tab="overview" active={activeTab === 'overview'}>
-            Visão geral
-          </TabLink>
-          <TabLink signalId={signal.id} returnTo={returnTo} tab="related" active={activeTab === 'related'}>
-            Sinais relacionados
-            <span className="ml-1.5 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{related.items.length}</span>
-          </TabLink>
-          <TabLink signalId={signal.id} returnTo={returnTo} tab="provenance" active={activeTab === 'provenance'}>
-            Proveniência
-          </TabLink>
-        </nav>
-
-        <div className="p-5 sm:p-7">
-          {activeTab === 'overview' ? <Overview signal={signal} /> : null}
-          {activeTab === 'related' ? <RelatedSignals signal={signal} related={related} returnTo={returnTo} initialInvestigation={initialInvestigation} /> : null}
-          {activeTab === 'provenance' ? <Provenance signal={signal} audit={audit} /> : null}
+        <div data-workspace-tabs="true" className="absolute left-1/2 top-full w-fit max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-xl border border-border bg-muted/95 p-1.5 shadow-sm">
+            <nav aria-label="Seções do sinal" className="flex w-max max-w-full gap-1 overflow-x-auto">
+              <TabLink signalId={signal.id} returnTo={returnTo} tab="overview" active={activeTab === 'overview'} icon={FileText}>
+                Analisar sinal
+              </TabLink>
+              <TabLink signalId={signal.id} returnTo={returnTo} tab="related" active={activeTab === 'related'} icon={GitBranch}>
+                Relacionar sinais
+                <span className="ml-1.5 text-xs opacity-70">{related.items.length}</span>
+              </TabLink>
+            </nav>
         </div>
-      </section>
+      </div>
+
+            <div className="mt-16 rounded-2xl bg-muted/45 p-3 sm:p-4">
+              {activeTab === 'overview' ? <Overview signal={signal} /> : null}
+              {activeTab === 'related' ? <RelatedSignals signal={signal} related={related} returnTo={returnTo} initialInvestigation={initialInvestigation} /> : null}
+            </div>
     </main>
   )
+}
+
+function tabHref(signalId: string, tab: DetailTab, returnTo: string): string {
+  return `/sinais/${signalId}?${new URLSearchParams({ tab, returnTo })}`
 }
 
 function TabLink({
@@ -98,83 +107,84 @@ function TabLink({
   returnTo,
   tab,
   active,
+  icon: Icon,
   children,
 }: {
   signalId: string
   returnTo: string
   tab: DetailTab
   active: boolean
+  icon: LucideIcon
   children: React.ReactNode
 }) {
-  const params = new URLSearchParams({ tab, returnTo })
   return (
     <Link
-      href={`/sinais/${signalId}?${params}`}
+      href={tabHref(signalId, tab, returnTo)}
       aria-current={active ? 'page' : undefined}
-      className={`flex min-h-12 shrink-0 items-center border-b-2 px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
-        active ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+      className={`flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+        active ? 'bg-card text-primary shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:bg-card/70 hover:text-foreground'
       }`}
     >
+      <Icon className="size-4" aria-hidden />
       {children}
     </Link>
   )
 }
 
-function Overview({ signal }: { signal: IndividualSignalDetail }) {
+function Panel({ id, title, description, children }: { id: string; title: string; description?: string; children: React.ReactNode }) {
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-      <div className="space-y-6">
-        <section aria-labelledby="texto-fonte">
-          <div className="flex items-center gap-2">
-            <FileText className="size-5 text-primary" aria-hidden />
-            <h2 id="texto-fonte" className="text-lg font-semibold">Texto original da fonte</h2>
-          </div>
-          <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-foreground">{signal.source.body}</p>
-          {signal.source.url ? (
-            <a
-              href={signal.source.url}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-md text-sm font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Abrir publicação original <ExternalLink className="size-4" aria-hidden />
-            </a>
-          ) : null}
-        </section>
+    <section data-panel-tone="card" aria-labelledby={id} className="h-full rounded-2xl border border-border bg-card px-5 py-5 shadow-sm sm:px-6">
+      <h2 id={id} className="scroll-mt-20 text-sm font-semibold text-foreground">{title}</h2>
+      {description ? <p className="mt-0.5 text-xs text-muted-foreground">{description}</p> : null}
+      <div className="mt-4">{children}</div>
+    </section>
+  )
+}
 
-        <section aria-labelledby="ficha-tecnica" className="border-t border-border pt-6">
-          <h2 id="ficha-tecnica" className="text-lg font-semibold">Ficha técnica</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Campos extraídos para apoiar a leitura. Devem ser conferidos pelo analista.</p>
-          {signal.technicalSheet ? (
-            <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-              {Object.entries(signal.technicalSheet).map(([key, value]) => (
-                <div key={key} className="rounded-lg border border-border bg-muted/25 p-4">
-                  <dt className="text-xs font-medium text-muted-foreground">{fieldLabel(key)}</dt>
-                  <dd className="mt-1 text-sm leading-relaxed text-foreground">{formatFieldValue(value)}</dd>
-                </div>
-              ))}
-            </dl>
-          ) : (
-            <EmptyMessage title="Ficha técnica ainda indisponível" description="O texto original permanece disponível para investigação." />
-          )}
-        </section>
+function Overview({ signal }: { signal: IndividualSignalDetail }) {
+  const technicalFields = signal.technicalSheet
+    ? Object.entries(signal.technicalSheet).filter(([key]) => !HIDDEN_TECHNICAL_FIELDS.has(key))
+    : []
+  return (
+    <div data-overview-layout="reading-and-context" data-overview-dashboard="true" className="grid items-stretch gap-4 lg:grid-cols-12">
+      <div className="min-w-0 lg:col-span-8">
+        <Panel id="ficha-tecnica" title="Ficha técnica" description="Leitura estruturada extraída do conteúdo. Confira cada campo antes de usá-lo na investigação.">
+          <dl className="grid gap-3 sm:grid-cols-2">
+            <ItemCard icon={Activity} label="Etapa" value={STATE_LABEL[signal.state]} state={signal.state} />
+            {technicalFields.map(([key, value]) => (
+              <ItemCard key={key} icon={FIELD_ICON[key] ?? ClipboardList} label={fieldLabel(key)} value={formatFieldValue(value)} />
+            ))}
+          </dl>
+          {technicalFields.length === 0 ? (
+            <p className="mt-3 text-center text-xs text-muted-foreground">Os demais campos da ficha técnica ainda não estão disponíveis.</p>
+          ) : null}
+        </Panel>
       </div>
 
-      <aside className="space-y-4">
-        <Card className="gap-0 p-5">
-          <h2 className="text-sm font-semibold">Sobre este sinal</h2>
-          <dl className="mt-4 space-y-4 text-sm">
-            <MetaRow icon={signal.sourceKind === 'media' ? Newspaper : Radio} label="Tipo de fonte" value={SOURCE_LABEL[signal.sourceKind]} />
-            <MetaRow icon={CalendarClock} label="Publicado em" value={formatDate(signal.publishedAt)} />
-            <MetaRow icon={Clock3} label="Detectado em" value={formatDate(signal.createdAt)} />
-            <MetaRow icon={Link2} label="Identificador externo" value={signal.source.externalId ?? 'Não informado'} />
-          </dl>
-        </Card>
-        <div className="rounded-lg border border-andiroba/30 bg-andiroba/10 p-4 text-sm leading-relaxed text-foreground">
-          <div className="flex items-center gap-2 font-medium"><ShieldCheck className="size-4 text-andiroba" aria-hidden /> Decisão humana</div>
-          <p className="mt-2 text-muted-foreground">Este registro é um sinal para investigação, não a confirmação de evento ou caso clínico.</p>
-        </div>
+      <aside data-text-position="side" className="lg:col-span-4">
+        <Panel id="texto-fonte" title="Texto original da fonte" description="Conteúdo preservado para leitura e comparação pelo analista.">
+          <div className="border-t border-border pt-4">
+            <p className="whitespace-pre-wrap break-words text-sm leading-6 text-foreground">{signal.source.body}</p>
+            {signal.source.url ? (
+              <a
+                href={signal.source.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex min-h-10 items-center gap-2 border-t border-border pt-3 text-sm font-medium text-primary underline-offset-4 hover:underline"
+              >
+                Abrir publicação original <ExternalLink className="size-4" aria-hidden />
+              </a>
+            ) : null}
+          </div>
+        </Panel>
       </aside>
+
+      <div data-context-position="full" className="lg:col-span-12">
+        <section aria-labelledby="contexto-analise" className="h-full rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+          <h2 id="contexto-analise" className="text-sm font-semibold">Contexto da análise</h2>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">Este é um registro individual. Outros sinais permanecem separados até a decisão explícita do analista.</p>
+        </section>
+      </div>
     </div>
   )
 }
@@ -191,75 +201,51 @@ function RelatedSignals({
   initialInvestigation: InvestigationDetail | null
 }) {
   return (
-    <section aria-labelledby="relacionados-heading">
-      <div className="max-w-3xl">
-        <h2 id="relacionados-heading" className="text-lg font-semibold">Sinais relacionados</h2>
-        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-          Sugestões da IA não associam sinais automaticamente. Compare as fontes e decida quais pertencem à mesma investigação.
-        </p>
-      </div>
-
+    <Panel
+      id="relacionados-heading"
+      title="Sinais relacionados"
+      description="Sugestões da IA não associam sinais automaticamente. Compare as fontes e decida quais pertencem à mesma investigação."
+    >
       {related.items.length === 0 ? (
-        <div className="mt-6"><EmptyMessage title="Nenhum sinal relacionado sugerido" description="O sinal principal pode continuar sendo investigado individualmente." /></div>
+        <div className="mb-5"><EmptyMessage title="Nenhum sinal relacionado sugerido" description="O sinal principal pode continuar sendo investigado individualmente." /></div>
       ) : null}
-      <div className="mt-6"><InvestigationComposer signal={signal} related={related} returnTo={returnTo} initialInvestigation={initialInvestigation} /></div>
-    </section>
+      <InvestigationComposer signal={signal} related={related} returnTo={returnTo} initialInvestigation={initialInvestigation} />
+    </Panel>
   )
 }
 
-function Provenance({ signal, audit }: { signal: IndividualSignalDetail; audit: SignalAuditEvent[] }) {
+function ItemCard({ icon: Icon, label, value, state }: { icon: LucideIcon; label: string; value: string; state?: IndividualSignalState }) {
   return (
-    <section aria-labelledby="proveniencia-heading" className="max-w-3xl">
-      <h2 id="proveniencia-heading" className="text-lg font-semibold">Proveniência e rastreabilidade</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Informações técnicas que permitem rastrear como o sinal entrou no ambiente demonstrativo.</p>
-      <dl className="mt-5 grid gap-3 sm:grid-cols-2">
-        <Definition label="Adaptador" value={`${signal.provenance.adapterName} ${signal.provenance.adapterVersion}`} />
-        <Definition label="Coletado em" value={formatDate(signal.provenance.collectedAt)} />
-        <Definition label="Gerador" value={[signal.provenance.generatorName, signal.provenance.generatorVersion].filter(Boolean).join(' ') || 'Não informado'} />
-        <Definition label="Cenário" value={signal.provenance.scenarioId ?? 'Não informado'} />
-        <Definition label="Semente reproduzível" value={signal.provenance.seed?.toString() ?? 'Não informada'} />
-        <Definition label="Contrato" value={signal.contractVersion} />
-      </dl>
-      <div className="mt-8 border-t border-border pt-6">
-        <h3 className="font-semibold">Trilha de auditoria</h3>
-        {audit.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">Nenhuma mudança humana foi registrada para este sinal.</p>
-        ) : (
-          <ol className="mt-4 space-y-3">
-            {audit.map((event) => (
-              <li key={event.id} className="rounded-lg border border-border p-4 text-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-medium">Estado atualizado para {STATE_LABEL[event.state]}</p>
-                  <time className="text-xs text-muted-foreground" dateTime={event.occurredAt}>{formatDate(event.occurredAt)}</time>
-                </div>
-                <p className="mt-1 text-muted-foreground">Responsável: {event.actorId}{event.comment ? ` · ${event.comment}` : ''}</p>
-              </li>
-            ))}
-          </ol>
-        )}
+    <div data-technical-item="true" data-technical-state={state} className="flex items-center gap-3 rounded-xl border border-border p-3">
+      <Icon className="size-4 shrink-0 text-primary" aria-hidden />
+      <div className="min-w-0">
+        <dt className="text-sm font-medium text-foreground">{label}</dt>
+        <dd className="mt-0.5 break-words text-xs leading-relaxed text-muted-foreground">{value}</dd>
       </div>
-    </section>
+    </div>
   )
 }
 
-function Definition({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-lg border border-border p-4"><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 break-words text-sm font-medium">{value}</dd></div>
-}
-
-function MetaRow({ icon: Icon, label, value }: { icon: typeof MapPin; label: string; value: string }) {
-  return <div className="flex gap-3"><Icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden /><div><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-0.5 break-words font-medium">{value}</dd></div></div>
+function InlineFact({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+  return (
+    <div className="flex min-w-0 items-center gap-1.5">
+      <Icon className="size-3.5 shrink-0" aria-hidden />
+      <dt className="sr-only">{label}</dt>
+      <dd className="break-words">{value}</dd>
+    </div>
+  )
 }
 
 function EmptyMessage({ title, description }: { title: string; description: string }) {
-  return <div className="rounded-lg border border-dashed border-border bg-muted/20 p-6 text-center"><p className="font-medium">{title}</p><p className="mt-1 text-sm text-muted-foreground">{description}</p></div>
-}
-
-function StateBadge({ state }: { state: IndividualSignalState }) {
-  return <span className="inline-flex shrink-0 items-center rounded-full border border-primary-foreground/30 bg-primary-foreground/10 px-3 py-1.5 text-xs font-medium">{STATE_LABEL[state]}</span>
+  return <div className="rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center"><p className="text-sm font-medium">{title}</p><p className="mt-1 text-xs text-muted-foreground">{description}</p></div>
 }
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Manaus' }).format(new Date(value))
+}
+
+function displaySourceName(signal: IndividualSignalDetail): string {
+  return signal.sourceName.startsWith('demo-') ? SOURCE_LABEL[signal.sourceKind] : signal.sourceName
 }
 
 function fieldLabel(value: string): string {
@@ -271,6 +257,8 @@ function fieldLabel(value: string): string {
     temporal: 'Período',
     estimated_cases: 'Quantidade mencionada',
     missing_fields: 'Campos não encontrados',
+    municipality: 'Município',
+    district: 'Bairro',
   }
   return labels[value] ?? value.replaceAll('_', ' ')
 }
@@ -286,6 +274,16 @@ function formatFieldValue(value: unknown): string {
   return String(value)
 }
 
+const FIELD_ICON: Record<string, LucideIcon> = {
+  disease_or_condition: Stethoscope,
+  syndrome: Activity,
+  symptoms: Thermometer,
+  location: MapPin,
+  temporal: CalendarRange,
+  estimated_cases: UsersRound,
+  missing_fields: Info,
+}
+
 const SOURCE_LABEL: Record<'media' | 'community', string> = {
   media: 'Mídia',
   community: 'Relato comunitário',
@@ -298,3 +296,11 @@ const STATE_LABEL: Record<IndividualSignalState, string> = {
   risk_assessment: 'Em avaliação de risco',
   closed: 'Encerrado',
 }
+
+const HIDDEN_TECHNICAL_FIELDS = new Set([
+  'evidence',
+  'confidence',
+  'record_nature',
+  'action_in_progress',
+  'suggested_relevance',
+])

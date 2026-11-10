@@ -1,44 +1,71 @@
 "use client";
 
-import { Activity, LogOut } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { BarChart3, LogOut, MapPinned, RadioTower } from "lucide-react";
 import { Button } from "@/v0/components/ui/button";
 
 export function Header() {
+  const pathname = usePathname() ?? "";
+  const detectedActive = pathname === "/" || pathname.startsWith("/sinais/");
+  const panoramaActive = pathname.startsWith("/panorama");
+
   return (
-    <header className="bg-primary text-primary-foreground shadow-lg">
+    <header className="bg-primary pb-6 text-primary-foreground shadow-[0_8px_24px_-18px_rgba(18,50,69,0.85)]">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary-foreground/10">
-              <Activity className="w-6 h-6" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-lg leading-tight">VBEHub</span>
-              <span className="text-xs text-primary-foreground/70 hidden sm:block">
-                Hub de Vigilância Epidemiológica
-              </span>
-            </div>
-          </div>
+        <div className="flex min-h-20 items-center justify-between gap-4 py-3 sm:min-h-24">
+          <Link href="/" aria-label="VBE Hub — início" className="flex min-w-0 items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary">
+            <Image
+              src="/brand/vbehub-horizontal-fundo-escuro.svg"
+              width="154"
+              height="70"
+              alt="VBE Hub"
+              className="h-14 w-auto shrink-0 sm:h-16"
+              priority
+            />
+          </Link>
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <span className="hidden rounded-md border border-primary-foreground/30 px-2.5 py-1 text-xs text-primary-foreground/85 md:inline-flex">
-              Dados locais de demonstração
-            </span>
             <Button
               aria-label="Sair do ambiente de demonstração"
               variant="ghost"
               size="sm"
-              className="text-primary-foreground hover:bg-primary-foreground/10"
+              className="text-white/80 hover:bg-white/10 hover:text-white"
             >
               <LogOut className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Sair</span>
             </Button>
           </div>
         </div>
+
+        <nav aria-label="Visões do sistema" className="flex min-h-12 items-end justify-center gap-1 overflow-x-auto border-t border-white/15 px-2">
+          <HeaderLink href="/" icon={RadioTower} active={detectedActive}>Detectados</HeaderLink>
+          <HeaderLink href="/panorama" icon={MapPinned} active={panoramaActive}>Visão geoespacial</HeaderLink>
+          <span
+            aria-disabled="true"
+            className="inline-flex min-h-12 shrink-0 cursor-not-allowed items-center gap-2 border-b-2 border-transparent px-3 text-[13px] font-medium text-white/45"
+          >
+            <BarChart3 className="size-4" aria-hidden />
+            Indicadores
+          </span>
+        </nav>
       </div>
     </header>
   );
+}
+
+function HeaderLink({ href, icon: Icon, active, children }: { href: string; icon: typeof RadioTower; active: boolean; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={`inline-flex min-h-12 shrink-0 items-center gap-2 border-b-2 px-3 text-[13px] font-medium hover:border-[#BFE6F7] hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${active ? "border-white text-white" : "border-transparent text-white/80"}`}
+    >
+      <Icon className="size-4" aria-hidden />
+      {children}
+    </Link>
+  )
 }
 

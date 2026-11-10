@@ -4,7 +4,7 @@ type: design
 status: active
 title: Pré-cálculo assíncrono de sinais relacionados
 created: 2026-11-08
-updated: 2026-11-08
+updated: 2026-11-09
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/related_worker/
@@ -66,6 +66,14 @@ apoio auditável: ela não adiciona o sinal à ficha e não confirma diagnóstic
 | `RELATED_QUEUE_CAPACITY` | `1000` | trabalhos pendentes na fila |
 | `RELATED_NEIGHBOR_LIMIT` | `20` | vizinhos consultados no índice |
 | `RELATED_CANDIDATE_LIMIT` | `3` | pares enviados ao modelo por sinal |
+| `RELATED_MINIMUM_SEMANTIC_SCORE` | `0.65` | piso de similaridade semântica para considerar o par |
+| `RELATED_MINIMUM_TOTAL_SCORE` | `0.55` | piso agregado após evidências clínica, temporal e territorial |
+
+O piso agregado é menor que o semântico de propósito: fichas esparsas podem expressar sintomas
+equivalentes com palavras diferentes. Um par ainda precisa superar a similaridade semântica de
+`0.65`; o piso de `0.55` apenas evita que a ausência de datas, localização estruturada ou igualdade
+lexical impeça o julgamento do modelo. O limite de três candidatos e a decisão humana posterior
+continuam obrigatórios.
 
 Sem `OPENAI_API_KEY`, o worker permanece ocioso e API, frontend e dados previamente persistidos
 continuam disponíveis. Gemini não faz parte desse caminho. Suas configurações e adapters antigos

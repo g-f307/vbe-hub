@@ -90,6 +90,18 @@ class Settings(BaseSettings):
     related_candidate_limit: int = Field(
         default=3, ge=1, le=10, validation_alias="RELATED_CANDIDATE_LIMIT"
     )
+    related_minimum_semantic_score: float = Field(
+        default=0.65,
+        ge=0,
+        le=1,
+        validation_alias="RELATED_MINIMUM_SEMANTIC_SCORE",
+    )
+    related_minimum_total_score: float = Field(
+        default=0.55,
+        ge=0,
+        le=1,
+        validation_alias="RELATED_MINIMUM_TOTAL_SCORE",
+    )
 
     @property
     def sqlalchemy_database_url(self) -> str:
