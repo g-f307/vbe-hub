@@ -83,7 +83,8 @@ dois eventos são uma única transação: qualquer conflito reverte toda a opera
 destino iguais retornam `409 investigation_transfer_same_file`.
 
 Criar ficha ou adicionar membro exige que o sinal esteja em `triage`; caso contrário, a API retorna
-`409 signal_not_in_triage`. Prosseguir para verificação usa o workflow da ficha documentado em
+`409 signal_not_in_triage`. A composição não inicia verificação automaticamente: o sinal-cabeça permanece
+visível em triagem e prosseguir usa um comando explícito no workflow da ficha documentado em
 [revisão humana e auditoria](human-review-workflow.md).
 
 Exemplo sanitizado de criação:

@@ -27,7 +27,8 @@ related_docs:
 
 - o sinal individual nasce em `detected` e entra em `triage` somente por comando explícito;
 - abrir detalhe ou aba não muda estado;
-- a seleção humana cria uma ficha com um ou mais sinais;
+- a seleção humana cria uma ficha com um ou mais sinais e mantém o conjunto em `triage`;
+- iniciar `verification` exige uma ação posterior e explícita do analista;
 - a partir de `verification`, a ficha possui o workflow compartilhado;
 - sinais membros preservam histórico, URL e conteúdo, mas não mantêm máquinas posteriores
   concorrentes;
@@ -37,8 +38,8 @@ related_docs:
 
 Um sinal é associado somente depois de `detected → triage`. Sua remoção de uma ficha mantém o
 workflow próprio em `triage`; o estado posterior da ficha nunca é copiado sobre esse histórico.
-A primeira transição da ficha é `triage → verification`, versão `0 → 1`, registrada no mesmo commit
-do evento. Depois, a ficha aceita `verification → risk_assessment`, retorno para `verification` e
+A primeira transição da ficha é `triage → verification`, versão `0 → 1`, registrada somente quando
+o analista aciona o avanço; ela não faz parte da composição. Depois, a ficha aceita `verification → risk_assessment`, retorno para `verification` e
 encerramento explícito com motivo.
 
 | Método e caminho | Finalidade |

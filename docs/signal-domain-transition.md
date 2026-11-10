@@ -66,7 +66,7 @@ ficha com o sinal principal e prosseguir.
 | --- | --- | --- |
 | Após coleta | Sinal | `detected` |
 | Análise inicial | Sinal | `triage` |
-| Composição confirmada | Ficha | primeira transição atômica para `verification`, versão 1 |
+| Composição confirmada | Sinal-cabeça/ficha | permanece em `triage`; membros são vinculados sem avanço automático |
 | Investigação conjunta | Ficha | `verification` ou `risk_assessment` |
 | Fim | Ficha | `closed` |
 

@@ -43,7 +43,7 @@ As rotas atuais são deliberadamente demonstrativas:
 | `/triagem` | fila, filtros, indicadores e paginação | consulta `GET /signals` no servidor Next |
 | `/kanban` | quadro complementar dos cinco estágios e tabela acessível | consulta até 100 itens de `GET /signals` com os mesmos filtros; não altera estado |
 | `/sinais/[slug]` | página dedicada do sinal, ficha técnica, relacionados e composição humana | consulta `GET /v1/signals/{id}` e `/related`; quando houver ficha ativa, também lê `/v1/investigations/{id}` |
-| `/api/investigations/compositions` | BFF da confirmação humana | inicia triagem quando necessário, cria/inclui membros e inicializa a ficha em verificação; aceita somente IDs e chave idempotente |
+| `/api/investigations/compositions` | BFF da confirmação humana | inicia triagem quando necessário e cria/inclui membros sem avançar automaticamente para verificação; aceita somente IDs e chave idempotente |
 | `/api/investigations/[fileId]/members/[signalId]/removals` | BFF da correção de vínculo | encaminha somente chave, versão esperada e motivo estruturado |
 | `/panorama` | leitura territorial agregada, mapa local e lista acessível | consulta `GET /signals/geographic-summary` no servidor Next |
 | `/api/health` | health check do contêiner do painel | retorna somente o estado do serviço |
@@ -114,8 +114,9 @@ continua fora do rastreamento.
   como uma extensão compacta que começa após o limite inferior do cabeçalho e ocupa somente a largura
   necessária aos seletores, sem criar uma faixa vazia. Na análise, a ficha técnica projetada ocupa
   a área principal, com o ícone centralizado verticalmente ao lado do conteúdo de cada tópico e a etapa
-  atual tratada como dado da própria ficha. Quando há composição, texto original e evidências dividem
-  a leitura inferior; a terceira aba concentra consulta, auditoria e remoção de evidências.
+  atual tratada como dado da própria ficha. Quando há composição, a ficha técnica conserva a largura
+  original; texto original e evidências formam uma coluna lateral, nesta ordem. A terceira aba concentra
+  consulta, auditoria e remoção de evidências.
 - A futura visão territorial mostra apenas agregados aprovados por área. Relatos individuais,
   endereço e coordenadas precisas não pertencem ao mapa.
 
@@ -136,11 +137,13 @@ idempotência e ator sintético. Erros de validação, indisponibilidade, 404 e 
 mostrados no painel; no conflito, a atualização explícita dos dados preserva o formulário local.
 
 Abrir `Sinais relacionados` lê apenas sugestões persistidas e ainda inéditas. Os estados `pending`, `ready` e
-`failed` são exibidos sem iniciar chamada à OpenAI; confiança e justificativa são rotuladas como
-sugestão técnica. Marcar candidatos também não escreve: a confirmação mostra o sinal principal,
+`failed` são exibidos sem iniciar chamada à OpenAI; uma sugestão pronta é apresentada ao analista apenas
+como possível relação, sem transformar confiança técnica em informação operacional. Marcar candidatos também não escreve: a confirmação mostra o sinal principal,
 os candidatos e seus IDs, preserva cada texto separadamente e só então inicia triagem e composição
-com chaves idempotentes. O sinal aberto permanece como cabeça; relacionados confirmados deixam a
-fila e aparecem como evidências somente para leitura. `Gerenciar evidências` exibe histórico e
+com chaves idempotentes. A composição permanece em triagem até uma ação posterior e explícita do
+analista. A resposta remove imediatamente os membros incorporados da seleção, sem exigir atualização
+manual. O sinal aberto permanece como cabeça; relacionados confirmados deixam a fila, aparecem como
+evidências e mantêm uma página própria somente para consulta. `Gerenciar evidências` exibe histórico e
 remoção; retirar uma evidência exige motivo,
 controle de versão e mantém o evento corretivo. A URL da página e das abas é compartilhável. O parâmetro `returnTo` aceita apenas
 destinos internos e preserva filtros, busca e cursor ao voltar para a fila.
