@@ -17,5 +17,7 @@ describe('PanoramaPage', () => {
 
     expect(html).toContain('src="/brand/vbehub-horizontal-fundo-escuro.svg"')
     expect(html).toContain('Visão geoespacial')
+    expect(html).toContain('rounded-t-3xl')
+    expect(html).toContain('-mt-6')
   })
 })

@@ -1,5 +1,8 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
+import { vi } from 'vitest'
+
+vi.mock('next/navigation', () => ({ usePathname: () => '/panorama' }))
 
 import { Header } from './header'
 
@@ -18,9 +21,10 @@ describe('Header', () => {
     expect(html).toContain('Indicadores')
     expect(html).not.toContain('Implementação futura')
     expect(html).toContain('justify-center')
-    expect(html).not.toContain('<header class="rounded-b-')
-    expect(html).toContain('translate-y-')
-    expect(html).toContain('rounded-b-')
+    expect(html).not.toContain('rounded-b-')
+    expect(html).toContain('pb-6')
+    expect(html).toContain('aria-current="page"')
+    expect(html).toContain('border-white text-white')
     expect(html).not.toContain('data-lucide="activity"')
   })
 })

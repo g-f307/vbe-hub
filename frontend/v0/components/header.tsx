@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { BarChart3, LogOut, MapPinned, RadioTower } from "lucide-react";
 import { Button } from "@/v0/components/ui/button";
 
 export function Header() {
+  const pathname = usePathname() ?? "";
+  const detectedActive = pathname === "/" || pathname.startsWith("/sinais/");
+  const panoramaActive = pathname.startsWith("/panorama");
+
   return (
-    <header className="mb-6 bg-primary text-primary-foreground shadow-[0_8px_24px_-18px_rgba(18,50,69,0.85)]">
+    <header className="bg-primary pb-6 text-primary-foreground shadow-[0_8px_24px_-18px_rgba(18,50,69,0.85)]">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex min-h-20 items-center justify-between gap-4 py-3 sm:min-h-24">
           <Link href="/" aria-label="VBE Hub — início" className="flex min-w-0 items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary">
@@ -35,29 +40,28 @@ export function Header() {
           </div>
         </div>
 
-        <div className="flex justify-center">
-          <nav aria-label="Visões do sistema" className="relative z-10 -mb-6 flex min-h-12 max-w-full translate-y-6 items-end justify-center gap-1 overflow-x-auto rounded-b-3xl border-t border-white/15 bg-primary px-4 shadow-[0_12px_20px_-18px_rgba(18,50,69,0.9)] sm:px-6">
-            <HeaderLink href="/" icon={RadioTower}>Detectados</HeaderLink>
-            <HeaderLink href="/panorama" icon={MapPinned}>Visão geoespacial</HeaderLink>
-            <span
-              aria-disabled="true"
-              className="inline-flex min-h-12 shrink-0 cursor-not-allowed items-center gap-2 border-b-2 border-transparent px-3 text-[13px] font-medium text-white/45"
-            >
-              <BarChart3 className="size-4" aria-hidden />
-              Indicadores
-            </span>
-          </nav>
-        </div>
+        <nav aria-label="Visões do sistema" className="flex min-h-12 items-end justify-center gap-1 overflow-x-auto border-t border-white/15 px-2">
+          <HeaderLink href="/" icon={RadioTower} active={detectedActive}>Detectados</HeaderLink>
+          <HeaderLink href="/panorama" icon={MapPinned} active={panoramaActive}>Visão geoespacial</HeaderLink>
+          <span
+            aria-disabled="true"
+            className="inline-flex min-h-12 shrink-0 cursor-not-allowed items-center gap-2 border-b-2 border-transparent px-3 text-[13px] font-medium text-white/45"
+          >
+            <BarChart3 className="size-4" aria-hidden />
+            Indicadores
+          </span>
+        </nav>
       </div>
     </header>
   );
 }
 
-function HeaderLink({ href, icon: Icon, children }: { href: string; icon: typeof RadioTower; children: React.ReactNode }) {
+function HeaderLink({ href, icon: Icon, active, children }: { href: string; icon: typeof RadioTower; active: boolean; children: React.ReactNode }) {
   return (
     <Link
       href={href}
-      className="inline-flex min-h-12 shrink-0 items-center gap-2 border-b-2 border-transparent px-3 text-[13px] font-medium text-white/80 hover:border-[#BFE6F7] hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
+      aria-current={active ? "page" : undefined}
+      className={`inline-flex min-h-12 shrink-0 items-center gap-2 border-b-2 px-3 text-[13px] font-medium hover:border-[#BFE6F7] hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${active ? "border-white text-white" : "border-transparent text-white/80"}`}
     >
       <Icon className="size-4" aria-hidden />
       {children}
