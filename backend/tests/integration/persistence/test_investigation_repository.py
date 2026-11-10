@@ -12,7 +12,10 @@ from vbe_hub.adapters.persistence.investigation_repository import (
 )
 from vbe_hub.adapters.persistence.relation_models import RelationAssessmentModel
 from vbe_hub.adapters.persistence.repositories import SqlAlchemyRawRecordRepository
-from vbe_hub.domain.investigations import InvestigationConcurrencyConflict
+from vbe_hub.domain.investigations import (
+    HeadInvestigationMemberError,
+    InvestigationConcurrencyConflict,
+)
 from vbe_hub.domain.records import (
     NormalizationStatus,
     NormalizedRecord,
@@ -92,6 +95,7 @@ async def test_investigation_membership_is_human_owned_versioned_and_auditable(
         operation_key=f"create-{uuid4()}",
         occurred_at=NOW,
     )
+    assert investigation.head_signal_id == first.id
     operation_key = f"add-{uuid4()}"
     updated = await repository.add_member(
         investigation_file_id=investigation.id,
@@ -142,6 +146,17 @@ async def test_investigation_membership_is_human_owned_versioned_and_auditable(
         "reject",
         "remove",
     ]
+
+    with pytest.raises(HeadInvestigationMemberError):
+        await repository.remove_member(
+            investigation.id,
+            first.id,
+            "analyst-1",
+            f"remove-head-{uuid4()}",
+            expected_version=4,
+            occurred_at=NOW,
+            reason_code="analyst-correction",
+        )
 
     with pytest.raises(DBAPIError):
         async with db_session.begin_nested():

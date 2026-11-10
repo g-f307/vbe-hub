@@ -35,7 +35,9 @@ from vbe_hub.adapters.persistence.models import (
 )
 from vbe_hub.adapters.persistence.relation_models import RelationAssessmentModel
 from vbe_hub.api.workflow import get_review_actor_id
+from vbe_hub.application.investigations.projection import compose_technical_sheet
 from vbe_hub.domain.investigations import (
+    HeadInvestigationMemberError,
     InvestigationConcurrencyConflict,
     InvestigationMemberNotFound,
     InvestigationOperationConflict,
@@ -156,11 +158,15 @@ class InvestigationMemberResponse(BaseModel):
 
 class InvestigationDetailResponse(BaseModel):
     id: UUID
+    head_signal_id: UUID
     version: int
     created_at: datetime
     updated_at: datetime
     members: list[InvestigationMemberResponse]
     events: list[InvestigationEventResponse]
+    technical_sheet: dict[str, Any]
+    technical_sheet_provenance: dict[str, list[str]]
+    technical_sheet_conflicts: list[dict[str, Any]]
 
 
 class InvestigationTransferResponse(BaseModel):
@@ -249,6 +255,11 @@ def _base_signal_query():
             ),
         )
         .outerjoin(
+            InvestigationFileModel,
+            InvestigationFileModel.id
+            == InvestigationFileMemberModel.investigation_file_id,
+        )
+        .outerjoin(
             InvestigationWorkflowModel,
             InvestigationWorkflowModel.investigation_file_id
             == InvestigationFileMemberModel.investigation_file_id,
@@ -264,7 +275,12 @@ async def list_individual_signals(
     state: SignalState | None = None,
     source_kind: Literal["media", "community"] | None = None,
 ) -> SignalPage:
-    query = _base_signal_query()
+    query = _base_signal_query().where(
+        or_(
+            InvestigationFileMemberModel.investigation_file_id.is_(None),
+            InvestigationFileModel.head_signal_id == IndividualSignalModel.id,
+        )
+    )
     if cursor:
         created_at, signal_id = _decode_cursor(cursor)
         query = query.where(
@@ -403,7 +419,13 @@ async def list_related_signals(
             or_(
                 SignalRelationSuggestionModel.left_signal_id == signal_id,
                 SignalRelationSuggestionModel.right_signal_id == signal_id,
+            ),
+            ~select(InvestigationFileMemberModel.id)
+            .where(
+                InvestigationFileMemberModel.signal_id == candidate.c.id,
+                InvestigationFileMemberModel.removed_at.is_(None),
             )
+            .exists(),
         )
     )
     if suggestion_status:
@@ -484,8 +506,19 @@ async def _investigation_detail(
         ).all()
     )
     signal_details = await _signal_details(session, [member.signal_id for member in members])
+    head = signal_details[file.head_signal_id]
+    projection = compose_technical_sheet(
+        file.head_signal_id,
+        head.technical_sheet,
+        [
+            (member.signal_id, signal_details[member.signal_id].technical_sheet)
+            for member in members
+            if member.signal_id != file.head_signal_id
+        ],
+    )
     return InvestigationDetailResponse(
         id=file.id,
+        head_signal_id=file.head_signal_id,
         version=file.version,
         created_at=file.created_at,
         updated_at=file.updated_at,
@@ -508,6 +541,9 @@ async def _investigation_detail(
             )
             for event in events
         ],
+        technical_sheet=projection.technical_sheet,
+        technical_sheet_provenance=projection.provenance,
+        technical_sheet_conflicts=projection.conflicts,
     )
 
 
@@ -531,6 +567,10 @@ def _raise_write_error(error: Exception) -> None:
     if isinstance(error, LastInvestigationMemberError):
         raise HTTPException(
             status_code=409, detail={"code": "investigation_requires_member"}
+        ) from error
+    if isinstance(error, HeadInvestigationMemberError):
+        raise HTTPException(
+            status_code=409, detail={"code": "investigation_head_cannot_be_removed"}
         ) from error
     if isinstance(error, InvestigationMemberNotFound):
         raise HTTPException(

@@ -26,11 +26,15 @@ export type InvestigationEvent = {
 
 export type InvestigationDetail = {
   id: string
+  headSignalId: string
   version: number
   createdAt: string
   updatedAt: string
   members: InvestigationMember[]
   events: InvestigationEvent[]
+  technicalSheet: Record<string, unknown>
+  technicalSheetProvenance: Record<string, string[]>
+  technicalSheetConflicts: Array<Record<string, unknown>>
 }
 
 export class InvestigationActionError extends Error {
@@ -47,6 +51,11 @@ export class InvestigationActionError extends Error {
 
 export function selectableRelatedSignals(items: RelatedSignal[]): RelatedSignal[] {
   return items.filter((item) => item.status === 'ready' && item.candidate.activeInvestigationId === null)
+}
+
+export function hideInvestigationMembers(items: RelatedSignal[], memberIds: string[]): RelatedSignal[] {
+  const members = new Set(memberIds)
+  return items.filter((item) => !members.has(item.candidate.id))
 }
 
 export function buildCompositionPayload(input: {
@@ -131,9 +140,15 @@ export function mapInvestigation(value: unknown): InvestigationDetail {
   }
   return {
     id: requiredString(value.id),
+    headSignalId: requiredString(value.head_signal_id),
     version: requiredNumber(value.version),
     createdAt: requiredString(value.created_at),
     updatedAt: requiredString(value.updated_at),
+    technicalSheet: isRecord(value.technical_sheet) ? value.technical_sheet : {},
+    technicalSheetProvenance: stringArrayRecord(value.technical_sheet_provenance),
+    technicalSheetConflicts: Array.isArray(value.technical_sheet_conflicts)
+      ? value.technical_sheet_conflicts.filter(isRecord)
+      : [],
     members: value.members.map((member) => {
       if (!isRecord(member) || !isRecord(member.signal) || !isRecord(member.signal.source)) invalid()
       return {
@@ -170,10 +185,20 @@ function validationMessage(code?: string): string {
     signal_already_assigned: 'Um dos sinais já pertence a outra ficha de investigação.',
     signal_not_in_triage: 'Um dos sinais ainda não está disponível para composição.',
     investigation_requires_member: 'Uma ficha não pode ficar sem sinais.',
+    investigation_head_cannot_be_removed: 'O sinal-cabeça não pode ser removido da própria investigação.',
     operation_key_conflict: 'Esta operação já foi utilizada com outro conteúdo.',
     invalid_composition: 'Selecione ao menos um sinal relacionado válido.',
   }
   return messages[code ?? ''] ?? 'A decisão não atende às regras da investigação. Recarregue e confira os sinais.'
+}
+
+function stringArrayRecord(value: unknown): Record<string, string[]> {
+  if (!isRecord(value)) return {}
+  return Object.fromEntries(
+    Object.entries(value).filter((entry): entry is [string, string[]] =>
+      Array.isArray(entry[1]) && entry[1].every((item) => typeof item === 'string'),
+    ),
+  )
 }
 
 async function jsonOrNull(response: Response): Promise<unknown> {

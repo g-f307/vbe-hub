@@ -35,7 +35,8 @@ export default async function SignalPage({
     throw error
   }
   if (signal.activeInvestigationId) investigation = await getInvestigation(signal.activeInvestigationId)
-  const activeTab = first(query.tab) === 'related' ? 'related' : 'overview'
+  const requestedTab = first(query.tab)
+  const activeTab = requestedTab === 'related' || requestedTab === 'evidence' ? requestedTab : 'overview'
   const returnTo = safeInternalReturnTo(first(query.returnTo))
 
   return (

@@ -16,15 +16,17 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-> **Transição em andamento em 08/11/2026:** a fundação visual nova já executa na rota `/` e lê um
+> **Transição atualizada em 10/11/2026:** a fundação visual nova já executa na rota `/` e lê um
 > sinal individual por fonte no contrato `/v1`. O detalhe usa uma página dedicada, com ficha
 > técnica, proveniência, auditoria e sugestões relacionadas pré-calculadas. O analista pode
 > selecionar candidatos, conferir os IDs e textos lado a lado e somente então criar ou ampliar uma
-> ficha auditável; nenhuma abertura ou marcação associa fontes. As rotas legadas continuam
+> ficha auditável. O sinal aberto permanece como cabeça; os relacionados confirmados passam a
+> evidências preservadas, consultáveis e removíveis em uma aba própria. Nenhuma abertura ou marcação associa fontes. As rotas legadas continuam
 > disponíveis como referência durante a transição. A
 > [ADR-010](docs/decisions/ADR-010-individual-signals-human-investigation.md) redefine cada fonte
 > como sinal individual. As tabelas, o worker assíncrono, a [API `/v1`](docs/individual-signal-api.md)
-> e o workflow-v2 já existem. Nenhuma sugestão da
+> e o workflow-v2 já existem; a [ADR-011](docs/decisions/ADR-011-head-signal-evidence.md) define a
+> cabeça e a projeção auditável das evidências. Nenhuma sugestão da
 > IA associa fontes automaticamente.
 
 Fundação, dados sintéticos, funil auditável de correlação, consolidação versionada, prioridade

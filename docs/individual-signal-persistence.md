@@ -4,15 +4,17 @@ type: data
 status: active
 title: Persistência de sinais individuais e fichas de investigação
 created: 2026-11-08
-updated: 2026-11-08
+updated: 2026-11-10
 owner: VBE Hub
 implemented_code:
   - backend/migrations/versions/20261108_0008_individual_signals.py
   - backend/migrations/versions/20261108_0009_individual_workflow.py
+  - backend/migrations/versions/20261110_0010_investigation_head_signal.py
   - backend/src/vbe_hub/adapters/persistence/investigation_models.py
   - backend/src/vbe_hub/adapters/persistence/investigation_repository.py
 related_docs:
   - ADR-010
+  - ADR-011
   - DATA-001
   - DES-002
 ---
@@ -36,6 +38,10 @@ A migration `20261108_0009` adiciona as máquinas `workflow-v2`. Um gatilho cria
 existentes. `investigation_workflows` só nasce quando o analista confirma a passagem para
 `verification`. `workflow_v2_events` preserva as duas trilhas com chave idempotente global,
 sequência por unidade, versão otimista e bloqueio de `UPDATE`/`DELETE`.
+
+A migration `20261110_0010` adiciona `investigation_files.head_signal_id`. A FK impede uma cabeça
+inexistente e o índice único impede que o mesmo sinal seja cabeça de duas fichas. Fichas anteriores
+recebem o primeiro membro ativo por `added_at, id`, sem alterar eventos ou fontes.
 
 Esta entrega cria a base persistente. O pipeline assíncrono e a [API versionada de sinais
 individuais](individual-signal-api.md) já usam essas tabelas; workflow completo e nova interface
@@ -62,6 +68,8 @@ erDiagram
 - Os pares de sugestões são canônicos e únicos por versão; índices dos dois lados atendem à aba de
   relacionados sem chamada síncrona à IA.
 - Um sinal possui no máximo um vínculo ativo, garantido por índice único parcial.
+- Toda ficha possui exatamente uma cabeça persistida; a cabeça é também membro ativo e não pode ser
+  removida pelo repositório.
 - A ficha usa versão otimista; uma escrita com versão antiga falha sem registrar evento parcial.
 - Inclusão, remoção e rejeição são eventos sequenciais e append-only. Trigger impede `UPDATE` e
   `DELETE` no histórico.
@@ -100,10 +108,9 @@ docker compose run --rm migrate uv run --no-sync alembic downgrade 20261006_0007
 docker compose run --rm migrate uv run --no-sync alembic upgrade head
 ```
 
-O downgrade remove somente as cinco tabelas introduzidas pela migration. Ele não apaga o modelo
-legado, mas remove fichas e decisões gravadas no modelo novo; por isso não deve ser executado sobre
-um ambiente compartilhado sem backup e autorização explícita. O upgrade seguinte refaz somente o
-backfill de sinais, nunca decisões humanas.
+O downgrade de `0010` remove somente a coluna e seu índice. Downgrades até `0007` removem as tabelas
+do modelo individual e, portanto, fichas e decisões; não devem ser executados em ambiente
+compartilhado sem backup e autorização explícita.
 
 ## Limites
 

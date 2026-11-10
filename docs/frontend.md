@@ -4,7 +4,7 @@ type: design
 status: active
 title: Fundação do frontend
 created: 2026-10-07
-updated: 2026-11-09
+updated: 2026-11-10
 owner: VBE Hub
 related_docs:
   - DES-001
@@ -43,7 +43,7 @@ As rotas atuais são deliberadamente demonstrativas:
 | `/triagem` | fila, filtros, indicadores e paginação | consulta `GET /signals` no servidor Next |
 | `/kanban` | quadro complementar dos cinco estágios e tabela acessível | consulta até 100 itens de `GET /signals` com os mesmos filtros; não altera estado |
 | `/sinais/[slug]` | página dedicada do sinal, ficha técnica, relacionados e composição humana | consulta `GET /v1/signals/{id}` e `/related`; quando houver ficha ativa, também lê `/v1/investigations/{id}` |
-| `/api/investigations/compositions` | BFF da confirmação humana | inicia triagem quando necessário, cria/inclui membros e inicializa a ficha em verificação; aceita somente IDs e chave idempotente |
+| `/api/investigations/compositions` | BFF da confirmação humana | inicia triagem quando necessário e cria/inclui membros sem avançar automaticamente para verificação; aceita somente IDs e chave idempotente |
 | `/api/investigations/[fileId]/members/[signalId]/removals` | BFF da correção de vínculo | encaminha somente chave, versão esperada e motivo estruturado |
 | `/panorama` | leitura territorial agregada, mapa local e lista acessível | consulta `GET /signals/geographic-summary` no servidor Next |
 | `/api/health` | health check do contêiner do painel | retorna somente o estado do serviço |
@@ -100,10 +100,12 @@ continua fora do rastreamento.
   do estágio. Como o nome do estágio já aparece no cabeçalho da coluna, ele não é repetido no card.
 - A rota de detalhe funciona como espaço de investigação em largura ampla, não como modal. O cabeçalho
   identifica o registro; uma faixa de fatos reúne fonte e datas sem expor identificadores
-  técnicos; abas orientadas às tarefas de analisar e relacionar mantêm o estado na URL. Na análise,
+  técnicos; abas orientadas às tarefas de analisar, relacionar e gerenciar evidências mantêm o estado na URL. Na análise,
   texto original e ficha técnica
   ocupam a área principal, enquanto o contexto operacional permanece em um painel lateral responsivo.
   Campos internos de processamento da extração não são apresentados como conteúdo da ficha técnica.
+  Rótulos, chaves estruturadas, precisões e termos clínicos conhecidos são apresentados em português;
+  equivalentes bilíngues são deduplicados apenas na visualização, sem modificar a extração persistida.
   A proveniência continua preservada no contrato e no backend, mas não é exposta como aba ao usuário final.
   A composição dispensa a etapa intermediária de revisão: após selecionar sugestões prontas, o analista
   confirma diretamente a inclusão na ficha.
@@ -112,10 +114,18 @@ continua fora do rastreamento.
   azul-petróleo e as superfícies neutras do VBE Hub sem introduzir indicadores que não existam no domínio.
   Cabeçalho e abas formam uma única peça encostada ao início do body. O alternador de abas é centralizado
   como uma extensão compacta que começa após o limite inferior do cabeçalho e ocupa somente a largura
-  necessária aos dois seletores, sem criar uma faixa vazia. Na análise, a ficha técnica ocupa
+  necessária aos seletores, sem criar uma faixa vazia. Na análise, a ficha técnica projetada ocupa
   a área principal, com o ícone centralizado verticalmente ao lado do conteúdo de cada tópico e a etapa
-  atual tratada como dado da própria ficha. O texto original fica na coluna lateral e o contexto aparece
-  em uma faixa inferior somente com título e texto, sem badge decorativo.
+  atual tratada como dado da própria ficha. Quando há composição, a ficha técnica conserva a largura
+  original; texto original e evidências dividem verticalmente a coluna lateral em duas metades, nesta
+  ordem, evitando espaço morto ao lado da ficha. Sem evidências incorporadas, o texto original ocupa
+  sozinho toda a altura da coluna. Evidências usam uma linha do tempo com o instante da
+  incorporação. O mesmo card aparece em grade compacta na aba de gerenciamento, sem repetir o rótulo
+  da seção dentro de cada item. A terceira aba concentra consulta e remoção de evidências; o histórico
+  técnico permanece preservado no backend, mas não é exposto nesse espaço operacional.
+- O card de evidência incorporada usa faixa ameixa dessaturada `#75627F`, ícone de vínculo e rótulo
+  textual. Essa categoria não representa etapa do Kanban e, por isso, não reutiliza azul, verde, âmbar,
+  vermelho ou cinza do workflow; cor nunca é o único indicador do significado.
 - A futura visão territorial mostra apenas agregados aprovados por área. Relatos individuais,
   endereço e coordenadas precisas não pertencem ao mapa.
 
@@ -135,11 +145,15 @@ envia `actor_id`. O backend continua sendo a autoridade para alvo revisável, tr
 idempotência e ator sintético. Erros de validação, indisponibilidade, 404 e conflito de versão são
 mostrados no painel; no conflito, a atualização explícita dos dados preserva o formulário local.
 
-Abrir `Sinais relacionados` lê apenas sugestões persistidas. Os estados `pending`, `ready` e
-`failed` são exibidos sem iniciar chamada à OpenAI; confiança e justificativa são rotuladas como
-sugestão técnica. Marcar candidatos também não escreve: a confirmação mostra o sinal principal,
+Abrir `Sinais relacionados` lê apenas sugestões persistidas e ainda inéditas. Os estados `pending`, `ready` e
+`failed` são exibidos sem iniciar chamada à OpenAI; uma sugestão pronta é apresentada ao analista apenas
+como possível relação, sem transformar confiança técnica em informação operacional. Marcar candidatos também não escreve: a confirmação mostra o sinal principal,
 os candidatos e seus IDs, preserva cada texto separadamente e só então inicia triagem e composição
-com chaves idempotentes. Uma ficha ativa exibe membros e eventos; retirar um membro exige motivo,
+com chaves idempotentes. A composição permanece em triagem até uma ação posterior e explícita do
+analista. A resposta remove imediatamente os membros incorporados da seleção, sem exigir atualização
+manual. O sinal aberto permanece como cabeça; relacionados confirmados deixam a fila, aparecem como
+evidências e mantêm uma página própria somente para consulta. `Gerenciar evidências` usa a mesma
+linguagem visual em uma grade compacta e permite remoção; retirar uma evidência exige motivo,
 controle de versão e mantém o evento corretivo. A URL da página e das abas é compartilhável. O parâmetro `returnTo` aceita apenas
 destinos internos e preserva filtros, busca e cursor ao voltar para a fila.
 

@@ -127,6 +127,8 @@ async def test_v1_human_commands_are_atomic_idempotent_and_versioned(
         await repository.get_or_create_signal(record.id, "individual-signal-v1", NOW)
         for record in records
     ]
+    suggestions = SqlAlchemySignalSuggestionRepository(db_session, now=lambda: NOW)
+    await suggestions.mark_pending(signals[0].id, signals[1].id, "related-signal-v1")
 
     async def session_override():
         yield db_session
@@ -164,6 +166,10 @@ async def test_v1_human_commands_are_atomic_idempotent_and_versioned(
             f"/v1/investigations/{file_id}/members/{signals[1].id}",
             json={"operation_key": add_key, "expected_version": 1},
         )
+        queue_after_composition = await client.get("/v1/signals")
+        related_after_composition = await client.get(
+            f"/v1/signals/{signals[0].id}/related"
+        )
         stale = await client.post(
             f"/v1/investigations/{file_id}/members/{signals[2].id}",
             json={"operation_key": f"stale-{uuid4()}", "expected_version": 1},
@@ -193,12 +199,17 @@ async def test_v1_human_commands_are_atomic_idempotent_and_versioned(
     assert conflicting_replay.status_code == 409
     assert conflicting_replay.json()["detail"]["code"] == "operation_key_conflict"
     assert added.status_code == 200
+    assert added.json()["head_signal_id"] == str(signals[0].id)
     assert added.json()["version"] == 2
     assert [member["signal"]["id"] for member in added.json()["members"]] == [
         str(signals[0].id),
         str(signals[1].id),
     ]
     assert all(member["signal"]["source"]["body"] for member in added.json()["members"])
+    assert str(signals[1].id) not in {
+        item["id"] for item in queue_after_composition.json()["items"]
+    }
+    assert related_after_composition.json()["items"] == []
     assert stale.status_code == 409
     assert stale.json()["detail"]["code"] == "investigation_version_conflict"
     assert removed.status_code == 200

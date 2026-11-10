@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { AlertTriangle, CheckCircle2, Clock3, LoaderCircle, Users } from 'lucide-react'
+import { AlertTriangle, Check, CheckCircle2, Clock3, LoaderCircle } from 'lucide-react'
 
 import {
   composeInvestigation,
   createInvestigationOperationKey,
+  hideInvestigationMembers,
   type InvestigationDetail,
   removeInvestigationMember,
   selectableRelatedSignals,
@@ -17,29 +18,33 @@ import type {
   RelatedSignal,
   RelatedSignalPage,
 } from '@/lib/individual-signal-read'
-import { Badge } from '@/v0/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { EvidenceTimeline } from '@/components/evidence-timeline'
 
 export function InvestigationComposer({
   signal,
   related,
   returnTo,
   initialInvestigation,
+  mode = 'related',
 }: {
   signal: IndividualSignalDetail
   related: RelatedSignalPage
   returnTo: string
   initialInvestigation: ReadInvestigationDetail | null
+  mode?: 'related' | 'evidence'
 }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [expandedSuggestionIds, setExpandedSuggestionIds] = useState<string[]>([])
+  const [visibleRelated, setVisibleRelated] = useState(() => related.items)
   const [investigation, setInvestigation] = useState<InvestigationDetail | null>(() => normalizeInvestigation(initialInvestigation))
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [removeTarget, setRemoveTarget] = useState<string | null>(null)
   const [removeReason, setRemoveReason] = useState('analyst-correction')
   const selectable = useMemo(
-    () => selectableRelatedSignals(related.items).filter((item) => !investigation?.members.some((member) => member.signal.id === item.candidate.id)),
-    [investigation, related.items],
+    () => selectableRelatedSignals(visibleRelated).filter((item) => !investigation?.members.some((member) => member.signal.id === item.candidate.id)),
+    [investigation, visibleRelated],
   )
   const selected = selectable.filter((item) => selectedIds.includes(item.candidate.id))
 
@@ -57,6 +62,7 @@ export function InvestigationComposer({
         operationKey: createInvestigationOperationKey('compose'),
       })
       setInvestigation(result)
+      setVisibleRelated((current) => hideInvestigationMembers(current, result.members.map((member) => member.signal.id)))
       setSelectedIds([])
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Não foi possível registrar a decisão.')
@@ -88,47 +94,72 @@ export function InvestigationComposer({
 
   return (
     <div className="space-y-7">
-      {investigation ? <InvestigationSummary investigation={investigation} onRemove={setRemoveTarget} /> : null}
+      {mode === 'evidence' ? (
+        investigation
+          ? <InvestigationSummary investigation={investigation} onRemove={setRemoveTarget} />
+          : <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">Ainda não há evidências incorporadas a este sinal.</p>
+      ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {related.items.map((item) => {
+      {mode === 'related' ? <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {visibleRelated.map((item) => {
           const canSelect = selectable.some((candidate) => candidate.suggestionId === item.suggestionId)
           const checked = selectedIds.includes(item.candidate.id)
+          const expanded = expandedSuggestionIds.includes(item.suggestionId)
+          const canExpand = (item.justification?.length ?? 0) > 120
           return (
-            <article key={item.suggestionId} className={`rounded-xl border bg-background p-5 ${checked ? 'border-primary ring-2 ring-primary/15' : 'border-border'}`}>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <Badge variant="outline">{item.candidate.sourceKind === 'media' ? 'Mídia' : 'Relato comunitário'}</Badge>
+            <article
+              key={item.suggestionId}
+              data-candidate-card="kanban"
+              className={`relative rounded-xl border border-t-4 bg-background p-4 ${candidateStageBorder[item.candidate.state]} ${checked ? 'ring-2 ring-primary/20' : 'border-x-border border-b-border'}`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-xs text-muted-foreground">{item.candidate.sourceKind === 'media' ? 'Mídia' : 'Relato comunitário'}</span>
                 <SuggestionState item={item} />
               </div>
-              <h3 className="mt-3 text-base font-semibold leading-snug">{item.candidate.title}</h3>
-              <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{item.candidate.excerpt}</p>
+              <h3 className="mt-2 text-sm font-semibold leading-snug">{item.candidate.title}</h3>
+              <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{item.candidate.excerpt}</p>
               {item.status === 'ready' ? (
-                <div className="mt-4 rounded-lg bg-muted/50 p-3 text-sm">
-                  <p className="font-medium">{relationLabel(item.relation)}{item.confidence === null ? '' : ` · ${Math.round(item.confidence * 100)}% de confiança técnica`}</p>
-                  <p className="mt-1 leading-relaxed text-muted-foreground">{item.justification ?? 'Justificativa não informada.'}</p>
+                <div className="mt-3 border-t border-border pt-3 text-xs">
+                  <p className="font-medium text-primary">Possível relação</p>
+                  <p className={`mt-1 leading-relaxed text-muted-foreground ${expanded ? '' : 'line-clamp-2'}`}>{item.justification ?? 'Justificativa não informada.'}</p>
+                  {canExpand ? (
+                    <button
+                      type="button"
+                      aria-expanded={expanded}
+                      onClick={() => setExpandedSuggestionIds((current) => current.includes(item.suggestionId)
+                        ? current.filter((id) => id !== item.suggestionId)
+                        : [...current, item.suggestionId])}
+                      className="mt-1.5 font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {expanded ? 'Ler menos' : 'Ler mais'}
+                    </button>
+                  ) : null}
                 </div>
               ) : null}
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+              <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
                 {canSelect ? (
-                  <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-medium">
-                    <input type="checkbox" checked={checked} onChange={() => toggle(item.candidate.id)} className="size-4 accent-primary" />
-                    Selecionar {item.candidate.title}
+                  <label className="flex min-h-9 cursor-pointer items-center gap-2 text-xs font-medium">
+                    <span className={`inline-flex size-5 items-center justify-center rounded-md border ${checked ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-background'}`}>
+                      {checked ? <Check className="size-3.5" aria-hidden /> : null}
+                    </span>
+                    <input type="checkbox" checked={checked} onChange={() => toggle(item.candidate.id)} className="sr-only" />
+                    Selecionar sinal
                   </label>
                 ) : (
                   <span className="text-xs text-muted-foreground">
                     {item.candidate.activeInvestigationId ? 'Já pertence a outra ficha' : 'Disponível somente após o processamento'}
                   </span>
                 )}
-                <Link href={relatedHref(signal.id, item.candidate.id, returnTo)} className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">
-                  Abrir este sinal
+                <Link href={relatedHref(signal.id, item.candidate.id, returnTo)} className="inline-flex min-h-9 items-center text-xs font-medium text-primary hover:underline">
+                  Consultar
                 </Link>
               </div>
             </article>
           )
         })}
-      </div>
+      </div> : null}
 
-      {selected.length > 0 ? (
+      {mode === 'related' && selected.length > 0 ? (
         <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-5" aria-live="polite">
           <p className="text-sm text-muted-foreground">{selected.length} sinal(is) selecionado(s)</p>
           <Button type="button" size="lg" onClick={confirmComposition} disabled={pending}>
@@ -161,31 +192,9 @@ export function InvestigationComposer({
 }
 
 function InvestigationSummary({ investigation, onRemove }: { investigation: InvestigationDetail; onRemove: (signalId: string) => void }) {
-  return (
-    <section aria-labelledby="ficha-ativa" className="rounded-xl border border-primary/25 bg-primary/5 p-5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div><h3 id="ficha-ativa" className="flex items-center gap-2 font-semibold"><Users className="size-4" aria-hidden /> Ficha de investigação ativa</h3><p className="mt-1 font-mono text-xs text-muted-foreground">{investigation.id} · versão {investigation.version}</p></div>
-        <Badge>{investigation.members.length} fonte(s)</Badge>
-      </div>
-      <div className="mt-4 grid gap-3 lg:grid-cols-2">
-        {investigation.members.map((member) => (
-          <article key={member.signal.id} className="rounded-lg border border-border bg-background p-4">
-            <p className="text-xs text-muted-foreground">{member.signal.sourceName} · {member.signal.sourceKind === 'media' ? 'Mídia' : 'Comunidade'}</p>
-            <h4 className="mt-1 font-medium">{member.signal.title}</h4>
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{member.signal.body}</p>
-            <p className="mt-3 font-mono text-[11px] text-muted-foreground">{member.signal.id}</p>
-            {investigation.members.length > 1 ? <Button type="button" variant="destructive" size="sm" className="mt-3" onClick={() => onRemove(member.signal.id)}>Remover da ficha</Button> : null}
-          </article>
-        ))}
-      </div>
-      <details className="mt-4 rounded-lg border border-border bg-background p-4">
-        <summary className="cursor-pointer text-sm font-medium">Histórico da composição ({investigation.events.length})</summary>
-        <ol className="mt-3 space-y-2 text-sm">
-          {investigation.events.map((event) => <li key={`${event.sequence}-${event.signalId}`}><span className="font-medium">{event.action === 'add' ? 'Adicionado' : event.action === 'remove' ? 'Removido' : 'Rejeitado'}</span> · {event.signalId} · {event.actorId}</li>)}
-        </ol>
-      </details>
-    </section>
-  )
+  const evidence = investigation.members.filter((member) => member.signal.id !== investigation.headSignalId)
+  if (evidence.length === 0) return <p className="rounded-lg border border-dashed border-border p-5 text-center text-sm text-muted-foreground">Nenhuma evidência foi incorporada.</p>
+  return <EvidenceTimeline items={evidence} headSignalId={investigation.headSignalId} layout="grid" onRemove={onRemove} />
 }
 
 function SuggestionState({ item }: { item: RelatedSignal }) {
@@ -199,18 +208,17 @@ function relatedHref(originId: string, candidateId: string, returnTo: string): s
   return `/sinais/${candidateId}?${new URLSearchParams({ returnTo: relatedReturn })}`
 }
 
-function relationLabel(value: string | null): string {
-  const labels: Record<string, string> = { duplicate: 'Possível duplicata', corroborates: 'Possível corroboração', updates: 'Possível atualização', related_context: 'Contexto possivelmente relacionado', unrelated: 'Provavelmente não relacionado' }
-  return value ? labels[value] ?? value : 'Relação não informada'
-}
-
 function normalizeInvestigation(value: ReadInvestigationDetail | null): InvestigationDetail | null {
   if (!value) return null
   return {
     id: value.id,
+    headSignalId: value.headSignalId,
     version: value.version,
     createdAt: value.createdAt,
     updatedAt: value.updatedAt,
+    technicalSheet: value.technicalSheet,
+    technicalSheetProvenance: value.technicalSheetProvenance,
+    technicalSheetConflicts: value.technicalSheetConflicts,
     members: value.members.map((member) => ({
       addedAt: member.addedAt,
       addedBy: member.addedBy,
@@ -225,4 +233,12 @@ function normalizeInvestigation(value: ReadInvestigationDetail | null): Investig
     })),
     events: value.events,
   }
+}
+
+const candidateStageBorder: Record<RelatedSignal['candidate']['state'], string> = {
+  detected: 'border-t-[#3E6F9E]',
+  triage: 'border-t-[#47735F]',
+  verification: 'border-t-[#A47B32]',
+  risk_assessment: 'border-t-[#A6534D]',
+  closed: 'border-t-[#626970]',
 }

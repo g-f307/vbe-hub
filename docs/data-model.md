@@ -54,7 +54,7 @@ As entidades em `vbe_hub.domain` não dependem do banco. Interfaces de repositó
 | `review_events` | Transições e decisões humanas auditáveis. | FK para o fluxo; sequência e chave de operação únicas; eventos protegidos contra alteração e exclusão. |
 | `individual_signals` | Identidade individual de cada fonte normalizada elegível. | Unicidade por registro e versão contratual; conteúdo permanece na origem. |
 | `signal_relation_suggestions` | Estado e resultado versionado da sugestão da IA entre um par canônico. | FKs para os dois sinais e avaliação; índices simétricos por sinal e estado. |
-| `investigation_files` | Unidade de trabalho formada pelo analista. | Versão otimista e timestamps; não contém descrição consolidada. |
+| `investigation_files` | Unidade de trabalho formada pelo analista. | Cabeça imutável, versão otimista e timestamps; não contém descrição consolidada. |
 | `investigation_file_members` | Vínculo corrigível entre ficha e sinais individuais. | Apenas um vínculo ativo por sinal; remoção preserva a linha histórica. |
 | `investigation_membership_events` | Inclusões, remoções e rejeições humanas. | Sequência por ficha, chave idempotente e proteção append-only. |
 
@@ -89,7 +89,7 @@ uma impressão SHA-256 do comando associado à chave idempotente, os valores ant
 identidade da sugestão. Correções são novos eventos; o histórico existente não é atualizado.
 
 O sinal individual usa `(normalized_record_id, contract_version)` como identidade natural. A ficha
-referencia os sinais sem copiar conteúdo, usa versão otimista e registra cada mudança de composição
+referencia os sinais sem copiar conteúdo, identifica uma cabeça, usa versão otimista e registra cada mudança de composição
 em evento append-only. A sugestão da IA é persistida separadamente; nenhuma linha de sugestão cria
 um membro. Detalhes de migration, backfill e reversão estão em
 [Persistência de sinais individuais e fichas](individual-signal-persistence.md).

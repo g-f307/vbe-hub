@@ -65,10 +65,14 @@ export type SignalAuditEvent = {
 }
 export type InvestigationDetail = {
   id: string
+  headSignalId: string
   version: number
   createdAt: string
   updatedAt: string
   members: Array<{ addedAt: string; addedBy: string; signal: IndividualSignalDetail }>
+  technicalSheet: Record<string, unknown>
+  technicalSheetProvenance: Record<string, string[]>
+  technicalSheetConflicts: Array<Record<string, unknown>>
   events: Array<{
     sequence: number
     action: 'add' | 'remove' | 'reject'
@@ -193,9 +197,15 @@ export async function getInvestigation(fileId: string): Promise<InvestigationDet
   }
   return {
     id: requiredString(payload.id),
+    headSignalId: requiredString(payload.head_signal_id),
     version: requiredInteger(payload.version),
     createdAt: requiredString(payload.created_at),
     updatedAt: requiredString(payload.updated_at),
+    technicalSheet: isRecord(payload.technical_sheet) ? payload.technical_sheet : {},
+    technicalSheetProvenance: stringArrayRecord(payload.technical_sheet_provenance),
+    technicalSheetConflicts: Array.isArray(payload.technical_sheet_conflicts)
+      ? payload.technical_sheet_conflicts.filter(isRecord)
+      : [],
     members: payload.members.map((member) => {
       if (!isRecord(member)) invalid('Um membro da ficha é inválido.')
       return {
@@ -218,6 +228,15 @@ export async function getInvestigation(fileId: string): Promise<InvestigationDet
       }
     }),
   }
+}
+
+function stringArrayRecord(value: unknown): Record<string, string[]> {
+  if (!isRecord(value)) return {}
+  return Object.fromEntries(
+    Object.entries(value).filter((entry): entry is [string, string[]] =>
+      Array.isArray(entry[1]) && entry[1].every((item) => typeof item === 'string'),
+    ),
+  )
 }
 
 function mapDetail(payload: unknown): IndividualSignalDetail {

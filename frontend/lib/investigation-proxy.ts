@@ -62,28 +62,6 @@ export async function proxyComposeInvestigation(request: Request, fetcher: Fetch
     if (investigation.response) return investigation.response
     if (!isInvestigation(investigation.data)) return problem(502, 'investigation_service_invalid_response')
   }
-  const workflow = await upstreamJson(`/v1/investigations/${investigation.data.id}/workflow`, undefined, fetcher)
-  const needsInitialWorkflow = workflow.response?.status === 404
-    && isRecord(workflow.data)
-    && isRecord(workflow.data.detail)
-    && workflow.data.detail.code === 'investigation_not_found'
-  if (workflow.response && !needsInitialWorkflow) return workflow.response
-  if (needsInitialWorkflow) {
-    const verification = await upstreamJson(
-      `/v1/investigations/${investigation.data.id}/workflow/transitions`,
-      {
-        method: 'POST',
-        body: {
-          operation_key: `${operationKey}:verify`,
-          expected_version: 0,
-          target_state: 'verification',
-          comment: 'Composição da ficha confirmada pelo analista.',
-        },
-      },
-      fetcher,
-    )
-    if (verification.response) return verification.response
-  }
   return jsonResponse(investigation.data)
 }
 

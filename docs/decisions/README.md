@@ -13,4 +13,5 @@ Voltar à [documentação](../README.md).
 | [ADR-007](ADR-007-rules-based-suggested-priority.md) | Aceita, parcialmente substituída | Regras explicáveis preservadas; prioridade futura pertence à ficha. |
 | [ADR-008](ADR-008-append-only-human-review.md) | Aceita | Decisões humanas como eventos imutáveis e concorrentes. |
 | [ADR-009](ADR-009-n8n-demo-orchestration.md) | Aceita | n8n restrito à orquestração visual da demonstração sintética. |
-| [ADR-010](ADR-010-individual-signals-human-investigation.md) | Aceita | Cada fonte é um sinal; a IA sugere relações e o analista forma fichas. |
+| [ADR-010](ADR-010-individual-signals-human-investigation.md) | Aceita, parcialmente substituída | Cada fonte é um sinal; a IA sugere relações e o analista forma fichas. |
+| [ADR-011](ADR-011-head-signal-evidence.md) | Aceita | A investigação mantém um sinal-cabeça e os demais membros como evidências auditáveis. |

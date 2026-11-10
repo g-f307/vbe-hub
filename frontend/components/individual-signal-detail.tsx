@@ -9,6 +9,7 @@ import {
   ExternalLink,
   FileText,
   GitBranch,
+  Layers3,
   Info,
   MapPin,
   Newspaper,
@@ -25,8 +26,9 @@ import type {
   RelatedSignalPage,
 } from '@/lib/individual-signal-read'
 import { InvestigationComposer } from '@/components/investigation-composer'
+import { EvidenceTimeline } from '@/components/evidence-timeline'
 
-type DetailTab = 'overview' | 'related'
+type DetailTab = 'overview' | 'related' | 'evidence'
 
 export function IndividualSignalDetailView({
   signal,
@@ -42,6 +44,7 @@ export function IndividualSignalDetailView({
   initialInvestigation?: InvestigationDetail | null
 }) {
   const SourceIcon = signal.sourceKind === 'media' ? Newspaper : UsersRound
+  const readOnlyEvidence = initialInvestigation !== null && initialInvestigation.headSignalId !== signal.id
   return (
     <main id="conteudo-principal" data-detail-layout="investigation-workspace" className="mx-auto w-full max-w-screen-2xl px-4 pb-8 sm:px-6 lg:px-8">
       <div data-detail-chrome="header-and-tabs" className="relative rounded-b-2xl border-x border-b border-border bg-card shadow-sm">
@@ -73,6 +76,7 @@ export function IndividualSignalDetailView({
                 <Clock3 className="size-4 self-center" aria-hidden />
                 Detectado em <span className="text-base font-semibold text-foreground">{formatDate(signal.createdAt)}</span>
               </p>
+              {readOnlyEvidence ? <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">Somente consulta</span> : null}
             </div>
           </div>
         </header>
@@ -82,17 +86,22 @@ export function IndividualSignalDetailView({
               <TabLink signalId={signal.id} returnTo={returnTo} tab="overview" active={activeTab === 'overview'} icon={FileText}>
                 Analisar sinal
               </TabLink>
-              <TabLink signalId={signal.id} returnTo={returnTo} tab="related" active={activeTab === 'related'} icon={GitBranch}>
+              {!readOnlyEvidence ? <TabLink signalId={signal.id} returnTo={returnTo} tab="related" active={activeTab === 'related'} icon={GitBranch}>
                 Relacionar sinais
                 <span className="ml-1.5 text-xs opacity-70">{related.items.length}</span>
-              </TabLink>
+              </TabLink> : null}
+              {!readOnlyEvidence ? <TabLink signalId={signal.id} returnTo={returnTo} tab="evidence" active={activeTab === 'evidence'} icon={Layers3}>
+                Gerenciar evidências
+                <span className="ml-1.5 text-xs opacity-70">{evidenceMembers(initialInvestigation).length}</span>
+              </TabLink> : null}
             </nav>
         </div>
       </div>
 
             <div className="mt-16 rounded-2xl bg-muted/45 p-3 sm:p-4">
-              {activeTab === 'overview' ? <Overview signal={signal} /> : null}
-              {activeTab === 'related' ? <RelatedSignals signal={signal} related={related} returnTo={returnTo} initialInvestigation={initialInvestigation} /> : null}
+              {activeTab === 'overview' || readOnlyEvidence ? <Overview signal={signal} investigation={readOnlyEvidence ? null : initialInvestigation} /> : null}
+              {activeTab === 'related' && !readOnlyEvidence ? <RelatedSignals signal={signal} related={related} returnTo={returnTo} initialInvestigation={initialInvestigation} /> : null}
+              {activeTab === 'evidence' && !readOnlyEvidence ? <EvidenceManager signal={signal} related={related} returnTo={returnTo} investigation={initialInvestigation} /> : null}
             </div>
     </main>
   )
@@ -141,9 +150,12 @@ function Panel({ id, title, description, children }: { id: string; title: string
   )
 }
 
-function Overview({ signal }: { signal: IndividualSignalDetail }) {
-  const technicalFields = signal.technicalSheet
-    ? Object.entries(signal.technicalSheet).filter(([key]) => !HIDDEN_TECHNICAL_FIELDS.has(key))
+function Overview({ signal, investigation }: { signal: IndividualSignalDetail; investigation: InvestigationDetail | null }) {
+  const projectedSheet = investigation?.technicalSheet ?? signal.technicalSheet
+  const incorporatedEvidence = investigation ? evidenceMembers(investigation) : []
+  const hasIncorporatedEvidence = incorporatedEvidence.length > 0
+  const technicalFields = projectedSheet
+    ? Object.entries(projectedSheet).filter(([key]) => !HIDDEN_TECHNICAL_FIELDS.has(key))
     : []
   return (
     <div data-overview-layout="reading-and-context" data-overview-dashboard="true" className="grid items-stretch gap-4 lg:grid-cols-12">
@@ -161,32 +173,75 @@ function Overview({ signal }: { signal: IndividualSignalDetail }) {
         </Panel>
       </div>
 
-      <aside data-text-position="side" className="lg:col-span-4">
-        <Panel id="texto-fonte" title="Texto original da fonte" description="Conteúdo preservado para leitura e comparação pelo analista.">
-          <div className="border-t border-border pt-4">
-            <p className="whitespace-pre-wrap break-words text-sm leading-6 text-foreground">{signal.source.body}</p>
-            {signal.source.url ? (
-              <a
-                href={signal.source.url}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 inline-flex min-h-10 items-center gap-2 border-t border-border pt-3 text-sm font-medium text-primary underline-offset-4 hover:underline"
-              >
-                Abrir publicação original <ExternalLink className="size-4" aria-hidden />
-              </a>
-            ) : null}
-          </div>
-        </Panel>
+      <aside data-text-position="side" data-overview-side-stack="true" className={`${hasIncorporatedEvidence ? 'grid min-h-0 grid-rows-2 gap-4' : ''} lg:col-span-4`}>
+        <div className={hasIncorporatedEvidence ? 'min-h-0 overflow-y-auto rounded-2xl' : 'h-full'}>
+          <Panel id="texto-fonte" title="Texto original da fonte" description="Conteúdo preservado para leitura e comparação pelo analista.">
+            <div className="border-t border-border pt-4">
+              <p className="whitespace-pre-wrap break-words text-sm leading-6 text-foreground">{signal.source.body}</p>
+              {signal.source.url ? (
+                <a
+                  href={signal.source.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 inline-flex min-h-10 items-center gap-2 border-t border-border pt-3 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Abrir publicação original <ExternalLink className="size-4" aria-hidden />
+                </a>
+              ) : null}
+            </div>
+          </Panel>
+        </div>
+        {hasIncorporatedEvidence && investigation ? <div className="min-h-0 overflow-y-auto rounded-2xl">
+          <Panel id="evidencias-incorporadas" title="Evidências incorporadas" description="Sinais relacionados preservados como fontes independentes desta investigação.">
+            <EvidenceTimeline items={incorporatedEvidence.map(toTimelineItem)} headSignalId={investigation.headSignalId} compact />
+          </Panel>
+        </div> : null}
       </aside>
 
-      <div data-context-position="full" className="lg:col-span-12">
+      {!investigation ? <div data-context-position="full" className="lg:col-span-12">
         <section aria-labelledby="contexto-analise" className="h-full rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
           <h2 id="contexto-analise" className="text-sm font-semibold">Contexto da análise</h2>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">Este é um registro individual. Outros sinais permanecem separados até a decisão explícita do analista.</p>
         </section>
-      </div>
+      </div> : null}
     </div>
   )
+}
+
+function EvidenceManager({
+  signal,
+  related,
+  returnTo,
+  investigation,
+}: {
+  signal: IndividualSignalDetail
+  related: RelatedSignalPage
+  returnTo: string
+  investigation: InvestigationDetail | null
+}) {
+  return (
+    <Panel id="gerenciar-evidencias" title="Gerenciar evidências" description="Consulte ou desfaça vínculos. Nenhum conteúdo original é alterado ou apagado.">
+      <InvestigationComposer signal={signal} related={related} returnTo={returnTo} initialInvestigation={investigation} mode="evidence" />
+    </Panel>
+  )
+}
+
+function evidenceMembers(investigation: InvestigationDetail | null) {
+  return investigation?.members.filter((member) => member.signal.id !== investigation.headSignalId) ?? []
+}
+
+function toTimelineItem(member: InvestigationDetail['members'][number]) {
+  return {
+    addedAt: member.addedAt,
+    signal: {
+      id: member.signal.id,
+      title: member.signal.title,
+      body: member.signal.source.body,
+      sourceKind: member.signal.sourceKind,
+      sourceName: member.signal.sourceName,
+      publishedAt: member.signal.publishedAt,
+    },
+  }
 }
 
 function RelatedSignals({
@@ -256,22 +311,54 @@ function fieldLabel(value: string): string {
     location: 'Localização',
     temporal: 'Período',
     estimated_cases: 'Quantidade mencionada',
+    estimated_deaths: 'Óbitos estimados',
+    pathogen: 'Patógeno',
+    environment: 'Ambiente',
+    affected_group: 'Grupo afetado',
     missing_fields: 'Campos não encontrados',
+    country: 'País',
+    state: 'Estado',
     municipality: 'Município',
     district: 'Bairro',
+    specific: 'Local específico',
+    precision: 'Precisão',
+    start: 'Início',
+    end: 'Fim',
   }
-  return labels[value] ?? value.replaceAll('_', ' ')
+  const fallback = value.replaceAll('_', ' ')
+  return labels[value] ?? `${fallback.charAt(0).toLocaleUpperCase('pt-BR')}${fallback.slice(1)}`
 }
 
 function formatFieldValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return 'Não informado'
-  if (Array.isArray(value)) return value.length === 0 ? 'Não informado' : value.map(formatFieldValue).join(', ')
+  if (Array.isArray(value)) {
+    const normalizedItems = [...new Set(value.map(formatFieldValue))]
+    return normalizedItems.length === 0 ? 'Não informado' : normalizedItems.join(', ')
+  }
   if (typeof value === 'object') return Object.entries(value as Record<string, unknown>)
     .filter(([, item]) => item !== null && item !== undefined && item !== '')
     .map(([key, item]) => `${fieldLabel(key)}: ${formatFieldValue(item)}`)
     .join(' · ') || 'Não informado'
   if (typeof value === 'boolean') return value ? 'Sim' : 'Não'
-  return String(value)
+  const text = String(value)
+  return VALUE_LABEL[text.toLocaleLowerCase('en-US')] ?? text
+}
+
+const VALUE_LABEL: Record<string, string> = {
+  district: 'Bairro ou distrito',
+  neighborhood: 'Bairro',
+  specific: 'Local específico',
+  exact: 'Local exato',
+  municipality: 'Município',
+  state: 'Estado',
+  country: 'País',
+  day: 'Dia',
+  month: 'Mês',
+  year: 'Ano',
+  unknown: 'Não informado',
+  fever: 'febre alta',
+  'severe headache': 'dor de cabeça intensa',
+  'stiff neck': 'dificuldade para movimentar o pescoço',
 }
 
 const FIELD_ICON: Record<string, LucideIcon> = {
@@ -281,6 +368,7 @@ const FIELD_ICON: Record<string, LucideIcon> = {
   location: MapPin,
   temporal: CalendarRange,
   estimated_cases: UsersRound,
+  estimated_deaths: UsersRound,
   missing_fields: Info,
 }
 
