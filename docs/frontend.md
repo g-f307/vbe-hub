@@ -117,8 +117,9 @@ continua fora do rastreamento.
   atual tratada como dado da própria ficha. Quando há composição, a ficha técnica conserva a largura
   original; texto original e evidências dividem verticalmente a coluna lateral em duas metades, nesta
   ordem, evitando espaço morto ao lado da ficha. Evidências usam uma linha do tempo com o instante da
-  incorporação e o mesmo card nas abas de análise e gerenciamento. A terceira aba concentra consulta,
-  auditoria e remoção de evidências.
+  incorporação. O mesmo card aparece em grade compacta na aba de gerenciamento, sem repetir o rótulo
+  da seção dentro de cada item. A terceira aba concentra consulta e remoção de evidências; o histórico
+  técnico permanece preservado no backend, mas não é exposto nesse espaço operacional.
 - O card de evidência incorporada usa faixa ameixa dessaturada `#75627F`, ícone de vínculo e rótulo
   textual. Essa categoria não representa etapa do Kanban e, por isso, não reutiliza azul, verde, âmbar,
   vermelho ou cinza do workflow; cor nunca é o único indicador do significado.
@@ -148,8 +149,8 @@ os candidatos e seus IDs, preserva cada texto separadamente e só então inicia 
 com chaves idempotentes. A composição permanece em triagem até uma ação posterior e explícita do
 analista. A resposta remove imediatamente os membros incorporados da seleção, sem exigir atualização
 manual. O sinal aberto permanece como cabeça; relacionados confirmados deixam a fila, aparecem como
-evidências e mantêm uma página própria somente para consulta. `Gerenciar evidências` exibe histórico e
-remoção; retirar uma evidência exige motivo,
+evidências e mantêm uma página própria somente para consulta. `Gerenciar evidências` usa a mesma
+linguagem visual em uma grade compacta e permite remoção; retirar uma evidência exige motivo,
 controle de versão e mantém o evento corretivo. A URL da página e das abas é compartilhável. O parâmetro `returnTo` aceita apenas
 destinos internos e preserva filtros, busca e cursor ao voltar para a fila.
 
