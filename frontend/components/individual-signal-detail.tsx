@@ -9,6 +9,7 @@ import {
   ExternalLink,
   FileText,
   GitBranch,
+  Layers3,
   Info,
   MapPin,
   Newspaper,
@@ -26,7 +27,7 @@ import type {
 } from '@/lib/individual-signal-read'
 import { InvestigationComposer } from '@/components/investigation-composer'
 
-type DetailTab = 'overview' | 'related'
+type DetailTab = 'overview' | 'related' | 'evidence'
 
 export function IndividualSignalDetailView({
   signal,
@@ -86,13 +87,18 @@ export function IndividualSignalDetailView({
                 Relacionar sinais
                 <span className="ml-1.5 text-xs opacity-70">{related.items.length}</span>
               </TabLink>
+              <TabLink signalId={signal.id} returnTo={returnTo} tab="evidence" active={activeTab === 'evidence'} icon={Layers3}>
+                Gerenciar evidências
+                <span className="ml-1.5 text-xs opacity-70">{evidenceMembers(initialInvestigation).length}</span>
+              </TabLink>
             </nav>
         </div>
       </div>
 
             <div className="mt-16 rounded-2xl bg-muted/45 p-3 sm:p-4">
-              {activeTab === 'overview' ? <Overview signal={signal} /> : null}
+              {activeTab === 'overview' ? <Overview signal={signal} investigation={initialInvestigation} /> : null}
               {activeTab === 'related' ? <RelatedSignals signal={signal} related={related} returnTo={returnTo} initialInvestigation={initialInvestigation} /> : null}
+              {activeTab === 'evidence' ? <EvidenceManager signal={signal} related={related} returnTo={returnTo} investigation={initialInvestigation} /> : null}
             </div>
     </main>
   )
@@ -141,13 +147,14 @@ function Panel({ id, title, description, children }: { id: string; title: string
   )
 }
 
-function Overview({ signal }: { signal: IndividualSignalDetail }) {
-  const technicalFields = signal.technicalSheet
-    ? Object.entries(signal.technicalSheet).filter(([key]) => !HIDDEN_TECHNICAL_FIELDS.has(key))
+function Overview({ signal, investigation }: { signal: IndividualSignalDetail; investigation: InvestigationDetail | null }) {
+  const projectedSheet = investigation?.technicalSheet ?? signal.technicalSheet
+  const technicalFields = projectedSheet
+    ? Object.entries(projectedSheet).filter(([key]) => !HIDDEN_TECHNICAL_FIELDS.has(key))
     : []
   return (
     <div data-overview-layout="reading-and-context" data-overview-dashboard="true" className="grid items-stretch gap-4 lg:grid-cols-12">
-      <div className="min-w-0 lg:col-span-8">
+      <div className={`min-w-0 ${investigation ? 'lg:col-span-12' : 'lg:col-span-8'}`}>
         <Panel id="ficha-tecnica" title="Ficha técnica" description="Leitura estruturada extraída do conteúdo. Confira cada campo antes de usá-lo na investigação.">
           <dl className="grid gap-3 sm:grid-cols-2">
             <ItemCard icon={Activity} label="Etapa" value={STATE_LABEL[signal.state]} state={signal.state} />
@@ -161,7 +168,7 @@ function Overview({ signal }: { signal: IndividualSignalDetail }) {
         </Panel>
       </div>
 
-      <aside data-text-position="side" className="lg:col-span-4">
+      <aside data-text-position="side" className={investigation ? 'lg:col-span-6' : 'lg:col-span-4'}>
         <Panel id="texto-fonte" title="Texto original da fonte" description="Conteúdo preservado para leitura e comparação pelo analista.">
           <div className="border-t border-border pt-4">
             <p className="whitespace-pre-wrap break-words text-sm leading-6 text-foreground">{signal.source.body}</p>
@@ -179,14 +186,60 @@ function Overview({ signal }: { signal: IndividualSignalDetail }) {
         </Panel>
       </aside>
 
-      <div data-context-position="full" className="lg:col-span-12">
+      {investigation ? (
+        <aside className="lg:col-span-6">
+          <Panel id="evidencias-incorporadas" title="Evidências incorporadas" description="Sinais relacionados preservados como fontes independentes desta investigação.">
+            <EvidenceCards investigation={investigation} compact />
+          </Panel>
+        </aside>
+      ) : null}
+
+      {!investigation ? <div data-context-position="full" className="lg:col-span-12">
         <section aria-labelledby="contexto-analise" className="h-full rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
           <h2 id="contexto-analise" className="text-sm font-semibold">Contexto da análise</h2>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">Este é um registro individual. Outros sinais permanecem separados até a decisão explícita do analista.</p>
         </section>
-      </div>
+      </div> : null}
     </div>
   )
+}
+
+function EvidenceManager({
+  signal,
+  related,
+  returnTo,
+  investigation,
+}: {
+  signal: IndividualSignalDetail
+  related: RelatedSignalPage
+  returnTo: string
+  investigation: InvestigationDetail | null
+}) {
+  return (
+    <Panel id="gerenciar-evidencias" title="Gerenciar evidências" description="Consulte ou desfaça vínculos. Nenhum conteúdo original é alterado ou apagado.">
+      <InvestigationComposer signal={signal} related={related} returnTo={returnTo} initialInvestigation={investigation} mode="evidence" />
+    </Panel>
+  )
+}
+
+function EvidenceCards({ investigation, compact = false }: { investigation: InvestigationDetail; compact?: boolean }) {
+  const members = evidenceMembers(investigation)
+  if (members.length === 0) return <EmptyMessage title="Nenhuma evidência incorporada" description="Os sinais confirmados pelo analista aparecerão aqui sem perder seu texto original." />
+  return (
+    <div className="grid gap-3">
+      {members.map((member) => (
+        <article key={member.signal.id} className="rounded-xl border border-border bg-background p-4">
+          <p className="text-xs text-muted-foreground">{displaySourceName(member.signal)} · {formatDate(member.signal.publishedAt)}</p>
+          <h3 className="mt-1 text-sm font-semibold">{member.signal.title}</h3>
+          <p className={`${compact ? 'line-clamp-4' : ''} mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground`}>{member.signal.source.body}</p>
+        </article>
+      ))}
+    </div>
+  )
+}
+
+function evidenceMembers(investigation: InvestigationDetail | null) {
+  return investigation?.members.filter((member) => member.signal.id !== investigation.headSignalId) ?? []
 }
 
 function RelatedSignals({

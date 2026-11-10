@@ -160,9 +160,13 @@ describe('contrato de sinais individuais', () => {
     const fileId = '048f6d5d-9c44-7b10-8000-000000000004'
     const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
       id: fileId,
+      head_signal_id: card.id,
       version: 2,
       created_at: '2026-11-08T10:00:00Z',
       updated_at: '2026-11-08T10:05:00Z',
+      technical_sheet: { symptoms: ['febre'] },
+      technical_sheet_provenance: { symptoms: [card.id] },
+      technical_sheet_conflicts: [],
       members: [{
         added_at: '2026-11-08T10:00:00Z',
         added_by: 'analista-demo',

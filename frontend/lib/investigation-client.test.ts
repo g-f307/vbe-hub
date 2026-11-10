@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildCompositionPayload,
   classifyInvestigationError,
+  mapInvestigation,
   selectableRelatedSignals,
 } from './investigation-client'
 import type { RelatedSignal } from './individual-signal-read'
@@ -29,6 +30,24 @@ const related = (id: string, status: RelatedSignal['status'], activeInvestigatio
 })
 
 describe('investigation composition', () => {
+  it('mapeia explicitamente a cabeça e a projeção auditável da ficha', () => {
+    expect(mapInvestigation({
+      id: '018f6d5d-9c44-7b10-8000-000000000010',
+      head_signal_id: '018f6d5d-9c44-7b10-8000-000000000001',
+      version: 2,
+      created_at: '2026-11-08T10:00:00Z',
+      updated_at: '2026-11-08T10:05:00Z',
+      members: [],
+      events: [],
+      technical_sheet: { symptoms: ['febre'] },
+      technical_sheet_provenance: { symptoms: ['018f6d5d-9c44-7b10-8000-000000000001'] },
+      technical_sheet_conflicts: [],
+    })).toMatchObject({
+      headSignalId: '018f6d5d-9c44-7b10-8000-000000000001',
+      technicalSheet: { symptoms: ['febre'] },
+      technicalSheetProvenance: { symptoms: ['018f6d5d-9c44-7b10-8000-000000000001'] },
+    })
+  })
   it('envia somente IDs únicos confirmados e não envia identidade do analista', () => {
     expect(buildCompositionPayload({
       primarySignalId: '018f6d5d-9c44-7b10-8000-000000000001',

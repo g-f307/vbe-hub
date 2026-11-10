@@ -25,11 +25,13 @@ export function InvestigationComposer({
   related,
   returnTo,
   initialInvestigation,
+  mode = 'related',
 }: {
   signal: IndividualSignalDetail
   related: RelatedSignalPage
   returnTo: string
   initialInvestigation: ReadInvestigationDetail | null
+  mode?: 'related' | 'evidence'
 }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [investigation, setInvestigation] = useState<InvestigationDetail | null>(() => normalizeInvestigation(initialInvestigation))
@@ -88,14 +90,22 @@ export function InvestigationComposer({
 
   return (
     <div className="space-y-7">
-      {investigation ? <InvestigationSummary investigation={investigation} onRemove={setRemoveTarget} /> : null}
+      {mode === 'evidence' ? (
+        investigation
+          ? <InvestigationSummary investigation={investigation} onRemove={setRemoveTarget} />
+          : <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">Ainda não há evidências incorporadas a este sinal.</p>
+      ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {mode === 'related' ? <div className="grid gap-4 lg:grid-cols-2">
         {related.items.map((item) => {
           const canSelect = selectable.some((candidate) => candidate.suggestionId === item.suggestionId)
           const checked = selectedIds.includes(item.candidate.id)
           return (
-            <article key={item.suggestionId} className={`rounded-xl border bg-background p-5 ${checked ? 'border-primary ring-2 ring-primary/15' : 'border-border'}`}>
+            <article
+              key={item.suggestionId}
+              data-candidate-card="kanban"
+              className={`rounded-xl border border-t-4 bg-background p-5 ${candidateStageBorder[item.candidate.state]} ${checked ? 'ring-2 ring-primary/15' : 'border-x-border border-b-border'}`}
+            >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Badge variant="outline">{item.candidate.sourceKind === 'media' ? 'Mídia' : 'Relato comunitário'}</Badge>
                 <SuggestionState item={item} />
@@ -126,9 +136,9 @@ export function InvestigationComposer({
             </article>
           )
         })}
-      </div>
+      </div> : null}
 
-      {selected.length > 0 ? (
+      {mode === 'related' && selected.length > 0 ? (
         <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-5" aria-live="polite">
           <p className="text-sm text-muted-foreground">{selected.length} sinal(is) selecionado(s)</p>
           <Button type="button" size="lg" onClick={confirmComposition} disabled={pending}>
@@ -161,23 +171,25 @@ export function InvestigationComposer({
 }
 
 function InvestigationSummary({ investigation, onRemove }: { investigation: InvestigationDetail; onRemove: (signalId: string) => void }) {
+  const evidence = investigation.members.filter((member) => member.signal.id !== investigation.headSignalId)
   return (
-    <section aria-labelledby="ficha-ativa" className="rounded-xl border border-primary/25 bg-primary/5 p-5">
+    <section aria-labelledby="evidencias-ativas" className="rounded-xl border border-primary/25 bg-primary/5 p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div><h3 id="ficha-ativa" className="flex items-center gap-2 font-semibold"><Users className="size-4" aria-hidden /> Ficha de investigação ativa</h3><p className="mt-1 font-mono text-xs text-muted-foreground">{investigation.id} · versão {investigation.version}</p></div>
-        <Badge>{investigation.members.length} fonte(s)</Badge>
+        <div><h3 id="evidencias-ativas" className="flex items-center gap-2 font-semibold"><Users className="size-4" aria-hidden /> Evidências da investigação</h3><p className="mt-1 text-xs text-muted-foreground">Conteúdos preservados e vinculados por decisão humana · versão {investigation.version}</p></div>
+        <Badge>{evidence.length} evidência(s)</Badge>
       </div>
       <div className="mt-4 grid gap-3 lg:grid-cols-2">
-        {investigation.members.map((member) => (
+        {evidence.map((member) => (
           <article key={member.signal.id} className="rounded-lg border border-border bg-background p-4">
             <p className="text-xs text-muted-foreground">{member.signal.sourceName} · {member.signal.sourceKind === 'media' ? 'Mídia' : 'Comunidade'}</p>
             <h4 className="mt-1 font-medium">{member.signal.title}</h4>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{member.signal.body}</p>
             <p className="mt-3 font-mono text-[11px] text-muted-foreground">{member.signal.id}</p>
-            {investigation.members.length > 1 ? <Button type="button" variant="destructive" size="sm" className="mt-3" onClick={() => onRemove(member.signal.id)}>Remover da ficha</Button> : null}
+            <Button type="button" variant="destructive" size="sm" className="mt-3" onClick={() => onRemove(member.signal.id)}>Remover evidência</Button>
           </article>
         ))}
       </div>
+      {evidence.length === 0 ? <p className="mt-4 rounded-lg border border-dashed border-border p-5 text-center text-sm text-muted-foreground">Nenhuma evidência foi incorporada.</p> : null}
       <details className="mt-4 rounded-lg border border-border bg-background p-4">
         <summary className="cursor-pointer text-sm font-medium">Histórico da composição ({investigation.events.length})</summary>
         <ol className="mt-3 space-y-2 text-sm">
@@ -208,9 +220,13 @@ function normalizeInvestigation(value: ReadInvestigationDetail | null): Investig
   if (!value) return null
   return {
     id: value.id,
+    headSignalId: value.headSignalId,
     version: value.version,
     createdAt: value.createdAt,
     updatedAt: value.updatedAt,
+    technicalSheet: value.technicalSheet,
+    technicalSheetProvenance: value.technicalSheetProvenance,
+    technicalSheetConflicts: value.technicalSheetConflicts,
     members: value.members.map((member) => ({
       addedAt: member.addedAt,
       addedBy: member.addedBy,
@@ -225,4 +241,12 @@ function normalizeInvestigation(value: ReadInvestigationDetail | null): Investig
     })),
     events: value.events,
   }
+}
+
+const candidateStageBorder: Record<RelatedSignal['candidate']['state'], string> = {
+  detected: 'border-t-[#3E6F9E]',
+  triage: 'border-t-[#47735F]',
+  verification: 'border-t-[#A47B32]',
+  risk_assessment: 'border-t-[#A6534D]',
+  closed: 'border-t-[#626970]',
 }

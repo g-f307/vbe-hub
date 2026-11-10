@@ -64,7 +64,18 @@ describe('investigation BFF', () => {
 })
 
 function investigation(version: number) {
-  return { id: fileId, version, created_at: '2026-11-08T10:00:00Z', updated_at: '2026-11-08T10:00:00Z', members: [], events: [] }
+  return {
+    id: fileId,
+    head_signal_id: primary,
+    version,
+    created_at: '2026-11-08T10:00:00Z',
+    updated_at: '2026-11-08T10:00:00Z',
+    members: [],
+    events: [],
+    technical_sheet: {},
+    technical_sheet_provenance: {},
+    technical_sheet_conflicts: [],
+  }
 }
 
 function json(value: unknown, status = 200): Response {
