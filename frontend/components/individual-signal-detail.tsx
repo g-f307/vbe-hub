@@ -152,6 +152,8 @@ function Panel({ id, title, description, children }: { id: string; title: string
 
 function Overview({ signal, investigation }: { signal: IndividualSignalDetail; investigation: InvestigationDetail | null }) {
   const projectedSheet = investigation?.technicalSheet ?? signal.technicalSheet
+  const incorporatedEvidence = investigation ? evidenceMembers(investigation) : []
+  const hasIncorporatedEvidence = incorporatedEvidence.length > 0
   const technicalFields = projectedSheet
     ? Object.entries(projectedSheet).filter(([key]) => !HIDDEN_TECHNICAL_FIELDS.has(key))
     : []
@@ -171,8 +173,8 @@ function Overview({ signal, investigation }: { signal: IndividualSignalDetail; i
         </Panel>
       </div>
 
-      <aside data-text-position="side" data-overview-side-stack="true" className={`${investigation ? 'grid min-h-0 grid-rows-2 gap-4' : ''} lg:col-span-4`}>
-        <div className={investigation ? 'min-h-0 overflow-y-auto rounded-2xl' : ''}>
+      <aside data-text-position="side" data-overview-side-stack="true" className={`${hasIncorporatedEvidence ? 'grid min-h-0 grid-rows-2 gap-4' : ''} lg:col-span-4`}>
+        <div className={hasIncorporatedEvidence ? 'min-h-0 overflow-y-auto rounded-2xl' : 'h-full'}>
           <Panel id="texto-fonte" title="Texto original da fonte" description="Conteúdo preservado para leitura e comparação pelo analista.">
             <div className="border-t border-border pt-4">
               <p className="whitespace-pre-wrap break-words text-sm leading-6 text-foreground">{signal.source.body}</p>
@@ -189,9 +191,9 @@ function Overview({ signal, investigation }: { signal: IndividualSignalDetail; i
             </div>
           </Panel>
         </div>
-        {investigation ? <div className="min-h-0 overflow-y-auto rounded-2xl">
+        {hasIncorporatedEvidence && investigation ? <div className="min-h-0 overflow-y-auto rounded-2xl">
           <Panel id="evidencias-incorporadas" title="Evidências incorporadas" description="Sinais relacionados preservados como fontes independentes desta investigação.">
-            <EvidenceTimeline items={evidenceMembers(investigation).map(toTimelineItem)} headSignalId={investigation.headSignalId} compact />
+            <EvidenceTimeline items={incorporatedEvidence.map(toTimelineItem)} headSignalId={investigation.headSignalId} compact />
           </Panel>
         </div> : null}
       </aside>

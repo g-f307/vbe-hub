@@ -217,9 +217,10 @@ describe('IndividualSignalDetailView', () => {
     expect(overview).toContain('grid-rows-2')
     expect(overview).toContain('data-evidence-timeline="true"')
     expect(overview).toContain('data-evidence-card="incorporated"')
-    expect(overview).toContain('max-w-[18rem]')
+    expect(overview).not.toContain('max-w-[18rem]')
     expect(overview).toContain('border-t-[#75627F]')
     expect(overview).toContain('Incorporado em')
+    expect(overview).not.toContain('Relato comunitário · publicado em')
     expect(overview).toContain('Ver detalhes')
     expect(overview).not.toContain('>Evidência incorporada<')
     expect(overview).toContain('href="/sinais/candidate-ready?returnTo=')
@@ -232,6 +233,22 @@ describe('IndividualSignalDetailView', () => {
     expect(evidence).not.toContain('Conteúdos preservados e vinculados por decisão humana')
     expect(evidence).not.toContain('Histórico da composição')
     expect(evidence).not.toContain('Remover da ficha')
+  })
+
+  it('mantém o texto original em toda a altura quando a ficha ainda não tem evidências', () => {
+    const investigationWithoutEvidence: InvestigationDetail = {
+      ...investigation,
+      version: 1,
+      members: [investigation.members[0]],
+    }
+
+    const overview = renderToStaticMarkup(
+      <IndividualSignalDetailView signal={signal} related={{ items: [], nextCursor: null }} returnTo="/" activeTab="overview" initialInvestigation={investigationWithoutEvidence} />,
+    )
+
+    expect(overview).not.toContain('grid-rows-2')
+    expect(overview).not.toContain('Evidências incorporadas')
+    expect(overview).toContain('Texto original preservado do relato comunitário.')
   })
 
   it('mantém a ficha própria da evidência acessível somente para consulta', () => {
