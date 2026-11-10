@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { AlertTriangle, Check, CheckCircle2, Clock3, LoaderCircle, Users } from 'lucide-react'
+import { AlertTriangle, Check, CheckCircle2, Clock3, LoaderCircle } from 'lucide-react'
 
 import {
   composeInvestigation,
@@ -18,7 +18,6 @@ import type {
   RelatedSignal,
   RelatedSignalPage,
 } from '@/lib/individual-signal-read'
-import { Badge } from '@/v0/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EvidenceTimeline } from '@/components/evidence-timeline'
 
@@ -194,22 +193,8 @@ export function InvestigationComposer({
 
 function InvestigationSummary({ investigation, onRemove }: { investigation: InvestigationDetail; onRemove: (signalId: string) => void }) {
   const evidence = investigation.members.filter((member) => member.signal.id !== investigation.headSignalId)
-  return (
-    <section aria-labelledby="evidencias-ativas" className="rounded-xl border border-primary/25 bg-primary/5 p-5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div><h3 id="evidencias-ativas" className="flex items-center gap-2 font-semibold"><Users className="size-4" aria-hidden /> Evidências da investigação</h3><p className="mt-1 text-xs text-muted-foreground">Conteúdos preservados e vinculados por decisão humana · versão {investigation.version}</p></div>
-        <Badge>{evidence.length} evidência(s)</Badge>
-      </div>
-      <div className="mt-4"><EvidenceTimeline items={evidence} headSignalId={investigation.headSignalId} onRemove={onRemove} /></div>
-      {evidence.length === 0 ? <p className="mt-4 rounded-lg border border-dashed border-border p-5 text-center text-sm text-muted-foreground">Nenhuma evidência foi incorporada.</p> : null}
-      <details className="mt-4 rounded-lg border border-border bg-background p-4">
-        <summary className="cursor-pointer text-sm font-medium">Histórico da composição ({investigation.events.length})</summary>
-        <ol className="mt-3 space-y-2 text-sm">
-          {investigation.events.map((event) => <li key={`${event.sequence}-${event.signalId}`}><span className="font-medium">{event.action === 'add' ? 'Adicionado' : event.action === 'remove' ? 'Removido' : 'Rejeitado'}</span> · {event.signalId} · {event.actorId}</li>)}
-        </ol>
-      </details>
-    </section>
-  )
+  if (evidence.length === 0) return <p className="rounded-lg border border-dashed border-border p-5 text-center text-sm text-muted-foreground">Nenhuma evidência foi incorporada.</p>
+  return <EvidenceTimeline items={evidence} headSignalId={investigation.headSignalId} layout="grid" onRemove={onRemove} />
 }
 
 function SuggestionState({ item }: { item: RelatedSignal }) {
