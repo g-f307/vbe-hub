@@ -104,6 +104,8 @@ continua fora do rastreamento.
   texto original e ficha técnica
   ocupam a área principal, enquanto o contexto operacional permanece em um painel lateral responsivo.
   Campos internos de processamento da extração não são apresentados como conteúdo da ficha técnica.
+  Rótulos, chaves estruturadas, precisões e termos clínicos conhecidos são apresentados em português;
+  equivalentes bilíngues são deduplicados apenas na visualização, sem modificar a extração persistida.
   A proveniência continua preservada no contrato e no backend, mas não é exposta como aba ao usuário final.
   A composição dispensa a etapa intermediária de revisão: após selecionar sugestões prontas, o analista
   confirma diretamente a inclusão na ficha.
@@ -116,7 +118,8 @@ continua fora do rastreamento.
   a área principal, com o ícone centralizado verticalmente ao lado do conteúdo de cada tópico e a etapa
   atual tratada como dado da própria ficha. Quando há composição, a ficha técnica conserva a largura
   original; texto original e evidências dividem verticalmente a coluna lateral em duas metades, nesta
-  ordem, evitando espaço morto ao lado da ficha. Evidências usam uma linha do tempo com o instante da
+  ordem, evitando espaço morto ao lado da ficha. Sem evidências incorporadas, o texto original ocupa
+  sozinho toda a altura da coluna. Evidências usam uma linha do tempo com o instante da
   incorporação. O mesmo card aparece em grade compacta na aba de gerenciamento, sem repetir o rótulo
   da seção dentro de cada item. A terceira aba concentra consulta e remoção de evidências; o histórico
   técnico permanece preservado no backend, mas não é exposto nesse espaço operacional.
