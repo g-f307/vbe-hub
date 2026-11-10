@@ -20,6 +20,7 @@ import type {
 } from '@/lib/individual-signal-read'
 import { Badge } from '@/v0/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { EvidenceTimeline } from '@/components/evidence-timeline'
 
 export function InvestigationComposer({
   signal,
@@ -199,20 +200,7 @@ function InvestigationSummary({ investigation, onRemove }: { investigation: Inve
         <div><h3 id="evidencias-ativas" className="flex items-center gap-2 font-semibold"><Users className="size-4" aria-hidden /> Evidências da investigação</h3><p className="mt-1 text-xs text-muted-foreground">Conteúdos preservados e vinculados por decisão humana · versão {investigation.version}</p></div>
         <Badge>{evidence.length} evidência(s)</Badge>
       </div>
-      <div className="mt-4 grid gap-3 lg:grid-cols-2">
-        {evidence.map((member) => (
-          <article key={member.signal.id} className="rounded-lg border border-border bg-background p-4">
-            <p className="text-xs text-muted-foreground">{member.signal.sourceName} · {member.signal.sourceKind === 'media' ? 'Mídia' : 'Comunidade'}</p>
-            <h4 className="mt-1 font-medium">{member.signal.title}</h4>
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{member.signal.body}</p>
-            <p className="mt-3 font-mono text-[11px] text-muted-foreground">{member.signal.id}</p>
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-              <Link href={`/sinais/${member.signal.id}`} className="text-xs font-medium text-primary hover:underline">Abrir ficha para consulta</Link>
-              <Button type="button" variant="destructive" size="sm" onClick={() => onRemove(member.signal.id)}>Remover evidência</Button>
-            </div>
-          </article>
-        ))}
-      </div>
+      <div className="mt-4"><EvidenceTimeline items={evidence} headSignalId={investigation.headSignalId} onRemove={onRemove} /></div>
       {evidence.length === 0 ? <p className="mt-4 rounded-lg border border-dashed border-border p-5 text-center text-sm text-muted-foreground">Nenhuma evidência foi incorporada.</p> : null}
       <details className="mt-4 rounded-lg border border-border bg-background p-4">
         <summary className="cursor-pointer text-sm font-medium">Histórico da composição ({investigation.events.length})</summary>

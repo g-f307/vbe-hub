@@ -26,6 +26,7 @@ import type {
   RelatedSignalPage,
 } from '@/lib/individual-signal-read'
 import { InvestigationComposer } from '@/components/investigation-composer'
+import { EvidenceTimeline } from '@/components/evidence-timeline'
 
 type DetailTab = 'overview' | 'related' | 'evidence'
 
@@ -170,27 +171,29 @@ function Overview({ signal, investigation }: { signal: IndividualSignalDetail; i
         </Panel>
       </div>
 
-      <aside data-text-position="side" data-overview-side-stack="true" className="space-y-4 lg:col-span-4">
-        <Panel id="texto-fonte" title="Texto original da fonte" description="Conteúdo preservado para leitura e comparação pelo analista.">
-          <div className="border-t border-border pt-4">
-            <p className="whitespace-pre-wrap break-words text-sm leading-6 text-foreground">{signal.source.body}</p>
-            {signal.source.url ? (
-              <a
-                href={signal.source.url}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 inline-flex min-h-10 items-center gap-2 border-t border-border pt-3 text-sm font-medium text-primary underline-offset-4 hover:underline"
-              >
-                Abrir publicação original <ExternalLink className="size-4" aria-hidden />
-              </a>
-            ) : null}
-          </div>
-        </Panel>
-        {investigation ? (
-          <Panel id="evidencias-incorporadas" title="Evidências incorporadas" description="Sinais relacionados preservados como fontes independentes desta investigação.">
-            <EvidenceCards investigation={investigation} compact />
+      <aside data-text-position="side" data-overview-side-stack="true" className={`${investigation ? 'grid min-h-0 grid-rows-2 gap-4' : ''} lg:col-span-4`}>
+        <div className={investigation ? 'min-h-0 overflow-y-auto rounded-2xl' : ''}>
+          <Panel id="texto-fonte" title="Texto original da fonte" description="Conteúdo preservado para leitura e comparação pelo analista.">
+            <div className="border-t border-border pt-4">
+              <p className="whitespace-pre-wrap break-words text-sm leading-6 text-foreground">{signal.source.body}</p>
+              {signal.source.url ? (
+                <a
+                  href={signal.source.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 inline-flex min-h-10 items-center gap-2 border-t border-border pt-3 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Abrir publicação original <ExternalLink className="size-4" aria-hidden />
+                </a>
+              ) : null}
+            </div>
           </Panel>
-        ) : null}
+        </div>
+        {investigation ? <div className="min-h-0 overflow-y-auto rounded-2xl">
+          <Panel id="evidencias-incorporadas" title="Evidências incorporadas" description="Sinais relacionados preservados como fontes independentes desta investigação.">
+            <EvidenceTimeline items={evidenceMembers(investigation).map(toTimelineItem)} headSignalId={investigation.headSignalId} compact />
+          </Panel>
+        </div> : null}
       </aside>
 
       {!investigation ? <div data-context-position="full" className="lg:col-span-12">
@@ -221,24 +224,22 @@ function EvidenceManager({
   )
 }
 
-function EvidenceCards({ investigation, compact = false }: { investigation: InvestigationDetail; compact?: boolean }) {
-  const members = evidenceMembers(investigation)
-  if (members.length === 0) return <EmptyMessage title="Nenhuma evidência incorporada" description="Os sinais confirmados pelo analista aparecerão aqui sem perder seu texto original." />
-  return (
-    <div className="grid gap-3">
-      {members.map((member) => (
-        <Link href={`/sinais/${member.signal.id}?${new URLSearchParams({ returnTo: `/sinais/${investigation.headSignalId}?tab=overview` })}`} key={member.signal.id} className="block rounded-xl border border-border bg-background p-4 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <p className="text-xs text-muted-foreground">{displaySourceName(member.signal)} · {formatDate(member.signal.publishedAt)}</p>
-          <h3 className="mt-1 text-sm font-semibold">{member.signal.title}</h3>
-          <p className={`${compact ? 'line-clamp-4' : ''} mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground`}>{member.signal.source.body}</p>
-        </Link>
-      ))}
-    </div>
-  )
-}
-
 function evidenceMembers(investigation: InvestigationDetail | null) {
   return investigation?.members.filter((member) => member.signal.id !== investigation.headSignalId) ?? []
+}
+
+function toTimelineItem(member: InvestigationDetail['members'][number]) {
+  return {
+    addedAt: member.addedAt,
+    signal: {
+      id: member.signal.id,
+      title: member.signal.title,
+      body: member.signal.source.body,
+      sourceKind: member.signal.sourceKind,
+      sourceName: member.signal.sourceName,
+      publishedAt: member.signal.publishedAt,
+    },
+  }
 }
 
 function RelatedSignals({
