@@ -43,6 +43,7 @@ export function IndividualSignalDetailView({
   initialInvestigation?: InvestigationDetail | null
 }) {
   const SourceIcon = signal.sourceKind === 'media' ? Newspaper : UsersRound
+  const readOnlyEvidence = initialInvestigation !== null && initialInvestigation.headSignalId !== signal.id
   return (
     <main id="conteudo-principal" data-detail-layout="investigation-workspace" className="mx-auto w-full max-w-screen-2xl px-4 pb-8 sm:px-6 lg:px-8">
       <div data-detail-chrome="header-and-tabs" className="relative rounded-b-2xl border-x border-b border-border bg-card shadow-sm">
@@ -74,6 +75,7 @@ export function IndividualSignalDetailView({
                 <Clock3 className="size-4 self-center" aria-hidden />
                 Detectado em <span className="text-base font-semibold text-foreground">{formatDate(signal.createdAt)}</span>
               </p>
+              {readOnlyEvidence ? <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">Somente consulta</span> : null}
             </div>
           </div>
         </header>
@@ -83,22 +85,22 @@ export function IndividualSignalDetailView({
               <TabLink signalId={signal.id} returnTo={returnTo} tab="overview" active={activeTab === 'overview'} icon={FileText}>
                 Analisar sinal
               </TabLink>
-              <TabLink signalId={signal.id} returnTo={returnTo} tab="related" active={activeTab === 'related'} icon={GitBranch}>
+              {!readOnlyEvidence ? <TabLink signalId={signal.id} returnTo={returnTo} tab="related" active={activeTab === 'related'} icon={GitBranch}>
                 Relacionar sinais
                 <span className="ml-1.5 text-xs opacity-70">{related.items.length}</span>
-              </TabLink>
-              <TabLink signalId={signal.id} returnTo={returnTo} tab="evidence" active={activeTab === 'evidence'} icon={Layers3}>
+              </TabLink> : null}
+              {!readOnlyEvidence ? <TabLink signalId={signal.id} returnTo={returnTo} tab="evidence" active={activeTab === 'evidence'} icon={Layers3}>
                 Gerenciar evidências
                 <span className="ml-1.5 text-xs opacity-70">{evidenceMembers(initialInvestigation).length}</span>
-              </TabLink>
+              </TabLink> : null}
             </nav>
         </div>
       </div>
 
             <div className="mt-16 rounded-2xl bg-muted/45 p-3 sm:p-4">
-              {activeTab === 'overview' ? <Overview signal={signal} investigation={initialInvestigation} /> : null}
-              {activeTab === 'related' ? <RelatedSignals signal={signal} related={related} returnTo={returnTo} initialInvestigation={initialInvestigation} /> : null}
-              {activeTab === 'evidence' ? <EvidenceManager signal={signal} related={related} returnTo={returnTo} investigation={initialInvestigation} /> : null}
+              {activeTab === 'overview' || readOnlyEvidence ? <Overview signal={signal} investigation={readOnlyEvidence ? null : initialInvestigation} /> : null}
+              {activeTab === 'related' && !readOnlyEvidence ? <RelatedSignals signal={signal} related={related} returnTo={returnTo} initialInvestigation={initialInvestigation} /> : null}
+              {activeTab === 'evidence' && !readOnlyEvidence ? <EvidenceManager signal={signal} related={related} returnTo={returnTo} investigation={initialInvestigation} /> : null}
             </div>
     </main>
   )
@@ -154,7 +156,7 @@ function Overview({ signal, investigation }: { signal: IndividualSignalDetail; i
     : []
   return (
     <div data-overview-layout="reading-and-context" data-overview-dashboard="true" className="grid items-stretch gap-4 lg:grid-cols-12">
-      <div className={`min-w-0 ${investigation ? 'lg:col-span-12' : 'lg:col-span-8'}`}>
+      <div className="min-w-0 lg:col-span-8">
         <Panel id="ficha-tecnica" title="Ficha técnica" description="Leitura estruturada extraída do conteúdo. Confira cada campo antes de usá-lo na investigação.">
           <dl className="grid gap-3 sm:grid-cols-2">
             <ItemCard icon={Activity} label="Etapa" value={STATE_LABEL[signal.state]} state={signal.state} />
@@ -168,7 +170,7 @@ function Overview({ signal, investigation }: { signal: IndividualSignalDetail; i
         </Panel>
       </div>
 
-      <aside data-text-position="side" className={investigation ? 'lg:col-span-6' : 'lg:col-span-4'}>
+      <aside data-text-position="side" data-overview-side-stack="true" className="space-y-4 lg:col-span-4">
         <Panel id="texto-fonte" title="Texto original da fonte" description="Conteúdo preservado para leitura e comparação pelo analista.">
           <div className="border-t border-border pt-4">
             <p className="whitespace-pre-wrap break-words text-sm leading-6 text-foreground">{signal.source.body}</p>
@@ -184,15 +186,12 @@ function Overview({ signal, investigation }: { signal: IndividualSignalDetail; i
             ) : null}
           </div>
         </Panel>
-      </aside>
-
-      {investigation ? (
-        <aside className="lg:col-span-6">
+        {investigation ? (
           <Panel id="evidencias-incorporadas" title="Evidências incorporadas" description="Sinais relacionados preservados como fontes independentes desta investigação.">
             <EvidenceCards investigation={investigation} compact />
           </Panel>
-        </aside>
-      ) : null}
+        ) : null}
+      </aside>
 
       {!investigation ? <div data-context-position="full" className="lg:col-span-12">
         <section aria-labelledby="contexto-analise" className="h-full rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
@@ -228,11 +227,11 @@ function EvidenceCards({ investigation, compact = false }: { investigation: Inve
   return (
     <div className="grid gap-3">
       {members.map((member) => (
-        <article key={member.signal.id} className="rounded-xl border border-border bg-background p-4">
+        <Link href={`/sinais/${member.signal.id}?${new URLSearchParams({ returnTo: `/sinais/${investigation.headSignalId}?tab=overview` })}`} key={member.signal.id} className="block rounded-xl border border-border bg-background p-4 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <p className="text-xs text-muted-foreground">{displaySourceName(member.signal)} · {formatDate(member.signal.publishedAt)}</p>
           <h3 className="mt-1 text-sm font-semibold">{member.signal.title}</h3>
           <p className={`${compact ? 'line-clamp-4' : ''} mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground`}>{member.signal.source.body}</p>
-        </article>
+        </Link>
       ))}
     </div>
   )

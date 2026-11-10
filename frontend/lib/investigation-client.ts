@@ -53,6 +53,11 @@ export function selectableRelatedSignals(items: RelatedSignal[]): RelatedSignal[
   return items.filter((item) => item.status === 'ready' && item.candidate.activeInvestigationId === null)
 }
 
+export function hideInvestigationMembers(items: RelatedSignal[], memberIds: string[]): RelatedSignal[] {
+  const members = new Set(memberIds)
+  return items.filter((item) => !members.has(item.candidate.id))
+}
+
 export function buildCompositionPayload(input: {
   primarySignalId: string
   selectedSignalIds: string[]

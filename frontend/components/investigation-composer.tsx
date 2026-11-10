@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { AlertTriangle, CheckCircle2, Clock3, LoaderCircle, Users } from 'lucide-react'
+import { AlertTriangle, Check, CheckCircle2, Clock3, LoaderCircle, Users } from 'lucide-react'
 
 import {
   composeInvestigation,
   createInvestigationOperationKey,
+  hideInvestigationMembers,
   type InvestigationDetail,
   removeInvestigationMember,
   selectableRelatedSignals,
@@ -34,14 +35,15 @@ export function InvestigationComposer({
   mode?: 'related' | 'evidence'
 }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [visibleRelated, setVisibleRelated] = useState(() => related.items)
   const [investigation, setInvestigation] = useState<InvestigationDetail | null>(() => normalizeInvestigation(initialInvestigation))
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [removeTarget, setRemoveTarget] = useState<string | null>(null)
   const [removeReason, setRemoveReason] = useState('analyst-correction')
   const selectable = useMemo(
-    () => selectableRelatedSignals(related.items).filter((item) => !investigation?.members.some((member) => member.signal.id === item.candidate.id)),
-    [investigation, related.items],
+    () => selectableRelatedSignals(visibleRelated).filter((item) => !investigation?.members.some((member) => member.signal.id === item.candidate.id)),
+    [investigation, visibleRelated],
   )
   const selected = selectable.filter((item) => selectedIds.includes(item.candidate.id))
 
@@ -59,6 +61,7 @@ export function InvestigationComposer({
         operationKey: createInvestigationOperationKey('compose'),
       })
       setInvestigation(result)
+      setVisibleRelated((current) => hideInvestigationMembers(current, result.members.map((member) => member.signal.id)))
       setSelectedIds([])
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Não foi possível registrar a decisão.')
@@ -96,41 +99,44 @@ export function InvestigationComposer({
           : <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">Ainda não há evidências incorporadas a este sinal.</p>
       ) : null}
 
-      {mode === 'related' ? <div className="grid gap-4 lg:grid-cols-2">
-        {related.items.map((item) => {
+      {mode === 'related' ? <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {visibleRelated.map((item) => {
           const canSelect = selectable.some((candidate) => candidate.suggestionId === item.suggestionId)
           const checked = selectedIds.includes(item.candidate.id)
           return (
             <article
               key={item.suggestionId}
               data-candidate-card="kanban"
-              className={`rounded-xl border border-t-4 bg-background p-5 ${candidateStageBorder[item.candidate.state]} ${checked ? 'ring-2 ring-primary/15' : 'border-x-border border-b-border'}`}
+              className={`relative rounded-xl border border-t-4 bg-background p-4 ${candidateStageBorder[item.candidate.state]} ${checked ? 'ring-2 ring-primary/20' : 'border-x-border border-b-border'}`}
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <Badge variant="outline">{item.candidate.sourceKind === 'media' ? 'Mídia' : 'Relato comunitário'}</Badge>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-xs text-muted-foreground">{item.candidate.sourceKind === 'media' ? 'Mídia' : 'Relato comunitário'}</span>
                 <SuggestionState item={item} />
               </div>
-              <h3 className="mt-3 text-base font-semibold leading-snug">{item.candidate.title}</h3>
-              <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{item.candidate.excerpt}</p>
+              <h3 className="mt-2 text-sm font-semibold leading-snug">{item.candidate.title}</h3>
+              <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{item.candidate.excerpt}</p>
               {item.status === 'ready' ? (
-                <div className="mt-4 rounded-lg bg-muted/50 p-3 text-sm">
-                  <p className="font-medium">{relationLabel(item.relation)}{item.confidence === null ? '' : ` · ${Math.round(item.confidence * 100)}% de confiança técnica`}</p>
-                  <p className="mt-1 leading-relaxed text-muted-foreground">{item.justification ?? 'Justificativa não informada.'}</p>
+                <div className="mt-3 border-t border-border pt-3 text-xs">
+                  <p className="font-medium text-primary">Possível relação</p>
+                  <p className="mt-1 line-clamp-2 leading-relaxed text-muted-foreground">{item.justification ?? 'Justificativa não informada.'}</p>
                 </div>
               ) : null}
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+              <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
                 {canSelect ? (
-                  <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-medium">
-                    <input type="checkbox" checked={checked} onChange={() => toggle(item.candidate.id)} className="size-4 accent-primary" />
-                    Selecionar {item.candidate.title}
+                  <label className="flex min-h-9 cursor-pointer items-center gap-2 text-xs font-medium">
+                    <span className={`inline-flex size-5 items-center justify-center rounded-md border ${checked ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-background'}`}>
+                      {checked ? <Check className="size-3.5" aria-hidden /> : null}
+                    </span>
+                    <input type="checkbox" checked={checked} onChange={() => toggle(item.candidate.id)} className="sr-only" />
+                    Selecionar sinal
                   </label>
                 ) : (
                   <span className="text-xs text-muted-foreground">
                     {item.candidate.activeInvestigationId ? 'Já pertence a outra ficha' : 'Disponível somente após o processamento'}
                   </span>
                 )}
-                <Link href={relatedHref(signal.id, item.candidate.id, returnTo)} className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">
-                  Abrir este sinal
+                <Link href={relatedHref(signal.id, item.candidate.id, returnTo)} className="inline-flex min-h-9 items-center text-xs font-medium text-primary hover:underline">
+                  Consultar
                 </Link>
               </div>
             </article>
@@ -185,7 +191,10 @@ function InvestigationSummary({ investigation, onRemove }: { investigation: Inve
             <h4 className="mt-1 font-medium">{member.signal.title}</h4>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{member.signal.body}</p>
             <p className="mt-3 font-mono text-[11px] text-muted-foreground">{member.signal.id}</p>
-            <Button type="button" variant="destructive" size="sm" className="mt-3" onClick={() => onRemove(member.signal.id)}>Remover evidência</Button>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+              <Link href={`/sinais/${member.signal.id}`} className="text-xs font-medium text-primary hover:underline">Abrir ficha para consulta</Link>
+              <Button type="button" variant="destructive" size="sm" onClick={() => onRemove(member.signal.id)}>Remover evidência</Button>
+            </div>
           </article>
         ))}
       </div>
@@ -209,11 +218,6 @@ function SuggestionState({ item }: { item: RelatedSignal }) {
 function relatedHref(originId: string, candidateId: string, returnTo: string): string {
   const relatedReturn = `/sinais/${originId}?${new URLSearchParams({ tab: 'related', returnTo })}`
   return `/sinais/${candidateId}?${new URLSearchParams({ returnTo: relatedReturn })}`
-}
-
-function relationLabel(value: string | null): string {
-  const labels: Record<string, string> = { duplicate: 'Possível duplicata', corroborates: 'Possível corroboração', updates: 'Possível atualização', related_context: 'Contexto possivelmente relacionado', unrelated: 'Provavelmente não relacionado' }
-  return value ? labels[value] ?? value : 'Relação não informada'
 }
 
 function normalizeInvestigation(value: ReadInvestigationDetail | null): InvestigationDetail | null {

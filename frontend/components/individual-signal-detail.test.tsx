@@ -135,7 +135,7 @@ describe('IndividualSignalDetailView', () => {
     expect(overview).toContain('data-text-position="side"')
     expect(overview).toContain('data-context-position="full"')
     expect(overview).toContain('lg:col-span-4')
-    expect(overview).toContain('lg:col-span-12')
+    expect(overview).toContain('lg:col-span-8')
     expect(overview).toContain('Analisar sinal')
     expect(overview).toContain('Relacionar sinais')
     expect(overview).not.toContain('Rastrear origem')
@@ -160,8 +160,10 @@ describe('IndividualSignalDetailView', () => {
     expect(overview).not.toContain('Este registro apoia a investigação')
     expect(overview).toContain('href="/?state=detected&amp;source_kind=community"')
     expect(suggestions).toContain('Sugestões da IA não associam sinais automaticamente')
-    expect(suggestions).toContain('Selecionar Notícia sobre sintomas em Flores')
+    expect(suggestions).toContain('Selecionar sinal')
     expect(suggestions).toContain('data-candidate-card="kanban"')
+    expect(suggestions).toContain('Possível relação')
+    expect(suggestions).not.toContain('confiança técnica')
     expect(suggestions).not.toContain('Decisão de composição')
     expect(suggestions).not.toContain('Criar ficha apenas com o sinal principal')
     expect(suggestions).not.toContain('Revisar composição')
@@ -210,8 +212,30 @@ describe('IndividualSignalDetailView', () => {
     expect(overview).toContain('Quatro pacientes foram atendidos')
     expect(overview).toContain('Quantidade mencionada')
     expect(overview).toContain('Gerenciar evidências')
+    expect(overview).toContain('data-overview-side-stack="true"')
+    expect(overview).toContain('href="/sinais/candidate-ready?returnTo=')
     expect(evidence).toContain('Evidências da investigação')
     expect(evidence).toContain('Remover evidência')
+    expect(evidence).toContain('Abrir ficha para consulta')
     expect(evidence).not.toContain('Remover da ficha')
+  })
+
+  it('mantém a ficha própria da evidência acessível somente para consulta', () => {
+    const evidenceSignal = investigation.members[1].signal
+    const html = renderToStaticMarkup(
+      <IndividualSignalDetailView
+        signal={evidenceSignal}
+        related={{ items: [], nextCursor: null }}
+        returnTo={`/sinais/${signal.id}?tab=evidence`}
+        activeTab="overview"
+        initialInvestigation={investigation}
+      />,
+    )
+
+    expect(html).toContain('Somente consulta')
+    expect(html).toContain('Quatro pacientes foram atendidos com sintomas semelhantes.')
+    expect(html).not.toContain('Quantidade mencionada')
+    expect(html).not.toContain('Relacionar sinais')
+    expect(html).not.toContain('Gerenciar evidências')
   })
 })

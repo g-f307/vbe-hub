@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildCompositionPayload,
   classifyInvestigationError,
+  hideInvestigationMembers,
   mapInvestigation,
   selectableRelatedSignals,
 } from './investigation-client'
@@ -74,6 +75,13 @@ describe('investigation composition', () => {
       related('failed', 'failed'),
       related('ready-assigned', 'ready', 'existing-file'),
     ]).map((item) => item.candidate.id)).toEqual(['ready-free'])
+  })
+
+  it('remove imediatamente da lista os sinais que a composição retornou como membros', () => {
+    expect(hideInvestigationMembers([
+      related('just-added', 'ready'),
+      related('still-available', 'ready'),
+    ], ['head', 'just-added']).map((item) => item.candidate.id)).toEqual(['still-available'])
   })
 
   it('classifica concorrência separadamente para orientar recarregamento', () => {

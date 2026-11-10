@@ -20,8 +20,6 @@ describe('investigation BFF', () => {
       if (url.endsWith(`/signals/${candidate}`)) return json({ active_investigation_id: null })
       if (url.endsWith('/investigations')) return json(investigation(1), 201)
       if (url.endsWith(`/investigations/${fileId}/members/${candidate}`)) return json(investigation(2))
-      if (url.endsWith(`/investigations/${fileId}/workflow`)) return json({ detail: { code: 'investigation_not_found' } }, 404)
-      if (url.endsWith(`/investigations/${fileId}/workflow/transitions`)) return json({ workflow: { state: 'verification', version: 1 }, event: {} })
       return json({ detail: { code: 'unexpected_test_request' } }, 500)
     })
     const request = new Request('http://frontend/api/investigations/compositions', {
@@ -41,7 +39,6 @@ describe('investigation BFF', () => {
       { operation_key: 'compose-test-001:triage:0', expected_version: 0, target_state: 'triage', comment: 'Triagem iniciada para composição humana de ficha.' },
       { signal_id: primary, operation_key: 'compose-test-001:create' },
       { operation_key: 'compose-test-001:add:0', expected_version: 1 },
-      { operation_key: 'compose-test-001:verify', expected_version: 0, target_state: 'verification', comment: 'Composição da ficha confirmada pelo analista.' },
     ])
   })
 
