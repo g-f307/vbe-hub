@@ -115,8 +115,13 @@ continua fora do rastreamento.
   necessária aos seletores, sem criar uma faixa vazia. Na análise, a ficha técnica projetada ocupa
   a área principal, com o ícone centralizado verticalmente ao lado do conteúdo de cada tópico e a etapa
   atual tratada como dado da própria ficha. Quando há composição, a ficha técnica conserva a largura
-  original; texto original e evidências formam uma coluna lateral, nesta ordem. A terceira aba concentra
-  consulta, auditoria e remoção de evidências.
+  original; texto original e evidências dividem verticalmente a coluna lateral em duas metades, nesta
+  ordem, evitando espaço morto ao lado da ficha. Evidências usam uma linha do tempo com o instante da
+  incorporação e o mesmo card nas abas de análise e gerenciamento. A terceira aba concentra consulta,
+  auditoria e remoção de evidências.
+- O card de evidência incorporada usa faixa ameixa dessaturada `#75627F`, ícone de vínculo e rótulo
+  textual. Essa categoria não representa etapa do Kanban e, por isso, não reutiliza azul, verde, âmbar,
+  vermelho ou cinza do workflow; cor nunca é o único indicador do significado.
 - A futura visão territorial mostra apenas agregados aprovados por área. Relatos individuais,
   endereço e coordenadas precisas não pertencem ao mapa.
 
