@@ -9,11 +9,13 @@ describe('filtros da fila de detectados', () => {
       source_kind: 'community',
       query: '  febre  ',
       cursor: 'cursor-2',
+      view: 'kanban',
     })).toEqual({
       state: 'triage',
       sourceKind: 'community',
       query: 'febre',
       cursor: 'cursor-2',
+      view: 'kanban',
     })
 
     expect(parseDetectedFilters({ state: 'invalido', source_kind: 'invalida' })).toEqual({
@@ -21,6 +23,7 @@ describe('filtros da fila de detectados', () => {
       sourceKind: 'all',
       query: undefined,
       cursor: undefined,
+      view: 'cards',
     })
   })
 })
