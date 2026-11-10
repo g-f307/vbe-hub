@@ -138,7 +138,9 @@ Para preparar novas sugestões de relacionados, configure `OPENAI_API_KEY` somen
 e reinicie `relation-worker`. O worker executa extração, embedding, pré-seleção limitada e
 julgamento de relação fora da requisição da interface. A fila aceita no máximo 1.000 sinais por
 padrão, consulta 20 vizinhos e envia no máximo três candidatos por sinal ao modelo; todos os
-limites são configuráveis pelas variáveis `RELATED_*`. Abrir a aba de relacionados apenas
+limites são configuráveis pelas variáveis `RELATED_*`. A pré-seleção exige similaridade semântica
+mínima de `0.65` e pontuação agregada mínima de `0.55`, permitindo que fichas esparsas e expressões
+clinicamente equivalentes cheguem ao julgamento sem remover os limites de custo. Abrir a aba de relacionados apenas
 lerá os estados persistidos `pending`, `ready` ou `failed`.
 
 ### Avaliações históricas opcionais

@@ -4,7 +4,7 @@ type: design
 status: active
 title: Fundação do frontend
 created: 2026-10-07
-updated: 2026-11-08
+updated: 2026-11-09
 owner: VBE Hub
 related_docs:
   - DES-001
@@ -28,19 +28,21 @@ os componentes compatíveis, sem manter uma segunda aplicação paralela.
 Essa separação evita reconstruir o desenho e, ao mesmo tempo, preserva Dockerfile, lockfile, health
 check, testes e proxy interno já validados no repositório.
 
-A raiz `/` consulta `GET /v1/signals` no servidor Next. Cada notícia ou relato aparece como card
-independente; busca no lote, filtros de estado/fonte e cursor permanecem na URL. Os cards não são
-arrastáveis e nenhuma abertura altera workflow. `frontend/v0/lib/mock-data.ts` permanece somente
+A raiz `/` consulta `GET /v1/signals` no servidor Next. Cada notícia ou relato permanece independente
+e pode ser visualizado como cards, lista compacta ou Kanban de cinco estados. Busca no lote, filtros,
+modo de visualização e cursor permanecem na URL. O Kanban reaproveita a estrutura visual do frontend
+exportado, adaptada ao contrato atual; seus cards não são arrastáveis e nenhuma abertura altera workflow.
+`frontend/v0/lib/mock-data.ts` permanece somente
 como artefato transitório de componentes ainda não integrados, nunca como fallback da fila.
 
 As rotas atuais são deliberadamente demonstrativas:
 
 | Rota | Papel na fundação | Estado de dados |
 | --- | --- | --- |
-| `/` | fila de sinais individuais detectados | consulta `GET /v1/signals`; um card por fonte |
+| `/` | fila de sinais individuais em cards, lista ou Kanban | consulta `GET /v1/signals`; um item por fonte |
 | `/triagem` | fila, filtros, indicadores e paginação | consulta `GET /signals` no servidor Next |
 | `/kanban` | quadro complementar dos cinco estágios e tabela acessível | consulta até 100 itens de `GET /signals` com os mesmos filtros; não altera estado |
-| `/sinais/[slug]` | página dedicada do sinal, ficha técnica, relacionados, composição humana, proveniência e auditoria | consulta `GET /v1/signals/{id}`, `/related` e `/audit-events`; quando houver ficha ativa, também lê `/v1/investigations/{id}` |
+| `/sinais/[slug]` | página dedicada do sinal, ficha técnica, relacionados e composição humana | consulta `GET /v1/signals/{id}` e `/related`; quando houver ficha ativa, também lê `/v1/investigations/{id}` |
 | `/api/investigations/compositions` | BFF da confirmação humana | inicia triagem quando necessário, cria/inclui membros e inicializa a ficha em verificação; aceita somente IDs e chave idempotente |
 | `/api/investigations/[fileId]/members/[signalId]/removals` | BFF da correção de vínculo | encaminha somente chave, versão esperada e motivo estruturado |
 | `/panorama` | leitura territorial agregada, mapa local e lista acessível | consulta `GET /signals/geographic-summary` no servidor Next |
@@ -71,17 +73,49 @@ continua fora do rastreamento.
   azul-petróleo `#155E75`, títulos `#123245`, acento `#0F766E`, fundo `#F6F8FA`, superfícies brancas
   e bordas `#DEE6EA`. Cores de prioridade permanecem reservadas aos respectivos níveis e sempre
   aparecem acompanhadas de texto.
-- O header azul-petróleo usa a assinatura clara aprovada; sua navegação centralizada se projeta para
-  baixo sobre o body e termina em cantos inferiores arredondados. Ela reúne Detectados, Visão
-  geoespacial e Indicadores. Indicadores
+- O header azul-petróleo usa a assinatura clara aprovada e centraliza a navegação horizontal para
+  Detectados, Visão geoespacial e Indicadores. A superfície clara do body sobrepõe sua base com
+  cantos superiores arredondados; o azul do header preenche os recortes externos dessa transição. Indicadores
   permanece inativo até que sua rota e seus dados sejam implementados, sem badge auxiliar.
 - A hierarquia segue o contrato visual: título de página em 26 px/600, títulos compactos de cards em
   14 px/500, descrições e controles em 13 px e metadados em 12 px. Em triagem, fluxo, investigação e
   panorama, sinais, prioridades, decisões e agregados vêm da API e continuam sintéticos.
+- Kanban não prescreve cores universais para estados; ferramentas como Azure Boards permitem regras
+  próprias e recomendam consistência, enquanto a categorização difundida pelo Jira usa cinza para
+  itens a fazer, azul para trabalho em andamento e verde para concluídos. O VBE Hub estende essa
+  semântica com tons sóbrios: azul para detectado, verde folha para triagem, âmbar para verificação, vermelho queimado
+  para avaliação de risco e grafite neutro para encerrado. Cards, lista e Kanban usam o mesmo mapa; texto
+  continua obrigatório, portanto a cor nunca é a única indicação do estágio.
 - A IA continuará sendo apresentada como sugestão auditável. A revisão, justificativa e decisão
   pertencem ao profissional de vigilância.
 - A fila e o quadro usam divulgação progressiva: código, estado, condição, local/período e composição de
   fontes ficam no item compacto; evidências, divergências, ficha e auditoria ficam no detalhe.
+- A visualização em lista organiza cada sinal em Sinal, Fonte, Publicação e Etapa. O tipo de fonte
+  aparece diretamente na linha com ícone — grupo de pessoas para relato comunitário e notícia para mídia. Um marcador
+  vertical de 4 px, centralizado e recuado das extremidades, repete a cor canônica do estágio no Kanban, sempre acompanhado pelo nome textual;
+  em telas estreitas, os mesmos campos são reorganizados verticalmente.
+- A visualização em cards mantém três itens por linha em telas amplas, com respiro horizontal moderado
+  entre os cartões e aproveitamento maior da largura útil da página.
+- Os cards do Kanban usam uma composição compacta e plana, com uma faixa horizontal discreta na cor
+  do estágio. Como o nome do estágio já aparece no cabeçalho da coluna, ele não é repetido no card.
+- A rota de detalhe funciona como espaço de investigação em largura ampla, não como modal. O cabeçalho
+  identifica o registro; uma faixa de fatos reúne fonte e datas sem expor identificadores
+  técnicos; abas orientadas às tarefas de analisar e relacionar mantêm o estado na URL. Na análise,
+  texto original e ficha técnica
+  ocupam a área principal, enquanto o contexto operacional permanece em um painel lateral responsivo.
+  Campos internos de processamento da extração não são apresentados como conteúdo da ficha técnica.
+  A proveniência continua preservada no contrato e no backend, mas não é exposta como aba ao usuário final.
+  A composição dispensa a etapa intermediária de revisão: após selecionar sugestões prontas, o analista
+  confirma diretamente a inclusão na ficha.
+  A composição visual do detalhe usa cabeçalho, faixa de abas e módulos independentes sobre um workspace
+  cinza-claro. Ficha técnica, contexto e texto original ocupam cartões proporcionais, seguindo a paleta
+  azul-petróleo e as superfícies neutras do VBE Hub sem introduzir indicadores que não existam no domínio.
+  Cabeçalho e abas formam uma única peça encostada ao início do body. O alternador de abas é centralizado
+  como uma extensão compacta que começa após o limite inferior do cabeçalho e ocupa somente a largura
+  necessária aos dois seletores, sem criar uma faixa vazia. Na análise, a ficha técnica ocupa
+  a área principal, com o ícone centralizado verticalmente ao lado do conteúdo de cada tópico e a etapa
+  atual tratada como dado da própria ficha. O texto original fica na coluna lateral e o contexto aparece
+  em uma faixa inferior somente com título e texto, sem badge decorativo.
 - A futura visão territorial mostra apenas agregados aprovados por área. Relatos individuais,
   endereço e coordenadas precisas não pertencem ao mapa.
 
