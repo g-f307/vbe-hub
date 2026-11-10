@@ -42,11 +42,12 @@ Voltar ao [contexto do projeto](../AGENTS.md).
 
 ## Situação
 
-O comportamento consolidado permanece reproduzível como evidência histórica. Em 2026-11-08, a
-ADR-010 aprovou a transição para um sinal individual por fonte, sugestões pré-calculadas pela
-OpenAI e fichas formadas somente por decisão humana. Persistência, worker assíncrono, API `/v1` e
-workflow-v2 estão implementados sem retirar o modelo legado. A interface ainda será migrada pelo
-caminho expand/contract descrito em [Transição para sinais individuais](signal-domain-transition.md).
+O comportamento consolidado permanece reproduzível como evidência histórica. A ADR-010 aprovou a
+transição para um sinal individual por fonte, sugestões pré-calculadas pela OpenAI e fichas
+formadas somente por decisão humana. A ADR-011 especializa a ficha em um sinal-cabeça e evidências
+preservadas. Persistência, worker assíncrono, API `/v1`, workflow-v2 e interface dedicada estão
+implementados sem retirar o modelo legado, pelo caminho expand/contract descrito em
+[Transição para sinais individuais](signal-domain-transition.md).
 
 Autenticação institucional e integrações reais com EIOS e Guardiões da Saúde permanecem fora da
 PoC; os contratos simulam entradas sem afirmar equivalência com endpoints oficiais.

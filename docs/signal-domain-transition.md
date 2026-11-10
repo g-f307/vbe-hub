@@ -21,7 +21,7 @@ related_docs:
 
 ## Situação
 
-A ADR-010 está aceita. As issues #69 a #72 implementam persistência, pré-cálculo OpenAI, API
+A ADR-010 está aceita e a ADR-011 especializa a composição em sinal-cabeça e evidências. As issues #69 a #72 implementam persistência, pré-cálculo OpenAI, API
 versionada e workflow-v2. A #73 migra a fundação visual, a #74 conecta a rota principal e a página
 dedicada ao contrato de sinais individuais e a #75 implementa seleção, confirmação, composição e
 correção humana de fichas. As rotas anteriores permanecem como referência. Demonstração e validação
@@ -34,8 +34,8 @@ troca completa do modelo ainda não deve ser alegada.
 | --- | --- | --- |
 | Sinal | Uma fonte coletada e preservada individualmente. | Sistema detecta; analista avalia. |
 | Sugestão de relação | Classificação da IA entre dois sinais candidatos. | IA sugere; não associa. |
-| Ficha de investigação | Unidade de trabalho criada pelo analista com um ou mais sinais. | Analista cria e corrige. |
-| Membro | Vínculo de um sinal com uma ficha, sem cópia destrutiva. | Analista decide. |
+| Ficha de investigação | Unidade de trabalho criada pelo analista e centralizada em um sinal-cabeça. | Analista cria e corrige. |
+| Evidência | Sinal vinculado à cabeça, preservado sem cópia destrutiva. | Analista decide. |
 | Prioridade sugerida | Ordenação explicável da ficha. | Sistema sugere; profissional decide. |
 
 “Caso” não será usado como nome de entidade, para não sugerir caso clínico confirmado.
@@ -51,7 +51,7 @@ flowchart LR
   S --> T[Triagem pelo analista]
   R --> T
   T --> H{Seleção humana}
-  H --> I[Ficha de investigação\n1..N sinais]
+  H --> I[Ficha de investigação\n1 cabeça + 0..N evidências]
   I --> V[Verificação]
   V --> A[Avaliação de risco]
   A --> C[Encerramento]
@@ -70,8 +70,8 @@ ficha com o sinal principal e prosseguir.
 | Investigação conjunta | Ficha | `verification` ou `risk_assessment` |
 | Fim | Ficha | `closed` |
 
-O sinal associado mantém referência à ficha ativa e o histórico anterior. Ele deixa a fila de
-detectados, mas não é excluído nem perde URL própria. As issues #69 e #72 implementam controle de
+O sinal-cabeça permanece na fila como ponto de entrada. Evidências mantêm referência à ficha ativa
+e o histórico anterior; deixam a fila independente, mas não são excluídas. As issues #69 e #72 implementam controle de
 versão e eventos append-only. Remover um membro o devolve à triagem; uma ficha não pode ficar
 vazia. A transferência direta entre fichas recebe as versões da origem e do destino e confirma ou
 reverte remoção, inclusão e eventos como uma única transação PostgreSQL.

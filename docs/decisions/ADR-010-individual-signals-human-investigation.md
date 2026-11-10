@@ -22,7 +22,8 @@ related_docs:
 
 ## Status
 
-Aceita em 2026-11-08. Persistência, pré-cálculo, API e workflow-v2 foram implementados nas issues
+Aceita em 2026-11-08 e parcialmente substituída pela ADR-011 quanto à simetria dos membros: toda
+ficha agora possui um sinal-cabeça persistente. Persistência, pré-cálculo, API e workflow-v2 foram implementados nas issues
 #69 a #72. Interface, demonstração e validação ainda serão migradas nas issues #73 a #77; por
 isso, o modelo legado de sinal consolidado permanece disponível temporariamente.
 
@@ -67,8 +68,9 @@ Cada registro coletado elegível produz no máximo um sinal individual por vers�
 identidade externa e o hash de conteúdo continuam garantindo idempotência da ingestão.
 
 Uma ficha possui identidade estável e pode conter um único sinal. Um sinal pode pertencer a no
-máximo uma ficha ativa; reatribuição exige evento compensatório e controle de concorrência. O sinal
-que iniciou a consulta não recebe privilégio persistente sobre os demais membros.
+máximo uma ficha ativa; reatribuição exige evento compensatório e controle de concorrência. A
+ADR-011 substitui a simetria originalmente definida aqui: o sinal que iniciou a composição é
+persistido como cabeça e os demais membros são evidências.
 
 Adicionar ou remover um membro nunca altera o conteúdo do sinal. Correções são novos eventos; não
 se atualizam nem apagam decisões anteriores. Uma ficha não pode ficar vazia: remover seu último

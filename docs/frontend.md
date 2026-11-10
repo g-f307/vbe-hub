@@ -4,7 +4,7 @@ type: design
 status: active
 title: Fundação do frontend
 created: 2026-10-07
-updated: 2026-11-09
+updated: 2026-11-10
 owner: VBE Hub
 related_docs:
   - DES-001
@@ -100,7 +100,7 @@ continua fora do rastreamento.
   do estágio. Como o nome do estágio já aparece no cabeçalho da coluna, ele não é repetido no card.
 - A rota de detalhe funciona como espaço de investigação em largura ampla, não como modal. O cabeçalho
   identifica o registro; uma faixa de fatos reúne fonte e datas sem expor identificadores
-  técnicos; abas orientadas às tarefas de analisar e relacionar mantêm o estado na URL. Na análise,
+  técnicos; abas orientadas às tarefas de analisar, relacionar e gerenciar evidências mantêm o estado na URL. Na análise,
   texto original e ficha técnica
   ocupam a área principal, enquanto o contexto operacional permanece em um painel lateral responsivo.
   Campos internos de processamento da extração não são apresentados como conteúdo da ficha técnica.
@@ -112,10 +112,10 @@ continua fora do rastreamento.
   azul-petróleo e as superfícies neutras do VBE Hub sem introduzir indicadores que não existam no domínio.
   Cabeçalho e abas formam uma única peça encostada ao início do body. O alternador de abas é centralizado
   como uma extensão compacta que começa após o limite inferior do cabeçalho e ocupa somente a largura
-  necessária aos dois seletores, sem criar uma faixa vazia. Na análise, a ficha técnica ocupa
+  necessária aos seletores, sem criar uma faixa vazia. Na análise, a ficha técnica projetada ocupa
   a área principal, com o ícone centralizado verticalmente ao lado do conteúdo de cada tópico e a etapa
-  atual tratada como dado da própria ficha. O texto original fica na coluna lateral e o contexto aparece
-  em uma faixa inferior somente com título e texto, sem badge decorativo.
+  atual tratada como dado da própria ficha. Quando há composição, texto original e evidências dividem
+  a leitura inferior; a terceira aba concentra consulta, auditoria e remoção de evidências.
 - A futura visão territorial mostra apenas agregados aprovados por área. Relatos individuais,
   endereço e coordenadas precisas não pertencem ao mapa.
 
@@ -135,11 +135,13 @@ envia `actor_id`. O backend continua sendo a autoridade para alvo revisável, tr
 idempotência e ator sintético. Erros de validação, indisponibilidade, 404 e conflito de versão são
 mostrados no painel; no conflito, a atualização explícita dos dados preserva o formulário local.
 
-Abrir `Sinais relacionados` lê apenas sugestões persistidas. Os estados `pending`, `ready` e
+Abrir `Sinais relacionados` lê apenas sugestões persistidas e ainda inéditas. Os estados `pending`, `ready` e
 `failed` são exibidos sem iniciar chamada à OpenAI; confiança e justificativa são rotuladas como
 sugestão técnica. Marcar candidatos também não escreve: a confirmação mostra o sinal principal,
 os candidatos e seus IDs, preserva cada texto separadamente e só então inicia triagem e composição
-com chaves idempotentes. Uma ficha ativa exibe membros e eventos; retirar um membro exige motivo,
+com chaves idempotentes. O sinal aberto permanece como cabeça; relacionados confirmados deixam a
+fila e aparecem como evidências somente para leitura. `Gerenciar evidências` exibe histórico e
+remoção; retirar uma evidência exige motivo,
 controle de versão e mantém o evento corretivo. A URL da página e das abas é compartilhável. O parâmetro `returnTo` aceita apenas
 destinos internos e preserva filtros, busca e cursor ao voltar para a fila.
 
