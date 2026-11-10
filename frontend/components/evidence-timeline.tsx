@@ -40,7 +40,7 @@ export function EvidenceTimeline({
             </span>
             {index < items.length - 1 ? <span className="min-h-5 w-px flex-1 bg-[#CFC5D4]" /> : null}
           </div> : null}
-          <article data-evidence-card="incorporated" className="mb-3 rounded-xl border border-t-4 border-border border-t-[#75627F] bg-background p-3.5 shadow-sm">
+          <article data-evidence-card="incorporated" className={`mb-3 w-full rounded-xl border border-t-4 border-border border-t-[#75627F] bg-background p-3.5 shadow-sm ${layout === 'timeline' ? 'max-w-[18rem]' : ''}`}>
             <div className={`flex items-center gap-2 ${layout === 'grid' ? 'justify-between' : 'justify-end'}`}>
               {layout === 'grid' ? <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-[#75627F] text-white"><Link2 className="size-3.5" aria-hidden /></span> : null}
               <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">

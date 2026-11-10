@@ -217,6 +217,7 @@ describe('IndividualSignalDetailView', () => {
     expect(overview).toContain('grid-rows-2')
     expect(overview).toContain('data-evidence-timeline="true"')
     expect(overview).toContain('data-evidence-card="incorporated"')
+    expect(overview).toContain('max-w-[18rem]')
     expect(overview).toContain('border-t-[#75627F]')
     expect(overview).toContain('Incorporado em')
     expect(overview).toContain('Ver detalhes')
