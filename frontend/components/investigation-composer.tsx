@@ -35,6 +35,7 @@ export function InvestigationComposer({
   mode?: 'related' | 'evidence'
 }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [expandedSuggestionIds, setExpandedSuggestionIds] = useState<string[]>([])
   const [visibleRelated, setVisibleRelated] = useState(() => related.items)
   const [investigation, setInvestigation] = useState<InvestigationDetail | null>(() => normalizeInvestigation(initialInvestigation))
   const [pending, setPending] = useState(false)
@@ -103,6 +104,8 @@ export function InvestigationComposer({
         {visibleRelated.map((item) => {
           const canSelect = selectable.some((candidate) => candidate.suggestionId === item.suggestionId)
           const checked = selectedIds.includes(item.candidate.id)
+          const expanded = expandedSuggestionIds.includes(item.suggestionId)
+          const canExpand = (item.justification?.length ?? 0) > 120
           return (
             <article
               key={item.suggestionId}
@@ -118,7 +121,19 @@ export function InvestigationComposer({
               {item.status === 'ready' ? (
                 <div className="mt-3 border-t border-border pt-3 text-xs">
                   <p className="font-medium text-primary">Possível relação</p>
-                  <p className="mt-1 line-clamp-2 leading-relaxed text-muted-foreground">{item.justification ?? 'Justificativa não informada.'}</p>
+                  <p className={`mt-1 leading-relaxed text-muted-foreground ${expanded ? '' : 'line-clamp-2'}`}>{item.justification ?? 'Justificativa não informada.'}</p>
+                  {canExpand ? (
+                    <button
+                      type="button"
+                      aria-expanded={expanded}
+                      onClick={() => setExpandedSuggestionIds((current) => current.includes(item.suggestionId)
+                        ? current.filter((id) => id !== item.suggestionId)
+                        : [...current, item.suggestionId])}
+                      className="mt-1.5 font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {expanded ? 'Ler menos' : 'Ler mais'}
+                    </button>
+                  ) : null}
                 </div>
               ) : null}
               <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">

@@ -46,7 +46,7 @@ const related: RelatedSignalPage = {
       errorCode: null,
       relation: 'corroborates',
       confidence: 0.88,
-      justification: 'Mesmo local, período e sintomas.',
+      justification: 'Mesmo local, período e sintomas. Os registros descrevem fontes independentes com informações compatíveis que devem ser comparadas integralmente pelo analista.',
       candidate: { ...signal, id: 'candidate-ready', title: 'Notícia sobre sintomas em Flores' },
     },
     {
@@ -164,6 +164,7 @@ describe('IndividualSignalDetailView', () => {
     expect(suggestions).toContain('data-candidate-card="kanban"')
     expect(suggestions).toContain('Possível relação')
     expect(suggestions).not.toContain('confiança técnica')
+    expect(suggestions).toContain('Ler mais')
     expect(suggestions).not.toContain('Decisão de composição')
     expect(suggestions).not.toContain('Criar ficha apenas com o sinal principal')
     expect(suggestions).not.toContain('Revisar composição')
