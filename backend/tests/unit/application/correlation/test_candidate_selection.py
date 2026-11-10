@@ -127,6 +127,45 @@ def test_incomplete_record_is_included_with_semantic_and_clinical_evidence() -> 
     assert "candidate_selected" in decision.reasons
 
 
+def test_semantically_strong_sparse_pair_can_reach_relation_judgment() -> None:
+    anchor = sheet(
+        start=None,
+        country=None,
+        state=None,
+        municipality=None,
+        district=None,
+        disease=None,
+        syndrome=None,
+        symptoms=("febre alta", "rigidez de nuca"),
+    )
+    sparse_neighbor = candidate(
+        12,
+        0.8991,
+        start=None,
+        country=None,
+        state=None,
+        municipality=None,
+        district=None,
+        disease=None,
+        syndrome=None,
+        symptoms=("febre", "pescoço endurecido"),
+    )
+
+    result = selector(
+        minimum_semantic_score=0.65,
+        minimum_total_score=0.55,
+    ).select(
+        anchor_id=ANCHOR_ID,
+        anchor_sheet=anchor,
+        neighbors=[sparse_neighbor],
+    )
+
+    decision = result.decisions[0]
+    assert decision.score == 0.57455
+    assert decision.included is True
+    assert "candidate_selected" in decision.reasons
+
+
 def test_low_evidence_neighbor_records_exclusion_reason() -> None:
     result = selector().select(
         anchor_id=ANCHOR_ID,
