@@ -311,22 +311,53 @@ function fieldLabel(value: string): string {
     location: 'Localização',
     temporal: 'Período',
     estimated_cases: 'Quantidade mencionada',
+    estimated_deaths: 'Óbitos estimados',
+    pathogen: 'Patógeno',
+    environment: 'Ambiente',
+    affected_group: 'Grupo afetado',
     missing_fields: 'Campos não encontrados',
+    country: 'País',
+    state: 'Estado',
     municipality: 'Município',
     district: 'Bairro',
+    specific: 'Local específico',
+    precision: 'Precisão',
+    start: 'Início',
+    end: 'Fim',
   }
   return labels[value] ?? value.replaceAll('_', ' ')
 }
 
 function formatFieldValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return 'Não informado'
-  if (Array.isArray(value)) return value.length === 0 ? 'Não informado' : value.map(formatFieldValue).join(', ')
+  if (Array.isArray(value)) {
+    const normalizedItems = [...new Set(value.map(formatFieldValue))]
+    return normalizedItems.length === 0 ? 'Não informado' : normalizedItems.join(', ')
+  }
   if (typeof value === 'object') return Object.entries(value as Record<string, unknown>)
     .filter(([, item]) => item !== null && item !== undefined && item !== '')
     .map(([key, item]) => `${fieldLabel(key)}: ${formatFieldValue(item)}`)
     .join(' · ') || 'Não informado'
   if (typeof value === 'boolean') return value ? 'Sim' : 'Não'
-  return String(value)
+  const text = String(value)
+  return VALUE_LABEL[text.toLocaleLowerCase('en-US')] ?? text
+}
+
+const VALUE_LABEL: Record<string, string> = {
+  district: 'Bairro ou distrito',
+  neighborhood: 'Bairro',
+  specific: 'Local específico',
+  exact: 'Local exato',
+  municipality: 'Município',
+  state: 'Estado',
+  country: 'País',
+  day: 'Dia',
+  month: 'Mês',
+  year: 'Ano',
+  unknown: 'Não informado',
+  fever: 'febre alta',
+  'severe headache': 'dor de cabeça intensa',
+  'stiff neck': 'dificuldade para movimentar o pescoço',
 }
 
 const FIELD_ICON: Record<string, LucideIcon> = {
@@ -336,6 +367,7 @@ const FIELD_ICON: Record<string, LucideIcon> = {
   location: MapPin,
   temporal: CalendarRange,
   estimated_cases: UsersRound,
+  estimated_deaths: UsersRound,
   missing_fields: Info,
 }
 

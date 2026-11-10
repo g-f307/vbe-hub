@@ -200,6 +200,43 @@ describe('IndividualSignalDetailView', () => {
     expect(html).not.toContain('>suggested relevance<')
   })
 
+  it('apresenta rótulos, chaves e termos conhecidos da ficha técnica em português', () => {
+    const signalWithMixedLanguage: IndividualSignalDetail = {
+      ...signal,
+      technicalSheet: {
+        pathogen: null,
+        symptoms: ['febre alta', 'dor de cabeça intensa', 'dificuldade para movimentar o pescoço', 'fever', 'severe headache', 'stiff neck'],
+        location: { district: 'zona leste', specific: 'Zumbi', precision: 'district' },
+        temporal: { end: '2026-10-17', start: '2026-10-17', precision: 'day' },
+        environment: 'unidade da zona leste',
+        affected_group: 'pacientes do Zumbi',
+        estimated_deaths: null,
+      },
+    }
+
+    const html = renderToStaticMarkup(
+      <IndividualSignalDetailView signal={signalWithMixedLanguage} related={related} returnTo="/" activeTab="overview" />,
+    )
+
+    expect(html).toContain('Patógeno')
+    expect(html).toContain('Ambiente')
+    expect(html).toContain('Grupo afetado')
+    expect(html).toContain('Óbitos estimados')
+    expect(html).toContain('Local específico: Zumbi')
+    expect(html).toContain('Precisão: Bairro ou distrito')
+    expect(html).toContain('Início: 2026-10-17')
+    expect(html).toContain('Fim: 2026-10-17')
+    expect(html).toContain('Precisão: Dia')
+    expect(html).toContain('febre alta, dor de cabeça intensa, dificuldade para movimentar o pescoço')
+    expect(html).not.toContain('>pathogen<')
+    expect(html).not.toContain('>environment<')
+    expect(html).not.toContain('>affected group<')
+    expect(html).not.toContain('>estimated deaths<')
+    expect(html).not.toContain('fever')
+    expect(html).not.toContain('severe headache')
+    expect(html).not.toContain('stiff neck')
+  })
+
   it('mantém a cabeça na análise e separa evidências já vinculadas dos candidatos inéditos', () => {
     const overview = renderToStaticMarkup(
       <IndividualSignalDetailView signal={signal} related={{ items: [], nextCursor: null }} returnTo="/" activeTab="overview" initialInvestigation={investigation} />,
