@@ -211,6 +211,7 @@ describe('IndividualSignalDetailView', () => {
         environment: 'unidade da zona leste',
         affected_group: 'pacientes do Zumbi',
         estimated_deaths: null,
+        observacao: 'acompanhamento pela vigilância',
       },
     }
 
@@ -222,6 +223,8 @@ describe('IndividualSignalDetailView', () => {
     expect(html).toContain('Ambiente')
     expect(html).toContain('Grupo afetado')
     expect(html).toContain('Óbitos estimados')
+    expect(html).toContain('Observacao')
+    expect(html).not.toContain('>observacao<')
     expect(html).toContain('Local específico: Zumbi')
     expect(html).toContain('Precisão: Bairro ou distrito')
     expect(html).toContain('Início: 2026-10-17')

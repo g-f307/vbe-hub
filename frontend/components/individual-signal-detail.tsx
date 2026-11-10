@@ -325,7 +325,8 @@ function fieldLabel(value: string): string {
     start: 'Início',
     end: 'Fim',
   }
-  return labels[value] ?? value.replaceAll('_', ' ')
+  const fallback = value.replaceAll('_', ' ')
+  return labels[value] ?? `${fallback.charAt(0).toLocaleUpperCase('pt-BR')}${fallback.slice(1)}`
 }
 
 function formatFieldValue(value: unknown): string {
