@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { AlertTriangle, CheckCircle2, Clock3, FileCheck2, LoaderCircle, Users } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Clock3, LoaderCircle, Users } from 'lucide-react'
 
 import {
   composeInvestigation,
@@ -32,7 +32,6 @@ export function InvestigationComposer({
   initialInvestigation: ReadInvestigationDetail | null
 }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [reviewing, setReviewing] = useState(false)
   const [investigation, setInvestigation] = useState<InvestigationDetail | null>(() => normalizeInvestigation(initialInvestigation))
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -59,7 +58,6 @@ export function InvestigationComposer({
       })
       setInvestigation(result)
       setSelectedIds([])
-      setReviewing(false)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Não foi possível registrar a decisão.')
     } finally {
@@ -130,37 +128,14 @@ export function InvestigationComposer({
         })}
       </div>
 
-      <section aria-labelledby="decisao-composicao" className="rounded-xl border border-andiroba/30 bg-andiroba/5 p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 id="decisao-composicao" className="font-semibold">Decisão de composição</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {selected.length > 0 ? `${selected.length} sinal(is) relacionado(s) selecionado(s).` : 'Criar ficha apenas com o sinal principal.'}
-              {' '}A associação só será registrada após sua confirmação.
-            </p>
-          </div>
-          <Button type="button" size="lg" onClick={() => setReviewing(true)} disabled={pending}>
-            <FileCheck2 aria-hidden /> Revisar composição
+      {selected.length > 0 ? (
+        <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-5" aria-live="polite">
+          <p className="text-sm text-muted-foreground">{selected.length} sinal(is) selecionado(s)</p>
+          <Button type="button" size="lg" onClick={confirmComposition} disabled={pending}>
+            {pending ? <LoaderCircle className="animate-spin" aria-hidden /> : <CheckCircle2 aria-hidden />}
+            {pending ? 'Adicionando…' : 'Adicionar selecionados à ficha'}
           </Button>
         </div>
-      </section>
-
-      {reviewing ? (
-        <section role="dialog" aria-modal="true" aria-labelledby="confirmar-composicao" className="rounded-xl border-2 border-primary/30 bg-card p-5 shadow-lg">
-          <h3 id="confirmar-composicao" className="text-lg font-semibold">Confirmar composição da ficha</h3>
-          <p className="mt-1 text-sm text-muted-foreground">Confira exatamente quais sinais serão reunidos. Os textos continuarão separados.</p>
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            <ComparisonCard id={signal.id} title={signal.title} body={signal.source.body} label="Sinal principal" />
-            {selected.map((item) => <ComparisonCard key={item.candidate.id} id={item.candidate.id} title={item.candidate.title} body={item.candidate.excerpt} label="Sinal relacionado" />)}
-          </div>
-          <div className="mt-5 flex flex-wrap justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setReviewing(false)} disabled={pending}>Cancelar</Button>
-            <Button type="button" onClick={confirmComposition} disabled={pending}>
-              {pending ? <LoaderCircle className="animate-spin" aria-hidden /> : <CheckCircle2 aria-hidden />}
-              Confirmar composição
-            </Button>
-          </div>
-        </section>
       ) : null}
 
       {removeTarget && investigation ? (
@@ -211,10 +186,6 @@ function InvestigationSummary({ investigation, onRemove }: { investigation: Inve
       </details>
     </section>
   )
-}
-
-function ComparisonCard({ id, title, body, label }: { id: string; title: string; body: string; label: string }) {
-  return <article className="rounded-lg border border-border bg-background p-4"><Badge variant="outline">{label}</Badge><h4 className="mt-2 font-medium">{title}</h4><p className="mt-2 line-clamp-5 text-sm leading-relaxed text-muted-foreground">{body}</p><p className="mt-3 font-mono text-[11px] text-muted-foreground">{id}</p></article>
 }
 
 function SuggestionState({ item }: { item: RelatedSignal }) {
