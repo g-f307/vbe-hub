@@ -143,15 +143,26 @@ demonstrar a revisão humana: os dados são sintéticos, o ator pré-carregado �
 decisão sanitária continua humana. Para reiniciar completamente o cenário, use o reset destrutivo
 de volumes descrito abaixo e execute `demo-load` outra vez.
 
-Para a interface baseada em sinais individuais, com dez grupos de quatro fontes e pelo menos três
-sugestões relacionadas por sinal, execute a carga ampliada:
+Para a interface baseada em sinais individuais, com dez grupos de quatro fontes processados pela
+OpenAI, configure `OPENAI_API_KEY` no `.env`, confirme que o `relation-worker` está ativo e execute
+a carga ampliada:
 
 ```bash
 docker compose --profile tools run --rm demo-populate
 ```
 
 Os relatos comunitários dessa carga possuem títulos e os sinais continuam separados até a decisão
-explícita do analista. O comando é idempotente e não chama provedores externos de IA.
+explícita do analista. O comando é idempotente, não persiste relações prontas e enfileira os 40
+sinais. O `relation-worker` chama a OpenAI para extração, embedding e julgamento de até três
+candidatos por sinal; portanto, a execução consome créditos e os resultados aparecem
+progressivamente. Verifique o andamento com:
+
+```bash
+docker compose logs --follow relation-worker
+```
+
+Use um banco limpo ao substituir uma carga demonstrativa antiga, pois entidades idempotentes já
+processadas preservam suas evidências auditáveis.
 
 Para reconstruir sem reaproveitar o cache local:
 

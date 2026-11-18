@@ -110,20 +110,27 @@ remova os volumes conforme [execução local](development.md#persistência-e-enc
 
 ## Massa ampliada de sinais individuais
 
-Para exercitar a interface atual com vários candidatos relacionados por sinal, use:
+Para exercitar a interface atual com relações produzidas pela OpenAI, configure
+`OPENAI_API_KEY` no `.env`, mantenha o `relation-worker` ativo e use:
 
 ```bash
 docker compose --profile tools run --rm demo-populate
 ```
 
 A carga idempotente cria dez ocorrências sintéticas com quatro fontes independentes cada: uma fonte
-de mídia e três relatos comunitários titulados. Os quatro sinais de cada ocorrência permanecem
-individuais em `Detectados`, e todas as combinações internas são persistidas como sugestões
-auditáveis. Portanto, cada sinal apresenta pelo menos três candidatos na aba de relacionamento,
-sem formar uma ficha de investigação ou tomar uma decisão sanitária automaticamente.
+de mídia e três relatos comunitários titulados. Os 40 sinais permanecem individuais em
+`Detectados` e são enfileirados para o processamento assíncrono real. Para cada sinal, o worker usa
+a OpenAI para extrair a ficha técnica, gerar o embedding, selecionar até três candidatos e julgar
+as possíveis relações. Somente resultados persistidos pelo worker aparecem na aba de
+relacionamento; nenhuma sugestão forma uma ficha de investigação ou toma uma decisão sanitária
+automaticamente.
 
-A identidade da carga é `synthetic-individual-demo-v2`. O comando usa fichas e relações pré-computadas,
-não consome cota de provedor de IA e pode ser executado novamente sem duplicar os registros.
+A identidade da carga é `synthetic-individual-demo-live-ai-v3`. A saída informa quantos sinais
+foram efetivamente enfileirados em `queued_for_ai`. O comando não grava fichas nem relações
+pré-computadas. Ele consome créditos da OpenAI por meio do worker e pode ser executado novamente sem
+duplicar os registros; resultados já persistidos podem ser reaproveitados pelo cache auditável.
+Para evitar misturar relações gravadas por versões anteriores da carga com a execução ao vivo,
+comece em um banco limpo conforme [execução local](development.md#persistência-e-encerramento).
 
 ## Fixture e lotes massivos
 
