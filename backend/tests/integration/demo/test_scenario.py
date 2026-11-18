@@ -5,8 +5,11 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vbe_hub.adapters.persistence.investigation_models import SignalRelationSuggestionModel
-from vbe_hub.adapters.persistence.models import RawRecordModel
+from vbe_hub.adapters.persistence.investigation_models import (
+    IndividualSignalModel,
+    SignalRelationSuggestionModel,
+)
+from vbe_hub.adapters.persistence.models import RawRecordModel, TechnicalSheetExtractionModel
 from vbe_hub.api.app import create_app
 from vbe_hub.api.signals import get_signal_read_session
 from vbe_hub.synthetic import importer
@@ -63,7 +66,7 @@ async def test_demo_scenario_materializes_reproducible_signals_for_the_panel(
 
 
 @pytest.mark.integration
-async def test_individual_demo_batch_creates_titled_community_signals_with_three_candidates_each(
+async def test_individual_demo_batch_leaves_titled_signals_pending_for_live_ai_processing(
     db_session: AsyncSession,
 ) -> None:
     result = await load_individual_demo_batch(db_session)
@@ -77,15 +80,28 @@ async def test_individual_demo_batch_creates_titled_community_signals_with_three
             )
         )
     ).all()
-    suggestions = (
-        await db_session.scalars(select(SignalRelationSuggestionModel))
-    ).all()
-    candidate_counts = Counter()
-    for suggestion in suggestions:
-        candidate_counts[suggestion.left_signal_id] += 1
-        candidate_counts[suggestion.right_signal_id] += 1
+    suggestions = list(
+        await db_session.scalars(
+            select(SignalRelationSuggestionModel).where(
+                SignalRelationSuggestionModel.left_signal_id.in_(result.signal_ids),
+                SignalRelationSuggestionModel.right_signal_id.in_(result.signal_ids),
+            )
+        )
+    )
+    technical_sheets = list(
+        await db_session.scalars(
+            select(TechnicalSheetExtractionModel)
+            .join(
+                IndividualSignalModel,
+                IndividualSignalModel.normalized_record_id
+                == TechnicalSheetExtractionModel.normalized_record_id,
+            )
+            .where(IndividualSignalModel.id.in_(result.signal_ids))
+        )
+    )
 
     assert len(result.signal_ids) == 40
     assert len(community_titles) == 30
     assert all(title and title.strip() for title in community_titles)
-    assert all(candidate_counts[signal_id] >= 3 for signal_id in result.signal_ids)
+    assert suggestions == []
+    assert technical_sheets == []

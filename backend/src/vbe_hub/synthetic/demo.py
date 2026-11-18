@@ -556,6 +556,7 @@ async def load_individual_demo_scenario(
     relation_kind: RelationKind = RelationKind.CORROBORATES,
     relation_assessment: RelationAssessmentRecord | None = None,
     expanded_sources: bool = False,
+    seed_relation_suggestions: bool = True,
 ) -> DemoLoadResult:
     """Persist each source as a detected signal and only suggest their relation.
 
@@ -577,21 +578,25 @@ async def load_individual_demo_scenario(
         "relation_suggestions": 0,
     }
     scenario = next(item for item in _BATCH_SCENARIOS if item.key == scenario_key)
-    primary_relation = relation_assessment
-    if primary_relation is None:
-        primary_relation = await _store_relation(
-            scenario,
-            prepared.records[0].id,
-            prepared.records[1].id,
-            relation_kind=relation_kind,
-            relation_repository=SqlAlchemyRelationAssessmentRepository(session),
-            created=created,
-        )
-    elif primary_relation.relation is None:
-        raise ValueError("demo relation assessment must have succeeded")
+    relations: list[RelationAssessmentRecord] = []
+    if seed_relation_suggestions:
+        primary_relation = relation_assessment
+        if primary_relation is None:
+            primary_relation = await _store_relation(
+                scenario,
+                prepared.records[0].id,
+                prepared.records[1].id,
+                relation_kind=relation_kind,
+                relation_repository=SqlAlchemyRelationAssessmentRepository(session),
+                created=created,
+            )
+        elif primary_relation.relation is None:
+            raise ValueError("demo relation assessment must have succeeded")
+        relations.append(primary_relation)
+    elif relation_assessment is not None:
+        raise ValueError("relation assessment requires seeded relation suggestions")
 
-    relations = [primary_relation]
-    if expanded_sources:
+    if expanded_sources and seed_relation_suggestions:
         for left_record, right_record in combinations(prepared.records, 2):
             if {left_record.id, right_record.id} == {
                 prepared.records[0].id,
@@ -657,7 +662,7 @@ async def load_individual_demo_scenario(
 
 
 async def load_individual_demo_batch(session: AsyncSession) -> DemoLoadResult:
-    """Populate the panel with four titled, mutually related signals per scenario."""
+    """Populate titled signals for asynchronous processing by the configured AI worker."""
 
     created = {
         "raw_records": 0,
@@ -672,7 +677,9 @@ async def load_individual_demo_batch(session: AsyncSession) -> DemoLoadResult:
         result = await load_individual_demo_scenario(
             session,
             scenario_key=scenario.key,
+            store_fixture_sheets=False,
             expanded_sources=True,
+            seed_relation_suggestions=False,
         )
         for key, count in result.created.items():
             created[key] += count

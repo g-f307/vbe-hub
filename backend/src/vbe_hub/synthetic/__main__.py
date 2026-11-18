@@ -6,12 +6,15 @@ import argparse
 import asyncio
 import json
 from pathlib import Path
+from uuid import UUID
 
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+from vbe_hub.infrastructure.related_queue import RelatedSignalQueue
 from vbe_hub.infrastructure.settings import get_settings
 from vbe_hub.synthetic.artifacts import write_dataset
-from vbe_hub.synthetic.demo import load_individual_demo_batch
+from vbe_hub.synthetic.demo import DemoLoadResult, load_individual_demo_batch
 from vbe_hub.synthetic.generator import generate_dataset
 from vbe_hub.synthetic.importer import import_dataset, load_demo_scenario
 from vbe_hub.synthetic.models import GeneratorConfig
@@ -43,7 +46,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     subparsers.add_parser(
         "demo-populate",
-        help="populate the individual-signal panel with expanded related fixtures",
+        help="populate expanded signals and enqueue them for live OpenAI processing",
     )
     return parser
 
@@ -83,7 +86,7 @@ async def _demo_load() -> None:
         await engine.dispose()
 
 
-async def _demo_populate() -> None:
+async def _demo_populate() -> DemoLoadResult:
     settings = get_settings()
     engine = create_async_engine(settings.sqlalchemy_database_url)
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
@@ -91,18 +94,25 @@ async def _demo_populate() -> None:
         async with session_factory() as session:
             result = await load_individual_demo_batch(session)
             await session.commit()
-        print(
-            json.dumps(
-                {
-                    "identity": "synthetic-individual-demo-v2",
-                    "created": dict(result.created),
-                    "signal_ids": [str(signal_id) for signal_id in result.signal_ids],
-                },
-                sort_keys=True,
-            )
-        )
+        return result
     finally:
         await engine.dispose()
+
+
+async def _enqueue_demo_signals(signal_ids: tuple[UUID, ...]) -> int:
+    settings = get_settings()
+    redis = Redis.from_url(settings.redis_url.get_secret_value())
+    queue = RelatedSignalQueue(
+        redis=redis,
+        capacity=settings.related_queue_capacity,
+        pop_timeout_seconds=5,
+        max_attempts=settings.openai_max_attempts,
+    )
+    try:
+        outcomes = [await queue.enqueue(signal_id) for signal_id in signal_ids]
+        return sum(outcomes)
+    finally:
+        await redis.aclose()
 
 
 def main() -> None:
@@ -120,7 +130,19 @@ def main() -> None:
     elif args.command == "demo-load":
         asyncio.run(_demo_load())
     elif args.command == "demo-populate":
-        asyncio.run(_demo_populate())
+        result = asyncio.run(_demo_populate())
+        queued = asyncio.run(_enqueue_demo_signals(result.signal_ids))
+        print(
+            json.dumps(
+                {
+                    "identity": "synthetic-individual-demo-live-ai-v3",
+                    "created": dict(result.created),
+                    "queued_for_ai": queued,
+                    "signal_ids": [str(signal_id) for signal_id in result.signal_ids],
+                },
+                sort_keys=True,
+            )
+        )
     elif args.command == "validate":
         report = validate_dataset(args.input)
         write_validation_report(report, args.report)

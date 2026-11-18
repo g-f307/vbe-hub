@@ -1,4 +1,5 @@
 import sys
+from uuid import UUID
 
 from vbe_hub.synthetic import __main__ as command
 from vbe_hub.synthetic.demo import DemoLoadResult
@@ -20,15 +21,21 @@ def test_demo_load_command_routes_to_the_canonical_loader(monkeypatch) -> None:
 
 
 def test_demo_populate_command_routes_to_the_expanded_individual_loader(monkeypatch) -> None:
-    calls: list[bool] = []
+    signal_ids = (UUID(int=1), UUID(int=2))
+    calls: list[object] = []
 
     async def fake_demo_populate() -> DemoLoadResult:
-        calls.append(True)
-        return DemoLoadResult(created={"individual_signals": 40}, signal_ids=())
+        calls.append("loaded")
+        return DemoLoadResult(created={"individual_signals": 2}, signal_ids=signal_ids)
+
+    async def fake_enqueue(queued_signal_ids) -> int:
+        calls.append(tuple(queued_signal_ids))
+        return 2
 
     monkeypatch.setattr(command, "_demo_populate", fake_demo_populate, raising=False)
+    monkeypatch.setattr(command, "_enqueue_demo_signals", fake_enqueue, raising=False)
     monkeypatch.setattr(sys, "argv", ["vbe_hub.synthetic", "demo-populate"])
 
     command.main()
 
-    assert calls == [True]
+    assert calls == ["loaded", signal_ids]

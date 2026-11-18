@@ -304,6 +304,8 @@ services:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     command:
       ["uv", "run", "--no-sync", "python", "-m", "vbe_hub.synthetic", "demo-populate"]
 
