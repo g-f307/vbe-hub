@@ -143,6 +143,16 @@ demonstrar a revisão humana: os dados são sintéticos, o ator pré-carregado �
 decisão sanitária continua humana. Para reiniciar completamente o cenário, use o reset destrutivo
 de volumes descrito abaixo e execute `demo-load` outra vez.
 
+Para a interface baseada em sinais individuais, com dez grupos de quatro fontes e pelo menos três
+sugestões relacionadas por sinal, execute a carga ampliada:
+
+```bash
+docker compose --profile tools run --rm demo-populate
+```
+
+Os relatos comunitários dessa carga possuem títulos e os sinais continuam separados até a decisão
+explícita do analista. O comando é idempotente e não chama provedores externos de IA.
+
 Para reconstruir sem reaproveitar o cache local:
 
 ```bash

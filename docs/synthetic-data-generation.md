@@ -108,6 +108,23 @@ A identidade `synthetic-demo-v1` e os UUIDs dos sinais aparecem na saída. Reexe
 duplica entidades nem reinicializa o workflow que uma pessoa tenha revisado; para um estado limpo,
 remova os volumes conforme [execução local](development.md#persistência-e-encerramento).
 
+## Massa ampliada de sinais individuais
+
+Para exercitar a interface atual com vários candidatos relacionados por sinal, use:
+
+```bash
+docker compose --profile tools run --rm demo-populate
+```
+
+A carga idempotente cria dez ocorrências sintéticas com quatro fontes independentes cada: uma fonte
+de mídia e três relatos comunitários titulados. Os quatro sinais de cada ocorrência permanecem
+individuais em `Detectados`, e todas as combinações internas são persistidas como sugestões
+auditáveis. Portanto, cada sinal apresenta pelo menos três candidatos na aba de relacionamento,
+sem formar uma ficha de investigação ou tomar uma decisão sanitária automaticamente.
+
+A identidade da carga é `synthetic-individual-demo-v2`. O comando usa fichas e relações pré-computadas,
+não consome cota de provedor de IA e pode ser executado novamente sem duplicar os registros.
+
 ## Fixture e lotes massivos
 
 `backend/tests/fixtures/synthetic/v1/` contém 12 registros e cobre uma ocorrência de cada cenário obrigatório. O fixture é pequeno e versionado para regressão. `data/generated/` recebe lotes de trabalho e `data/reports/` recebe diagnósticos; ambos permanecem ignorados pelo Git, exceto pelos marcadores dos diretórios.
