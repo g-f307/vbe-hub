@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from vbe_hub.infrastructure.settings import get_settings
 from vbe_hub.synthetic.artifacts import write_dataset
+from vbe_hub.synthetic.demo import load_individual_demo_batch
 from vbe_hub.synthetic.generator import generate_dataset
 from vbe_hub.synthetic.importer import import_dataset, load_demo_scenario
 from vbe_hub.synthetic.models import GeneratorConfig
@@ -39,6 +40,10 @@ def _parser() -> argparse.ArgumentParser:
     subparsers.add_parser(
         "demo-load",
         help="load the deterministic canonical scenario for the local panel demonstration",
+    )
+    subparsers.add_parser(
+        "demo-populate",
+        help="populate the individual-signal panel with expanded related fixtures",
     )
     return parser
 
@@ -78,6 +83,28 @@ async def _demo_load() -> None:
         await engine.dispose()
 
 
+async def _demo_populate() -> None:
+    settings = get_settings()
+    engine = create_async_engine(settings.sqlalchemy_database_url)
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+    try:
+        async with session_factory() as session:
+            result = await load_individual_demo_batch(session)
+            await session.commit()
+        print(
+            json.dumps(
+                {
+                    "identity": "synthetic-individual-demo-v2",
+                    "created": dict(result.created),
+                    "signal_ids": [str(signal_id) for signal_id in result.signal_ids],
+                },
+                sort_keys=True,
+            )
+        )
+    finally:
+        await engine.dispose()
+
+
 def main() -> None:
     args = _parser().parse_args()
     if args.command == "generate":
@@ -92,6 +119,8 @@ def main() -> None:
         asyncio.run(_import(args.records, args.gold))
     elif args.command == "demo-load":
         asyncio.run(_demo_load())
+    elif args.command == "demo-populate":
+        asyncio.run(_demo_populate())
     elif args.command == "validate":
         report = validate_dataset(args.input)
         write_validation_report(report, args.report)

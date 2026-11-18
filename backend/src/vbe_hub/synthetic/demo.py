@@ -6,6 +6,7 @@ import hashlib
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
+from itertools import combinations
 from types import MappingProxyType
 from typing import Any
 from uuid import UUID, uuid5
@@ -90,7 +91,7 @@ class PreparedDemoScenario:
     """Persisted source records ready for provider-backed analysis."""
 
     key: str
-    records: tuple[NormalizedRecord, NormalizedRecord]
+    records: tuple[NormalizedRecord, ...]
     created: Mapping[str, int]
 
 
@@ -516,8 +517,9 @@ async def prepare_demo_scenario(
     *,
     scenario_key: str,
     store_fixture_sheets: bool = False,
+    expanded_sources: bool = False,
 ) -> PreparedDemoScenario:
-    """Persist only the two canonical sources needed for online analysis."""
+    """Persist canonical sources, optionally including the expanded panel fixture."""
 
     scenarios = tuple(item for item in _BATCH_SCENARIOS if item.key == scenario_key)
     if len(scenarios) != 1:
@@ -537,6 +539,7 @@ async def prepare_demo_scenario(
         extraction_repository=SqlAlchemyExtractionRepository(session),
         created=created,
         store_fixture_sheets=store_fixture_sheets,
+        expanded_sources=expanded_sources,
     )
     return PreparedDemoScenario(
         key=scenario_key,
@@ -552,6 +555,7 @@ async def load_individual_demo_scenario(
     store_fixture_sheets: bool = True,
     relation_kind: RelationKind = RelationKind.CORROBORATES,
     relation_assessment: RelationAssessmentRecord | None = None,
+    expanded_sources: bool = False,
 ) -> DemoLoadResult:
     """Persist each source as a detected signal and only suggest their relation.
 
@@ -562,6 +566,7 @@ async def load_individual_demo_scenario(
         session,
         scenario_key=scenario_key,
         store_fixture_sheets=store_fixture_sheets,
+        expanded_sources=expanded_sources,
     )
     created = {
         "raw_records": prepared.created["raw_records"],
@@ -572,9 +577,9 @@ async def load_individual_demo_scenario(
         "relation_suggestions": 0,
     }
     scenario = next(item for item in _BATCH_SCENARIOS if item.key == scenario_key)
-    relation = relation_assessment
-    if relation is None:
-        relation = await _store_relation(
+    primary_relation = relation_assessment
+    if primary_relation is None:
+        primary_relation = await _store_relation(
             scenario,
             prepared.records[0].id,
             prepared.records[1].id,
@@ -582,8 +587,28 @@ async def load_individual_demo_scenario(
             relation_repository=SqlAlchemyRelationAssessmentRepository(session),
             created=created,
         )
-    elif relation.relation is None:
+    elif primary_relation.relation is None:
         raise ValueError("demo relation assessment must have succeeded")
+
+    relations = [primary_relation]
+    if expanded_sources:
+        for left_record, right_record in combinations(prepared.records, 2):
+            if {left_record.id, right_record.id} == {
+                prepared.records[0].id,
+                prepared.records[1].id,
+            }:
+                continue
+            relations.append(
+                await _store_relation(
+                    scenario,
+                    left_record.id,
+                    right_record.id,
+                    relation_kind=relation_kind,
+                    relation_repository=SqlAlchemyRelationAssessmentRepository(session),
+                    created=created,
+                    identity_suffix=f"{left_record.id}:{right_record.id}",
+                )
+            )
 
     investigations = SqlAlchemyInvestigationRepository(session)
     signal_ids: list[UUID] = []
@@ -603,8 +628,15 @@ async def load_individual_demo_scenario(
             created["individual_signals"] += 1
         signal_ids.append(signal.id)
 
-    if relation.relation is not RelationKind.UNRELATED:
-        left, right = sorted(signal_ids)
+    signal_by_record = dict(
+        zip((record.id for record in prepared.records), signal_ids, strict=True)
+    )
+    for relation in relations:
+        if relation.relation is RelationKind.UNRELATED:
+            continue
+        left, right = sorted(
+            (signal_by_record[relation.left_id], signal_by_record[relation.right_id])
+        )
         existing_suggestion = await session.scalar(
             select(SignalRelationSuggestionModel.id).where(
                 SignalRelationSuggestionModel.left_signal_id == left,
@@ -624,6 +656,31 @@ async def load_individual_demo_scenario(
     )
 
 
+async def load_individual_demo_batch(session: AsyncSession) -> DemoLoadResult:
+    """Populate the panel with four titled, mutually related signals per scenario."""
+
+    created = {
+        "raw_records": 0,
+        "normalized_records": 0,
+        "technical_sheets": 0,
+        "relations": 0,
+        "individual_signals": 0,
+        "relation_suggestions": 0,
+    }
+    signal_ids: list[UUID] = []
+    for scenario in _BATCH_SCENARIOS:
+        result = await load_individual_demo_scenario(
+            session,
+            scenario_key=scenario.key,
+            expanded_sources=True,
+        )
+        for key, count in result.created.items():
+            created[key] += count
+        signal_ids.extend(result.signal_ids)
+
+    return DemoLoadResult(created=MappingProxyType(created), signal_ids=tuple(signal_ids))
+
+
 async def _store_records(
     scenario: _Scenario,
     *,
@@ -631,15 +688,18 @@ async def _store_records(
     extraction_repository: SqlAlchemyExtractionRepository,
     created: dict[str, int],
     store_fixture_sheets: bool,
-) -> tuple[NormalizedRecord, NormalizedRecord]:
+    expanded_sources: bool = False,
+) -> tuple[NormalizedRecord, ...]:
     records: list[NormalizedRecord] = []
-    for source_kind, source_name, title, body in _source_rows(scenario):
-        raw_id = _id(f"raw:{scenario.key}:{source_kind.value}")
+    for source_key, source_kind, source_name, title, body in _source_rows(
+        scenario, expanded=expanded_sources
+    ):
+        raw_id = _id(f"raw:{scenario.key}:{source_key}")
         raw = replace(
             RawRecord.create(
                 source_kind=source_kind,
                 source_name=source_name,
-                external_id=f"demo:{scenario.key}:{source_kind.value}",
+                external_id=f"demo:{scenario.key}:{source_key}",
                 published_at=scenario.published_at,
                 title=title,
                 body=body,
@@ -668,7 +728,7 @@ async def _store_records(
         normalized = await raw_repository.get_normalized(raw_id, _NORMALIZER_VERSION)
         if normalized is None:
             normalized = NormalizedRecord(
-                id=_id(f"normalized:{scenario.key}:{source_kind.value}"),
+                id=_id(f"normalized:{scenario.key}:{source_key}"),
                 raw_record_id=raw_id,
                 normalizer_version=_NORMALIZER_VERSION,
                 status=NormalizationStatus(state=ProcessingState.SUCCEEDED),
@@ -683,11 +743,11 @@ async def _store_records(
             )
             await raw_repository.save_normalized(normalized)
             created["normalized_records"] += 1
-        cache_key = _hash(f"extraction:{scenario.key}:{source_kind.value}")
+        cache_key = _hash(f"extraction:{scenario.key}:{source_key}")
         if store_fixture_sheets and await extraction_repository.get_succeeded(cache_key) is None:
             await extraction_repository.save(
                 ExtractionRecord(
-                    id=_id(f"extraction:{scenario.key}:{source_kind.value}"),
+                    id=_id(f"extraction:{scenario.key}:{source_key}"),
                     normalized_record_id=normalized.id,
                     cache_key=cache_key,
                     input_hash=_hash(raw.content_hash),
@@ -716,7 +776,7 @@ async def _store_records(
             )
             created["technical_sheets"] += 1
         records.append(normalized)
-    return records[0], records[1]
+    return tuple(records)
 
 
 async def _store_relation(
@@ -727,14 +787,15 @@ async def _store_relation(
     relation_kind: RelationKind,
     relation_repository: SqlAlchemyRelationAssessmentRepository,
     created: dict[str, int],
+    identity_suffix: str | None = None,
 ) -> RelationAssessmentRecord:
     # Preserve the identifiers of the original corroborating demo so an upgrade does not
     # duplicate cards already loaded by `demo-load`. Alternative relations are separate fixtures.
-    relation_identity = (
-        f"relation:{scenario.key}"
-        if relation_kind is RelationKind.CORROBORATES
-        else f"relation:{scenario.key}:{relation_kind.value}"
-    )
+    relation_identity = f"relation:{scenario.key}"
+    if relation_kind is not RelationKind.CORROBORATES:
+        relation_identity = f"{relation_identity}:{relation_kind.value}"
+    if identity_suffix is not None:
+        relation_identity = f"{relation_identity}:{identity_suffix}"
     cache_key = _hash(relation_identity)
     existing = await relation_repository.get(cache_key)
     if existing is not None:
@@ -804,19 +865,51 @@ async def _ensure_workflow(
     return created
 
 
-def _source_rows(scenario: _Scenario) -> tuple[tuple[SourceKind, str, str | None, str], ...]:
-    return (
+def _source_rows(
+    scenario: _Scenario, *, expanded: bool = False
+) -> tuple[tuple[str, SourceKind, str, str | None, str], ...]:
+    place = scenario.location.get("district") or scenario.location.get("municipality") or "Manaus"
+    symptoms = ", ".join(scenario.symptoms)
+    canonical = (
         (
+            "media",
             SourceKind.MEDIA,
             "demo-news",
             scenario.media_title,
             scenario.media_body,
         ),
         (
+            "community",
             SourceKind.COMMUNITY,
             "demo-community",
             None,
             scenario.community_body,
+        ),
+    )
+    if not expanded:
+        return canonical
+    return (canonical[0],) + (
+        (
+            "community-titled",
+            SourceKind.COMMUNITY,
+            "demo-community",
+            f"Moradores relatam sintomas compatíveis com {scenario.condition} em {place}",
+            scenario.community_body,
+        ),
+        (
+            "community-family",
+            SourceKind.COMMUNITY,
+            "demo-community-family",
+            f"Famílias descrevem sintomas semelhantes em {place}",
+            f"Famílias de {place} relatam pessoas próximas com {symptoms} nos últimos dias.",
+        ),
+        (
+            "community-leaders",
+            SourceKind.COMMUNITY,
+            "demo-community-leaders",
+            f"Lideranças comunitárias recebem novos relatos em {place}",
+            f"Lideranças de {place} receberam relatos de moradores com {symptoms} e orientaram "
+            "a procura por atendimento.",
         ),
     )
 
