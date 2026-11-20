@@ -4,7 +4,7 @@ type: api
 status: active
 title: API versionada de sinais individuais e fichas
 created: 2026-11-08
-updated: 2026-11-10
+updated: 2026-11-20
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/api/individual_signals.py
@@ -97,6 +97,58 @@ Exemplo sanitizado de criação:
 ```
 
 ## Compatibilidade
+
+### Informações operacionais da ficha
+
+O detalhe individual e a investigação retornam também `information`. A ficha exibida usa somente
+Descrição (`source.body`), Confidencialidade, Tipo de sinal, Etiologia, Perigo geral, Perigo
+específico, Etiquetas, Data do sinal, Data de detecção e Data de notificação. Os atributos antigos
+de `technical_sheet` continuam disponíveis para correlação, auditoria e consumidores existentes,
+mas não são apresentados como campos adicionais na ficha.
+
+| Campo de `information` | Origem e comportamento |
+| --- | --- |
+| `confidentiality` | `original_payload.signal_information.confidentiality`, texto operacional explícito ou `null`. Não representa confiança da IA nem implementa controle de acesso institucional. |
+| `signal_type` | `original_payload.signal_information.signal_type`, texto explícito ou `null`. Não é tipo de fonte nem etapa do fluxo; nenhum enum é inventado a partir do exemplo “Abertura”. |
+| `etiology` | Metadado explícito `etiology`; na ausência, `technical_sheet.disease_or_condition`, preservando suspeita e qualificadores. |
+| `hazard_general` / `hazard_specific` | Categorias explícitas de `signal_information`; sem dado, `null`. Não são deduzidas da síndrome nem atribuídas por confiança de extração. |
+| `tags` | Lista explícita `signal_information.tags`, normalizada por espaços/casefold e sem duplicatas. Não copia sintomas automaticamente nem traduz termos sem vocabulário aprovado. |
+| `signal_date` | Data ISO ou timestamp com fuso informado na origem; na ausência, início válido de `technical_sheet.temporal`. Não usa publicação como fallback nem inventa hora. |
+| `detected_at` | Coleta da origem em `provenance.collected_at`, preservando timestamps simulados dos dados sintéticos históricos. Não reutiliza `published_at` ou a data de incorporação como detecção. |
+| `notified_at` | Timestamp explícito com fuso em `signal_information.notified_at` ou `null`; nenhuma notificação é presumida. |
+| `origins` | Mapa campo → caminho de origem (`source:…`, `extraction:…` ou `provenance:…`). |
+
+`signal_information` é um envelope opcional do payload de origem já persistido em JSONB. Não há
+migration, atualização destrutiva ou reextração obrigatória. Textos aceitam até 200 caracteres,
+etiquetas até 50 itens de 80 caracteres; valores inválidos são ignorados campo a campo, mantendo a
+fonte original consultável. Nenhum atributo novo gera inferência ou chamada ao provedor durante a
+consulta. Ausência vira “Não informado” na interface.
+
+Exemplo parcial de **metadados declarados por uma fonte sintética**, antes da importação:
+
+```json
+{
+  "signal_information": {
+    "confidentiality": "Nível 1",
+    "signal_type": "Abertura",
+    "etiology": "Dengue (suspeita)",
+    "hazard_general": "Arbovirose",
+    "hazard_specific": "Dengue",
+    "tags": ["dengue", "febre", "arbovirose"],
+    "signal_date": "2026-11-14",
+    "notified_at": "2026-11-20T08:00:00-04:00"
+  }
+}
+```
+
+Esses valores são exemplares, não defaults da aplicação. O importador preserva os metadados junto
+ao payload; esta entrega não adiciona edição manual nem integração externa de notificação.
+
+Na investigação, `information_provenance` e `information_conflicts` acompanham a projeção.
+Etiologia, perigos, etiquetas e data do sinal podem ser complementados pelos membros; divergências
+escalares preservam a cabeça e registram alternativa/origem. Confidencialidade, tipo de sinal,
+detecção e notificação pertencem à cabeça e não são herdados de evidências. Remover um membro
+recalcula essa leitura sem modificar as fontes ou as extrações originais.
 
 `/signals`, seu detalhe, workflow e métricas consolidadas permanecem disponíveis durante a
 estratégia expand/contract. Novos consumidores devem usar `/v1`. A retirada do contrato legado
