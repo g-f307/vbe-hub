@@ -16,10 +16,10 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 
 ## Estado atual
 
-> **Transição atualizada em 10/11/2026:** a fundação visual nova já executa na rota `/` e lê um
+> **Transição atualizada em 20/11/2026:** a fundação visual nova já executa na rota `/` e lê um
 > sinal individual por fonte no contrato `/v1`. O detalhe usa uma página dedicada, com ficha
 > técnica, proveniência, auditoria e sugestões relacionadas pré-calculadas. O analista pode
-> selecionar candidatos, conferir os IDs e textos lado a lado e somente então criar ou ampliar uma
+> selecionar candidatos, conferir seus títulos e textos lado a lado e somente então criar ou ampliar uma
 > ficha auditável. O sinal aberto permanece como cabeça; os relacionados confirmados passam a
 > evidências preservadas, consultáveis e removíveis em uma aba própria. Nenhuma abertura ou marcação associa fontes. As rotas legadas continuam
 > disponíveis como referência durante a transição. A
@@ -28,6 +28,14 @@ Comece por [docs/README.md](docs/README.md). As decisões importantes estão em 
 > e o workflow-v2 já existem; a [ADR-011](docs/decisions/ADR-011-head-signal-evidence.md) define a
 > cabeça e a projeção auditável das evidências. Nenhuma sugestão da
 > IA associa fontes automaticamente.
+
+O detalhe oferece **Informações** e **Sinais relacionados**. Na segunda aba, o botão
+**Possíveis sinais relacionados** apresenta o total de candidatos disponíveis e abre a seleção
+em modal. A confirmação atualiza os vínculos e a ficha sem recarga manual. A consulta de um
+incorporado preserva o retorno ao sinal principal, à aba e à página da fila. A ficha mostra apenas
+os dez campos operacionais definidos na [API](docs/individual-signal-api.md#informações-operacionais-da-ficha),
+incluindo **Descrição**; dados ausentes permanecem “Não informado”. A identidade usa o novo azul
+`#319AD3` e os ativos oficiais do kit, já incluídos no frontend versionado.
 
 Fundação, dados sintéticos, funil auditável de correlação, consolidação versionada, prioridade
 sugerida explicável e revisão humana auditável estão implementados. O agrupamento automático e o
