@@ -6,9 +6,10 @@ import {
   getIndividualSignal,
   getInvestigation,
   IndividualSignalReadError,
-  listRelatedSignals,
+  listAllRelatedSignals,
 } from '@/lib/individual-signal-read'
 import { safeInternalReturnTo } from '@/lib/safe-navigation'
+import { resolveSignalTab } from '@/lib/signal-navigation'
 import { Header } from '@/v0/components/header'
 import { BodySurface } from '@/v0/components/body-surface'
 
@@ -25,25 +26,47 @@ export default async function SignalPage({
   let signal
   let related
   let investigation = null
+  let relatedResult
   try {
-    ;[signal, related] = await Promise.all([
+    ;[signal, relatedResult] = await Promise.all([
       getIndividualSignal(slug),
-      listRelatedSignals(slug),
+      listAllRelatedSignals(slug)
+        .then((page) => ({ page, unavailable: false }))
+        .catch(() => ({
+          page: { items: [], nextCursor: null },
+          unavailable: true,
+        })),
     ])
   } catch (error) {
-    if (error instanceof IndividualSignalReadError && error.kind === 'not-found') notFound()
+    if (
+      error instanceof IndividualSignalReadError &&
+      error.kind === 'not-found'
+    )
+      notFound()
     throw error
   }
-  if (signal.activeInvestigationId) investigation = await getInvestigation(signal.activeInvestigationId)
+  related = relatedResult.page
+  const relatedUnavailable = relatedResult.unavailable
+  if (signal.activeInvestigationId)
+    investigation = await getInvestigation(signal.activeInvestigationId)
   const requestedTab = first(query.tab)
-  const activeTab = requestedTab === 'related' || requestedTab === 'evidence' ? requestedTab : 'overview'
+  const { tab: activeTab, openCandidates } = resolveSignalTab(requestedTab)
   const returnTo = safeInternalReturnTo(first(query.returnTo))
 
   return (
-    <div className="min-h-screen bg-primary">
+    <div className="min-h-screen bg-[var(--brand-blue)]">
       <Header />
       <BodySurface>
-        <IndividualSignalDetailView signal={signal} related={related} returnTo={returnTo} activeTab={activeTab} initialInvestigation={investigation} />
+        <IndividualSignalDetailView
+          key={`${signal.id}:${requestedTab}:${first(query.candidates)}`}
+          signal={signal}
+          related={related}
+          returnTo={returnTo}
+          activeTab={activeTab}
+          initialInvestigation={investigation}
+          openCandidates={openCandidates || first(query.candidates) === 'open'}
+          relatedUnavailable={relatedUnavailable}
+        />
       </BodySurface>
     </div>
   )

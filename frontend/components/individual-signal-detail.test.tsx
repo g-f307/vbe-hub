@@ -1,15 +1,18 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-
 import { IndividualSignalDetailView } from './individual-signal-detail'
-import type { IndividualSignalDetail, InvestigationDetail, RelatedSignalPage } from '@/lib/individual-signal-read'
+import type {
+  IndividualSignalDetail,
+  InvestigationDetail,
+  RelatedSignalPage,
+} from '@/lib/individual-signal-read'
 
 const signal: IndividualSignalDetail = {
-  id: '018f6d5d-9c44-7b10-8000-000000000001',
+  id: 'head',
   state: 'detected',
   createdAt: '2026-11-08T09:00:00Z',
-  title: 'Relatos de febre e manchas no bairro',
-  excerpt: 'Moradores relatam sintomas semelhantes.',
+  title: 'Relatos de febre no bairro',
+  excerpt: 'Descrição preservada.',
   sourceKind: 'community',
   sourceName: 'demo-community',
   publishedAt: '2026-11-08T08:00:00Z',
@@ -17,296 +20,205 @@ const signal: IndividualSignalDetail = {
   contractVersion: 'individual-signal-v1',
   source: {
     externalId: 'community-001',
-    body: 'Texto original preservado do relato comunitário.',
+    body: 'Texto integral da comunidade.',
     url: null,
     language: 'pt-BR',
   },
   provenance: {
-    adapterName: 'synthetic-community',
-    adapterVersion: '1.0',
-    generatorName: 'vbe-hub',
-    generatorVersion: '1.0',
-    seed: 307,
-    scenarioId: 'scenario-001',
+    adapterName: 'test',
+    adapterVersion: '1',
+    generatorName: null,
+    generatorVersion: null,
+    seed: null,
+    scenarioId: null,
     collectedAt: '2026-11-08T09:00:00Z',
   },
   technicalSheet: {
-    disease_or_condition: 'Síndrome febril exantemática',
-    symptoms: ['febre', 'manchas vermelhas'],
-    location: { municipality: 'Manaus', district: 'Flores' },
+    disease_or_condition: 'Dengue (suspeita)',
+    symptoms: ['febre'],
+    estimated_cases: 4,
+    location: { district: 'Flores' },
+    pathogen: 'não exibir',
+    temporal: { start: '2026-11-01' },
+    confidence: 0.99,
   },
 }
-
+const evidence = {
+  ...signal,
+  id: 'evidence',
+  title: 'Outra fonte incorporada',
+  source: { ...signal.source, body: 'Descrição própria da evidência.' },
+}
+const investigation: InvestigationDetail = {
+  id: 'file',
+  headSignalId: 'head',
+  version: 2,
+  createdAt: signal.createdAt,
+  updatedAt: signal.createdAt,
+  technicalSheet: { ...signal.technicalSheet },
+  technicalSheetProvenance: {},
+  technicalSheetConflicts: [],
+  members: [
+    { signal, addedAt: signal.createdAt, addedBy: 'analyst' },
+    { signal: evidence, addedAt: signal.createdAt, addedBy: 'analyst' },
+  ],
+  events: [],
+}
 const related: RelatedSignalPage = {
   items: [
     {
-      suggestionId: 'suggestion-ready',
+      suggestionId: 'one',
       status: 'ready',
-      updatedAt: '2026-11-08T09:05:00Z',
-      errorCode: null,
       relation: 'corroborates',
-      confidence: 0.88,
-      justification: 'Mesmo local, período e sintomas. Os registros descrevem fontes independentes com informações compatíveis que devem ser comparadas integralmente pelo analista.',
-      candidate: { ...signal, id: 'candidate-ready', title: 'Notícia sobre sintomas em Flores' },
-    },
-    {
-      suggestionId: 'suggestion-pending',
-      status: 'pending',
-      updatedAt: '2026-11-08T09:04:00Z',
+      candidate: { ...signal, id: 'new' },
+      updatedAt: signal.createdAt,
       errorCode: null,
-      relation: null,
-      confidence: null,
-      justification: null,
-      candidate: { ...signal, id: 'candidate-pending', title: 'Relato aguardando análise' },
+      confidence: 0.8,
+      justification: 'Possível relação entre as fontes.',
     },
     {
-      suggestionId: 'suggestion-failed',
-      status: 'failed',
-      updatedAt: '2026-11-08T09:03:00Z',
-      errorCode: 'provider_timeout',
+      suggestionId: 'two',
+      status: 'ready',
+      relation: 'unrelated',
+      candidate: { ...signal, id: 'unrelated' },
+      updatedAt: signal.createdAt,
+      errorCode: null,
+      confidence: 0.9,
+      justification: 'Não relacionados.',
+    },
+    {
+      suggestionId: 'three',
+      status: 'pending',
       relation: null,
+      candidate: { ...signal, id: 'pending' },
+      updatedAt: signal.createdAt,
+      errorCode: null,
       confidence: null,
       justification: null,
-      candidate: { ...signal, id: 'candidate-failed', title: 'Relato não processado' },
     },
   ],
   nextCursor: null,
 }
 
-const investigation: InvestigationDetail = {
-  id: '018f6d5d-9c44-7b10-8000-000000000010',
-  headSignalId: signal.id,
-  version: 2,
-  createdAt: '2026-11-08T09:00:00Z',
-  updatedAt: '2026-11-08T09:10:00Z',
-  technicalSheet: { ...(signal.technicalSheet ?? {}), estimated_cases: 4 },
-  technicalSheetProvenance: { estimated_cases: ['candidate-ready'] },
-  technicalSheetConflicts: [],
-  members: [
-    { addedAt: '2026-11-08T09:00:00Z', addedBy: 'analyst', signal },
-    {
-      addedAt: '2026-11-08T09:10:00Z',
-      addedBy: 'analyst',
-      signal: {
-        ...signal,
-        id: 'candidate-ready',
-        title: 'Notícia sobre sintomas em Flores',
-        sourceKind: 'media',
-        source: { ...signal.source, body: 'Quatro pacientes foram atendidos com sintomas semelhantes.' },
-      },
-    },
-  ],
-  events: [],
-}
-
-describe('IndividualSignalDetailView', () => {
-  it('preserva a fonte e apresenta relacionados como sugestões navegáveis', () => {
-    const overview = renderToStaticMarkup(
+describe('detalhe do sinal', () => {
+  it('exibe somente os dez campos aprovados e preserva o texto original como Descrição', () => {
+    const html = renderToStaticMarkup(
       <IndividualSignalDetailView
         signal={signal}
         related={related}
-        returnTo="/?state=detected&source_kind=community"
+        returnTo="/?cursor=page2"
         activeTab="overview"
       />,
     )
-    const suggestions = renderToStaticMarkup(
+    for (const label of [
+      'Confidencialidade',
+      'Tipo de sinal',
+      'Etiologia',
+      'Perigo geral',
+      'Perigo específico',
+      'Etiquetas',
+      'Data do sinal',
+      'Data de detecção',
+      'Data de notificação',
+      'Descrição',
+    ])
+      expect(html).toContain(label)
+    expect(html.match(/data-information-field=/g)).toHaveLength(9)
+    for (const label of [
+      '>Etapa<',
+      '>Sintomas<',
+      '>Síndrome<',
+      '>Localização<',
+      '>Patógeno<',
+      '>Ambiente<',
+      '>Grupo afetado<',
+      '>Quantidade mencionada<',
+      '>Óbitos estimados<',
+      'Texto original da fonte',
+    ])
+      expect(html).not.toContain(label)
+    expect(html).toContain('Texto integral da comunidade.')
+    expect(html).toContain('Dengue (suspeita)')
+    expect(html).toContain('01/11/2026')
+    expect(html).toContain('Não informado')
+  })
+
+  it('tem duas abas e o botão contextual conta somente candidatos válidos', () => {
+    const html = renderToStaticMarkup(
       <IndividualSignalDetailView
         signal={signal}
         related={related}
-        returnTo="/?state=detected&source_kind=community"
-        activeTab="related"
+        returnTo="/"
+        activeTab="evidence"
+        initialInvestigation={investigation}
       />,
     )
-
-    expect(overview).toContain('Texto original preservado do relato comunitário.')
-    expect(overview).toContain('Ficha técnica')
-    expect(overview).toContain('Relacionar sinais')
-    expect(overview).toContain('data-detail-layout="investigation-workspace"')
-    expect(overview).toContain('data-detail-header="signal-record"')
-    expect(overview).toContain('data-signal-facts="true"')
-    expect(overview).toContain('data-overview-layout="reading-and-context"')
-    expect(overview).toContain('data-overview-dashboard="true"')
-    expect(overview).toContain('lg:grid-cols-12')
-    expect(overview).toContain('data-workspace-tabs="true"')
-    expect(overview).toContain('left-1/2 top-full w-fit')
-    expect(overview).toContain('w-max')
-    expect(overview).not.toContain('-translate-y-1/2')
-    expect(overview).toContain('data-detail-chrome="header-and-tabs"')
-    expect(overview).toContain('data-text-position="side"')
-    expect(overview).toContain('data-context-position="full"')
-    expect(overview).toContain('lg:col-span-4')
-    expect(overview).toContain('lg:col-span-8')
-    expect(overview).toContain('Analisar sinal')
-    expect(overview).toContain('Relacionar sinais')
-    expect(overview).not.toContain('Rastrear origem')
-    expect(overview).not.toContain('demo-community')
-    expect(overview.match(/Relato comunitário/g)).toHaveLength(1)
-    expect(overview.match(/Relacionar sinais/g)).toHaveLength(1)
-    expect(overview).not.toContain('Ver possíveis relações')
-    expect(overview).toContain('bg-card text-primary shadow-sm')
-    expect(overview).toContain('data-panel-tone="card"')
-    expect(overview).not.toContain('data-signal-state="detected"')
-    expect(overview).toContain('data-technical-state="detected"')
-    expect(overview).toContain('flex items-center gap-3')
-    expect(overview).not.toContain('items-center text-center')
-    expect(overview).not.toContain('data-context-badge="true"')
-    expect(overview).toContain('data-technical-item="true"')
-    expect(overview).not.toContain('data-technical-icon-tile="true"')
-    expect(overview).not.toContain('overflow-hidden rounded-xl border border-border bg-card shadow-sm')
-    expect(overview).not.toContain('Registro individual')
-    expect(overview).not.toContain(`ID ${signal.id}`)
-    expect(overview).not.toContain('Identificador externo')
-    expect(overview).not.toContain('Decisão humana')
-    expect(overview).not.toContain('Este registro apoia a investigação')
-    expect(overview).toContain('href="/?state=detected&amp;source_kind=community"')
-    expect(suggestions).toContain('Sugestões da IA não associam sinais automaticamente')
-    expect(suggestions).toContain('Selecionar sinal')
-    expect(suggestions).toContain('data-candidate-card="kanban"')
-    expect(suggestions).toContain('Possível relação')
-    expect(suggestions).not.toContain('confiança técnica')
-    expect(suggestions).toContain('Ler mais')
-    expect(suggestions).not.toContain('Decisão de composição')
-    expect(suggestions).not.toContain('Criar ficha apenas com o sinal principal')
-    expect(suggestions).not.toContain('Revisar composição')
-    expect(suggestions).not.toContain('Confirmar composição da ficha')
-    expect(suggestions).toContain('Mesmo local, período e sintomas.')
-    expect(suggestions).toContain('Processamento em andamento')
-    expect(suggestions).toContain('Não foi possível preparar esta sugestão')
-    expect(suggestions).toContain('href="/sinais/candidate-ready?returnTo=')
+    expect(html).toContain('Informações')
+    expect(html).toContain('Sinais relacionados')
+    expect(html).toContain('Possíveis sinais relacionados')
+    expect(html).toContain('aria-label="1 disponíveis"')
+    expect(html).not.toContain('Analisar sinal')
+    expect(html).not.toContain('Gerenciar evidências')
+    expect(html).toContain('Outra fonte incorporada')
+    expect(html).toContain('Remover evidência')
+    expect(html).toContain('aria-haspopup="dialog"')
   })
 
-  it('omite campos internos da ficha técnica sem alterar os campos epidemiológicos úteis', () => {
-    const withInternalFields: IndividualSignalDetail = {
-      ...signal,
-      technicalSheet: {
-        ...(signal.technicalSheet ?? {}),
-        evidence: 'field: symptoms · excerpt: febre',
-        confidence: 0.98,
-        record_nature: 'community',
-        action_in_progress: null,
-        suggested_relevance: null,
-      },
-    }
-    const html = renderToStaticMarkup(
-      <IndividualSignalDetailView signal={withInternalFields} related={related} returnTo="/" activeTab="overview" />,
-    )
-
-    expect(html).toContain('Condição mencionada')
-    expect(html).toContain('Sintomas')
-    expect(html).not.toContain('field: symptoms')
-    expect(html).not.toContain('>confidence<')
-    expect(html).not.toContain('>record nature<')
-    expect(html).not.toContain('>action in progress<')
-    expect(html).not.toContain('>suggested relevance<')
-  })
-
-  it('apresenta rótulos, chaves e termos conhecidos da ficha técnica em português', () => {
-    const signalWithMixedLanguage: IndividualSignalDetail = {
-      ...signal,
-      technicalSheet: {
-        pathogen: null,
-        symptoms: ['febre alta', 'dor de cabeça intensa', 'dificuldade para movimentar o pescoço', 'fever', 'severe headache', 'stiff neck'],
-        location: { district: 'zona leste', specific: 'Zumbi', precision: 'district' },
-        temporal: { end: '2026-10-17', start: '2026-10-17', precision: 'day' },
-        environment: 'unidade da zona leste',
-        affected_group: 'pacientes do Zumbi',
-        estimated_deaths: null,
-        observacao: 'acompanhamento pela vigilância',
-      },
-    }
-
-    const html = renderToStaticMarkup(
-      <IndividualSignalDetailView signal={signalWithMixedLanguage} related={related} returnTo="/" activeTab="overview" />,
-    )
-
-    expect(html).toContain('Patógeno')
-    expect(html).toContain('Ambiente')
-    expect(html).toContain('Grupo afetado')
-    expect(html).toContain('Óbitos estimados')
-    expect(html).toContain('Observacao')
-    expect(html).not.toContain('>observacao<')
-    expect(html).toContain('Local específico: Zumbi')
-    expect(html).toContain('Precisão: Bairro ou distrito')
-    expect(html).toContain('Início: 2026-10-17')
-    expect(html).toContain('Fim: 2026-10-17')
-    expect(html).toContain('Precisão: Dia')
-    expect(html).toContain('febre alta, dor de cabeça intensa, dificuldade para movimentar o pescoço')
-    expect(html).not.toContain('>pathogen<')
-    expect(html).not.toContain('>environment<')
-    expect(html).not.toContain('>affected group<')
-    expect(html).not.toContain('>estimated deaths<')
-    expect(html).not.toContain('fever')
-    expect(html).not.toContain('severe headache')
-    expect(html).not.toContain('stiff neck')
-  })
-
-  it('mantém a cabeça na análise e separa evidências já vinculadas dos candidatos inéditos', () => {
-    const overview = renderToStaticMarkup(
-      <IndividualSignalDetailView signal={signal} related={{ items: [], nextCursor: null }} returnTo="/" activeTab="overview" initialInvestigation={investigation} />,
-    )
-    const evidence = renderToStaticMarkup(
-      <IndividualSignalDetailView signal={signal} related={{ items: [], nextCursor: null }} returnTo="/" activeTab="evidence" initialInvestigation={investigation} />,
-    )
-
-    expect(overview).toContain('Evidências incorporadas')
-    expect(overview).toContain('Notícia sobre sintomas em Flores')
-    expect(overview).toContain('Quatro pacientes foram atendidos')
-    expect(overview).toContain('Quantidade mencionada')
-    expect(overview).toContain('Gerenciar evidências')
-    expect(overview).toContain('data-overview-side-stack="true"')
-    expect(overview).toContain('grid-rows-2')
-    expect(overview).toContain('data-evidence-timeline="true"')
-    expect(overview).toContain('data-evidence-card="incorporated"')
-    expect(overview).not.toContain('max-w-[18rem]')
-    expect(overview).toContain('border-t-[#75627F]')
-    expect(overview).toContain('Incorporado em')
-    expect(overview).not.toContain('Relato comunitário · publicado em')
-    expect(overview).toContain('Ver detalhes')
-    expect(overview).not.toContain('>Evidência incorporada<')
-    expect(overview).toContain('href="/sinais/candidate-ready?returnTo=')
-    expect(evidence).toContain('Remover evidência')
-    expect(evidence).toContain('Ver detalhes')
-    expect(evidence).toContain('data-evidence-timeline="true"')
-    expect(evidence).toContain('data-evidence-card="incorporated"')
-    expect(evidence).toContain('border-t-[#75627F]')
-    expect(evidence).toContain('data-evidence-layout="grid"')
-    expect(evidence).not.toContain('Conteúdos preservados e vinculados por decisão humana')
-    expect(evidence).not.toContain('Histórico da composição')
-    expect(evidence).not.toContain('Remover da ficha')
-  })
-
-  it('mantém o texto original em toda a altura quando a ficha ainda não tem evidências', () => {
-    const investigationWithoutEvidence: InvestigationDetail = {
-      ...investigation,
-      version: 1,
-      members: [investigation.members[0]],
-    }
-
-    const overview = renderToStaticMarkup(
-      <IndividualSignalDetailView signal={signal} related={{ items: [], nextCursor: null }} returnTo="/" activeTab="overview" initialInvestigation={investigationWithoutEvidence} />,
-    )
-
-    expect(overview).not.toContain('grid-rows-2')
-    expect(overview).not.toContain('Evidências incorporadas')
-    expect(overview).toContain('Texto original preservado do relato comunitário.')
-  })
-
-  it('mantém a ficha própria da evidência acessível somente para consulta', () => {
-    const evidenceSignal = investigation.members[1].signal
+  it('consulta o incorporado com sua própria ficha e retorna à aba e à página da fila', () => {
+    const queue = '/?view=list&cursor=page2&state=triage'
+    const headReturn = `/sinais/head?${new URLSearchParams({ tab: 'evidence', returnTo: queue })}`
     const html = renderToStaticMarkup(
       <IndividualSignalDetailView
-        signal={evidenceSignal}
-        related={{ items: [], nextCursor: null }}
-        returnTo={`/sinais/${signal.id}?tab=evidence`}
+        signal={evidence}
+        related={related}
+        returnTo={headReturn}
         activeTab="overview"
         initialInvestigation={investigation}
       />,
     )
-
     expect(html).toContain('Somente consulta')
-    expect(html).toContain('Quatro pacientes foram atendidos com sintomas semelhantes.')
-    expect(html).not.toContain('Quantidade mencionada')
-    expect(html).not.toContain('Relacionar sinais')
-    expect(html).not.toContain('Gerenciar evidências')
+    expect(html).toContain('Voltar ao sinal principal')
+    expect(html).toContain('Descrição própria da evidência.')
+    expect(html).toContain(
+      'href="/?view=list&amp;cursor=page2&amp;state=triage"',
+    )
+    expect(html).toContain('tab=evidence')
+    expect(html).not.toContain('Possíveis sinais relacionados')
+    expect(html).not.toContain('Remover evidência')
+  })
+
+  it('distingue ausência de candidatos de falha na leitura das sugestões', () => {
+    const props = { signal, related: { items: [], nextCursor: null }, returnTo: '/', activeTab: 'evidence' as const }
+    const empty = renderToStaticMarkup(<IndividualSignalDetailView {...props} />)
+    expect(empty).toContain('aria-label="0 disponíveis"')
+    expect(empty).toContain('Ainda não há evidências incorporadas')
+    const unavailable = renderToStaticMarkup(<IndividualSignalDetailView {...props} relatedUnavailable />)
+    expect(unavailable).toContain('Não foi possível carregar as sugestões')
+    expect(unavailable).toContain('Tentar novamente')
+    expect(unavailable).toContain('disabled')
+  })
+
+  it('preserva a divisão lateral quando há incorporados e a altura integral sem eles', () => {
+    const withEvidence = renderToStaticMarkup(
+      <IndividualSignalDetailView
+        signal={signal}
+        related={related}
+        returnTo="/?cursor=page2"
+        activeTab="overview"
+        initialInvestigation={investigation}
+      />,
+    )
+    const alone = renderToStaticMarkup(
+      <IndividualSignalDetailView
+        signal={signal}
+        related={related}
+        returnTo="/"
+        activeTab="overview"
+      />,
+    )
+    expect(withEvidence).toContain('grid-rows-2')
+    expect(withEvidence).toContain('Incorporado em')
+    expect(withEvidence).toContain('returnTo%3D%252F%253Fcursor%253Dpage2')
+    expect(alone).not.toContain('grid-rows-2')
   })
 })
