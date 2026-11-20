@@ -14,7 +14,11 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from vbe_hub.infrastructure.related_queue import RelatedSignalQueue
 from vbe_hub.infrastructure.settings import get_settings
 from vbe_hub.synthetic.artifacts import write_dataset
-from vbe_hub.synthetic.demo import DemoLoadResult, load_individual_demo_batch
+from vbe_hub.synthetic.demo import (
+    DemoLoadResult,
+    load_individual_demo_batch,
+    refresh_demo_information,
+)
 from vbe_hub.synthetic.generator import generate_dataset
 from vbe_hub.synthetic.importer import import_dataset, load_demo_scenario
 from vbe_hub.synthetic.models import GeneratorConfig
@@ -47,6 +51,10 @@ def _parser() -> argparse.ArgumentParser:
     subparsers.add_parser(
         "demo-populate",
         help="populate expanded signals and enqueue them for live OpenAI processing",
+    )
+    subparsers.add_parser(
+        "demo-refresh-information",
+        help="fill missing operational metadata of existing demo sources without AI calls",
     )
     return parser
 
@@ -115,6 +123,17 @@ async def _enqueue_demo_signals(signal_ids: tuple[UUID, ...]) -> int:
         await redis.aclose()
 
 
+async def _demo_refresh_information() -> None:
+    engine = create_async_engine(get_settings().sqlalchemy_database_url)
+    try:
+        async with async_sessionmaker(engine)() as session:
+            result = await refresh_demo_information(session)
+            await session.commit()
+        print(json.dumps({"identity": "demo-information-v1", **result, "queued_for_ai": 0}))
+    finally:
+        await engine.dispose()
+
+
 def main() -> None:
     args = _parser().parse_args()
     if args.command == "generate":
@@ -129,6 +148,8 @@ def main() -> None:
         asyncio.run(_import(args.records, args.gold))
     elif args.command == "demo-load":
         asyncio.run(_demo_load())
+    elif args.command == "demo-refresh-information":
+        asyncio.run(_demo_refresh_information())
     elif args.command == "demo-populate":
         result = asyncio.run(_demo_populate())
         queued = asyncio.run(_enqueue_demo_signals(result.signal_ids))

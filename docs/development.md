@@ -4,7 +4,7 @@ type: operations
 status: active
 title: Execução e validação local
 created: 2026-09-28
-updated: 2026-10-07
+updated: 2026-11-20
 owner: VBE Hub
 related_docs:
   - DES-001
@@ -39,7 +39,8 @@ As rotas `/triagem` e `/sinais/[slug]` reutilizam o protótipo v0 e leem dados s
 persistidos pela API. O segmento da rota é o UUID canônico. A investigação também registra revisão
 humana e transição por rotas internas do Next, que encaminham somente campos permitidos à API. A
 comunicação com a API ocorre somente no servidor Next pela rede interna do Compose, sem CORS ou URL
-interna no navegador. `/panorama` permanece mockado até sua própria integração.
+interna no navegador. `/panorama` mantém a leitura territorial legada por
+`GET /signals/geographic-summary`; esta atualização não implementa uma nova visão geoespacial.
 
 Para a demonstração do fluxo de revisão, `REVIEW_ACTOR_ID` define o ator sintético registrado na
 auditoria e usa `synthetic-analyst` por padrão. Essa configuração não substitui autenticação nem
@@ -55,7 +56,7 @@ Endpoints de leitura usados pelo painel:
 - `GET /signals`: fila sintética paginada e filtrável;
 - `GET /signals/{signal_id}`: investigação com proveniência, fichas técnicas disponíveis, relações e auditoria.
 
-Endpoints do novo contrato, ainda não consumidos pelo painel legado:
+Endpoints do contrato atual, consumidos pela fila `/` e pelo detalhe `/sinais/[slug]`:
 
 - `GET /v1/signals`: fila com uma fonte por sinal;
 - `GET /v1/signals/{signal_id}/related`: sugestões pré-calculadas;
@@ -65,6 +66,21 @@ Endpoints do novo contrato, ainda não consumidos pelo painel legado:
 - `GET /v1/metrics/summary`: sinais, sugestões e fichas contabilizados separadamente.
 
 Consulte a [API de sinais individuais](individual-signal-api.md) para os demais comandos.
+
+O detalhe possui as abas Informações e Sinais relacionados. Nesta última, use Possíveis sinais
+relacionados para abrir o modal de seleção e confirmação. A ficha apresenta os dez campos
+operacionais aprovados; a carga antiga não informa necessariamente sigilo, tipo, perigos,
+etiquetas ou notificação. Esses campos ficam “Não informado” até existir metadado explícito na
+origem, conforme o contrato. Não é necessário reprocessar a massa com IA para atualizar a tela.
+
+Para aplicar uma atualização já recebida do repositório preservando banco, fila e credenciais:
+
+```bash
+docker compose up --build --detach --wait
+```
+
+O tema e os ativos novos estão em `frontend/`; o build não depende da pasta local ignorada
+`vbe-hub-frontend/`. Não use reset de volumes para atualizar a identidade ou os campos da ficha.
 
 Consulte o [contrato de leitura canônica](signal-read-api.md). Falha, vazio, carregamento e 404
 são exibidos explicitamente e não há fallback silencioso para mocks.
@@ -163,6 +179,30 @@ docker compose logs --follow relation-worker
 
 Use um banco limpo ao substituir uma carga demonstrativa antiga, pois entidades idempotentes já
 processadas preservam suas evidências auditáveis.
+
+### Atualizar metadados dos exemplos existentes
+
+Para somente adaptar as cargas `demo-load` e `demo-populate` aos campos operacionais atuais,
+**não limpe o banco** nem repita o processamento por IA. Execute:
+
+```bash
+docker compose --profile tools run --build --rm demo-refresh-information
+```
+
+O comando completa `signal_information` apenas nos registros de identidade conhecida do gerador
+`vbe-hub-demo`, marcados como sintéticos e com cenário/identificador externo correspondentes.
+Não cria sinais, não altera títulos, descrições, IDs, extrações, sugestões, associações ou histórico,
+e não acessa provedores de IA nem enfileira trabalho. Valores operacionais já preenchidos são
+preservados. A transação é atômica; a repetição informa `updated: 0`.
+
+As novas cargas já incluem os mesmos metadados: `Nível 1` e `Abertura` são valores demonstrativos,
+não uma política institucional; etiologias são suspeitas, nunca diagnósticos. Categorias e etiquetas
+são declaradas no fixture, não novas conclusões da IA. A data do sinal segue a publicação simulada;
+a notificação é simulada para 30 minutos depois e **não representa envio a uma autoridade**.
+A detecção permanece “Não informado” nessas cargas históricas: a coleta retroativa não comprova
+uma detecção real. A proveniência original e o marcador `synthetic` permanecem preservados.
+
+### Reconstrução e verificação
 
 Para reconstruir sem reaproveitar o cache local:
 

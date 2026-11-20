@@ -1,4 +1,5 @@
 import type { RelatedSignal } from './individual-signal-read'
+import { mapSignalInformation, type SignalInformation } from './signal-information'
 
 export type InvestigationSignal = {
   id: string
@@ -25,6 +26,7 @@ export type InvestigationEvent = {
 }
 
 export type InvestigationDetail = {
+  information?: SignalInformation
   id: string
   headSignalId: string
   version: number
@@ -50,7 +52,10 @@ export class InvestigationActionError extends Error {
 }
 
 export function selectableRelatedSignals(items: RelatedSignal[]): RelatedSignal[] {
-  return items.filter((item) => item.status === 'ready' && item.candidate.activeInvestigationId === null)
+  return items.filter((item) => item.status === 'ready'
+    && item.candidate.activeInvestigationId === null
+    && ['detected', 'triage'].includes(item.candidate.state)
+    && ['duplicate', 'corroborates', 'updates', 'related_context'].includes(item.relation ?? ''))
 }
 
 export function hideInvestigationMembers(items: RelatedSignal[], memberIds: string[]): RelatedSignal[] {
@@ -145,6 +150,7 @@ export function mapInvestigation(value: unknown): InvestigationDetail {
     createdAt: requiredString(value.created_at),
     updatedAt: requiredString(value.updated_at),
     technicalSheet: isRecord(value.technical_sheet) ? value.technical_sheet : {},
+    information: mapSignalInformation(value.information),
     technicalSheetProvenance: stringArrayRecord(value.technical_sheet_provenance),
     technicalSheetConflicts: Array.isArray(value.technical_sheet_conflicts)
       ? value.technical_sheet_conflicts.filter(isRecord)

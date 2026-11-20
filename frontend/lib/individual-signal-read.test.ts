@@ -6,6 +6,7 @@ import {
   getIndividualSignal,
   listIndividualSignals,
   listRelatedSignals,
+  listAllRelatedSignals,
   listSignalAuditEvents,
 } from './individual-signal-read'
 
@@ -26,6 +27,14 @@ const card = {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('contrato de sinais individuais', () => {
+  it('lê todas as páginas de candidatos para não truncar o contador', async () => {
+    const fetch = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ items: [], next_cursor: 'next-page' })))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ items: [], next_cursor: null })))
+    vi.stubGlobal('fetch', fetch)
+    expect(await listAllRelatedSignals(card.id)).toEqual({ items: [], nextCursor: null })
+    expect(fetch.mock.calls[1][0]).toContain('cursor=next-page')
+  })
   it('serializa somente filtros aceitos pelo endpoint versionado', () => {
     expect(Object.fromEntries(buildIndividualSignalSearch({
       state: 'detected',

@@ -1,34 +1,57 @@
+'use client'
+
 import Link from 'next/link'
+import { useState } from 'react'
 import {
-  Activity,
   CalendarClock,
   CalendarRange,
   ChevronRight,
-  ClipboardList,
-  Clock3,
   ExternalLink,
   FileText,
   GitBranch,
   Layers3,
-  Info,
-  MapPin,
   Newspaper,
+  Shield,
   Stethoscope,
-  Thermometer,
+  Tag,
+  TriangleAlert,
   UsersRound,
   type LucideIcon,
 } from 'lucide-react'
 
 import type {
   IndividualSignalDetail,
-  IndividualSignalState,
   InvestigationDetail,
   RelatedSignalPage,
 } from '@/lib/individual-signal-read'
-import { InvestigationComposer } from '@/components/investigation-composer'
+import {
+  selectableRelatedSignals,
+  type InvestigationDetail as Composition,
+} from '@/lib/investigation-client'
+import {
+  formatInformationDate,
+  informationForSignal,
+} from '@/lib/signal-information'
+import {
+  resolveSignalNavigation,
+  resolveSignalTab,
+  signalHref,
+  type SignalTab,
+} from '@/lib/signal-navigation'
+import {
+  InvestigationComposer,
+  normalizeInvestigation,
+} from '@/components/investigation-composer'
 import { EvidenceTimeline } from '@/components/evidence-timeline'
-
-type DetailTab = 'overview' | 'related' | 'evidence'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/v0/components/ui/dialog'
 
 export function IndividualSignalDetailView({
   signal,
@@ -36,103 +59,270 @@ export function IndividualSignalDetailView({
   returnTo,
   activeTab,
   initialInvestigation = null,
+  openCandidates = false,
+  relatedUnavailable = false,
 }: {
   signal: IndividualSignalDetail
   related: RelatedSignalPage
   returnTo: string
-  activeTab: DetailTab
+  activeTab: SignalTab | 'related'
   initialInvestigation?: InvestigationDetail | null
+  openCandidates?: boolean
+  relatedUnavailable?: boolean
 }) {
   const SourceIcon = signal.sourceKind === 'media' ? Newspaper : UsersRound
-  const readOnlyEvidence = initialInvestigation !== null && initialInvestigation.headSignalId !== signal.id
+  const [investigation, setInvestigation] = useState(() =>
+    normalizeInvestigation(initialInvestigation),
+  )
+  const [candidatesOpen, setCandidatesOpen] = useState(
+    openCandidates || activeTab === 'related',
+  )
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
+  const readOnly =
+    investigation !== null && investigation.headSignalId !== signal.id
+  const head = readOnly
+    ? investigation.members.find(
+        (member) => member.signal.id === investigation.headSignalId,
+      )
+    : null
+  const navigation = resolveSignalNavigation(
+    returnTo,
+    readOnly ? investigation.headSignalId : null,
+  )
+  const tab = readOnly ? 'overview' : resolveSignalTab(activeTab).tab
+  const evidence = readOnly
+    ? []
+    : (investigation?.members.filter(
+        (member) => member.signal.id !== signal.id,
+      ) ?? [])
+  const candidates = selectableRelatedSignals(related.items).filter(
+    (item) =>
+      item.candidate.id !== signal.id &&
+      !investigation?.members.some(
+        (member) => member.signal.id === item.candidate.id,
+      ),
+  )
+
+  function changed(value: Composition) {
+    setInvestigation(value)
+    setNotice('Sinais relacionados atualizados.')
+    setCandidatesOpen(false)
+    window.history.replaceState(
+      null,
+      '',
+      signalHref(signal.id, 'evidence', returnTo),
+    )
+  }
+
+  function toggleCandidates(open: boolean) {
+    if (busy) return
+    setCandidatesOpen(open)
+    const href = signalHref(signal.id, 'evidence', returnTo)
+    window.history.replaceState(
+      null,
+      '',
+      open ? `${href}&candidates=open` : href,
+    )
+  }
+
   return (
-    <main id="conteudo-principal" data-detail-layout="investigation-workspace" className="mx-auto w-full max-w-screen-2xl px-4 pb-8 sm:px-6 lg:px-8">
-      <div data-detail-chrome="header-and-tabs" className="relative rounded-b-2xl border-x border-b border-border bg-card shadow-sm">
-        <header data-detail-header="signal-record" className="px-5 pb-6 pt-5 sm:px-8">
-          <nav aria-label="Trilha de navegação" className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-            <Link href={returnTo} className="shrink-0 rounded font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+    <main
+      id="conteudo-principal"
+      data-detail-layout="investigation-workspace"
+      className="mx-auto w-full max-w-screen-2xl px-4 pb-8 sm:px-6 lg:px-8"
+    >
+      <div
+        data-detail-chrome="header-and-tabs"
+        className="relative rounded-b-2xl border-x border-b border-border bg-card shadow-sm"
+      >
+        <header
+          data-detail-header="signal-record"
+          className="px-5 pb-6 pt-5 sm:px-8"
+        >
+          <nav
+            aria-label="Trilha de navegação"
+            className="flex min-w-0 flex-wrap items-center gap-1.5 text-xs text-muted-foreground"
+          >
+            <Link
+              href={navigation.queueHref}
+              className="shrink-0 rounded font-medium hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+            >
               Sinais detectados
             </Link>
             <ChevronRight className="size-3.5 shrink-0" aria-hidden />
-            <span className="truncate font-medium text-foreground">{signal.title}</span>
+            {head && navigation.headHref ? (
+              <>
+                <Link
+                  href={navigation.headHref}
+                  className="max-w-full truncate font-medium text-primary"
+                >
+                  {head.signal.title}
+                </Link>
+                <ChevronRight className="size-3.5 shrink-0" aria-hidden />
+              </>
+            ) : null}
+            <span
+              aria-current="page"
+              className="min-w-0 truncate font-medium text-foreground"
+            >
+              {signal.title}
+            </span>
           </nav>
-
           <div className="mt-5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex min-w-0 items-start gap-4">
               <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/40 text-primary">
                 <SourceIcon className="size-5" aria-hidden />
               </span>
               <div className="min-w-0">
-                <h1 className="text-balance text-2xl font-semibold leading-tight tracking-tight text-foreground sm:text-[26px]">{signal.title}</h1>
-                <dl data-signal-facts="true" className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                  <InlineFact icon={SourceIcon} label="Fonte" value={displaySourceName(signal)} />
-                  <InlineFact icon={CalendarClock} label="Publicado em" value={formatDate(signal.publishedAt)} />
-                </dl>
+                <h1 className="text-balance text-2xl font-semibold leading-tight tracking-tight text-foreground sm:text-[26px]">
+                  {signal.title}
+                </h1>
+                <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                  <SourceIcon className="size-4" aria-hidden />
+                  {signal.sourceName.startsWith('demo-')
+                    ? signal.sourceKind === 'media'
+                      ? 'Mídia'
+                      : 'Relato comunitário'
+                    : signal.sourceName}
+                </p>
               </div>
-            </div>
-
-            <div className="flex shrink-0 flex-col gap-3 lg:items-end">
-              <p className="flex items-baseline gap-2 text-sm text-muted-foreground">
-                <Clock3 className="size-4 self-center" aria-hidden />
-                Detectado em <span className="text-base font-semibold text-foreground">{formatDate(signal.createdAt)}</span>
-              </p>
-              {readOnlyEvidence ? <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">Somente consulta</span> : null}
             </div>
           </div>
         </header>
-
-        <div data-workspace-tabs="true" className="absolute left-1/2 top-full w-fit max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-xl border border-border bg-muted/95 p-1.5 shadow-sm">
-            <nav aria-label="Seções do sinal" className="flex w-max max-w-full gap-1 overflow-x-auto">
-              <TabLink signalId={signal.id} returnTo={returnTo} tab="overview" active={activeTab === 'overview'} icon={FileText}>
-                Analisar sinal
+        <div
+          data-workspace-tabs="true"
+          className="absolute left-1/2 top-full w-fit max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-xl border border-border bg-muted/95 p-1.5 shadow-sm"
+        >
+          <nav
+            aria-label="Seções do sinal"
+            className="flex w-max max-w-full gap-1 overflow-x-auto"
+          >
+            <TabLink
+              href={signalHref(signal.id, 'overview', returnTo)}
+              active={tab === 'overview'}
+              icon={FileText}
+            >
+              Informações
+            </TabLink>
+            {!readOnly ? (
+              <TabLink
+                href={signalHref(signal.id, 'evidence', returnTo)}
+                active={tab === 'evidence'}
+                icon={Layers3}
+              >
+                Sinais relacionados{' '}
+                <span className="ml-1 text-xs">{evidence.length}</span>
               </TabLink>
-              {!readOnlyEvidence ? <TabLink signalId={signal.id} returnTo={returnTo} tab="related" active={activeTab === 'related'} icon={GitBranch}>
-                Relacionar sinais
-                <span className="ml-1.5 text-xs opacity-70">{related.items.length}</span>
-              </TabLink> : null}
-              {!readOnlyEvidence ? <TabLink signalId={signal.id} returnTo={returnTo} tab="evidence" active={activeTab === 'evidence'} icon={Layers3}>
-                Gerenciar evidências
-                <span className="ml-1.5 text-xs opacity-70">{evidenceMembers(initialInvestigation).length}</span>
-              </TabLink> : null}
-            </nav>
+            ) : null}
+          </nav>
         </div>
       </div>
-
-            <div className="mt-16 rounded-2xl bg-muted/45 p-3 sm:p-4">
-              {activeTab === 'overview' || readOnlyEvidence ? <Overview signal={signal} investigation={readOnlyEvidence ? null : initialInvestigation} /> : null}
-              {activeTab === 'related' && !readOnlyEvidence ? <RelatedSignals signal={signal} related={related} returnTo={returnTo} initialInvestigation={initialInvestigation} /> : null}
-              {activeTab === 'evidence' && !readOnlyEvidence ? <EvidenceManager signal={signal} related={related} returnTo={returnTo} investigation={initialInvestigation} /> : null}
+      <div className="mt-16 rounded-2xl bg-muted/45 p-3 sm:p-4">
+        {notice ? (
+          <p role="status" className="mb-3 text-sm text-primary">
+            {notice}
+          </p>
+        ) : null}
+        {tab === 'overview' ? (
+          <Overview
+            signal={signal}
+            investigation={readOnly ? null : investigation}
+            returnTo={navigation.queueHref}
+          />
+        ) : (
+          <Panel
+            id="sinais-relacionados"
+            title="Sinais relacionados"
+            description="Consulte os sinais incorporados ou procure novas relações para esta investigação."
+          >
+            <div className="mb-5 flex flex-wrap items-center justify-end gap-3">
+              <Dialog open={candidatesOpen} onOpenChange={toggleCandidates}>
+                <DialogTrigger asChild>
+                  <Button type="button" disabled={relatedUnavailable}>
+                    <GitBranch aria-hidden />
+                    Possíveis sinais relacionados{' '}
+                    <span
+                      aria-label={`${candidates.length} disponíveis`}
+                      className="ml-1 rounded-full bg-white/20 px-2 py-0.5 text-xs tabular-nums"
+                    >
+                      {candidates.length}
+                    </span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent
+                  className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl"
+                  showCloseButton={!busy}
+                  onEscapeKeyDown={(event) => {
+                    if (busy) event.preventDefault()
+                  }}
+                  onPointerDownOutside={(event) => {
+                    if (busy) event.preventDefault()
+                  }}
+                >
+                  <DialogHeader className="shrink-0 border-b border-border px-5 py-5 pr-12 text-left sm:px-6">
+                    <DialogTitle>Possíveis sinais relacionados</DialogTitle>
+                    <DialogDescription>
+                      Sugestões da IA não associam sinais automaticamente.
+                      Selecione os sinais que deseja incorporar a “
+                      {signal.title}”.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="min-h-0 overflow-y-auto px-5 py-5 sm:px-6">
+                    <InvestigationComposer
+                      signal={signal}
+                      related={related}
+                      returnTo={returnTo}
+                      initialInvestigation={investigation}
+                      onChange={changed}
+                      onBusy={setBusy}
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
+            {relatedUnavailable ? (
+              <p role="alert" className="mb-4 text-sm text-destructive">
+                Não foi possível carregar as sugestões.{' '}
+                <a
+                  href={signalHref(signal.id, 'evidence', returnTo)}
+                  className="underline"
+                >
+                  Tentar novamente
+                </a>
+              </p>
+            ) : null}
+            <InvestigationComposer
+              signal={signal}
+              related={related}
+              returnTo={returnTo}
+              initialInvestigation={investigation}
+              mode="evidence"
+              onChange={changed}
+            />
+          </Panel>
+        )}
+      </div>
     </main>
   )
 }
 
-function tabHref(signalId: string, tab: DetailTab, returnTo: string): string {
-  return `/sinais/${signalId}?${new URLSearchParams({ tab, returnTo })}`
-}
-
 function TabLink({
-  signalId,
-  returnTo,
-  tab,
+  href,
   active,
   icon: Icon,
   children,
 }: {
-  signalId: string
-  returnTo: string
-  tab: DetailTab
+  href: string
   active: boolean
   icon: LucideIcon
   children: React.ReactNode
 }) {
   return (
     <Link
-      href={tabHref(signalId, tab, returnTo)}
+      href={href}
       aria-current={active ? 'page' : undefined}
-      className={`flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-        active ? 'bg-card text-primary shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:bg-card/70 hover:text-foreground'
-      }`}
+      className={`flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${active ? 'bg-card text-primary shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:bg-card/70 hover:text-foreground'}`}
     >
       <Icon className="size-4" aria-hidden />
       {children}
@@ -140,255 +330,185 @@ function TabLink({
   )
 }
 
-function Panel({ id, title, description, children }: { id: string; title: string; description?: string; children: React.ReactNode }) {
+function Panel({
+  id,
+  title,
+  description,
+  children,
+}: {
+  id: string
+  title: string
+  description?: string
+  children: React.ReactNode
+}) {
   return (
-    <section data-panel-tone="card" aria-labelledby={id} className="h-full rounded-2xl border border-border bg-card px-5 py-5 shadow-sm sm:px-6">
-      <h2 id={id} className="scroll-mt-20 text-sm font-semibold text-foreground">{title}</h2>
-      {description ? <p className="mt-0.5 text-xs text-muted-foreground">{description}</p> : null}
+    <section
+      data-panel-tone="card"
+      aria-labelledby={id}
+      className="h-full rounded-2xl border border-border bg-card px-5 py-5 shadow-sm sm:px-6"
+    >
+      <h2 id={id} className="text-sm font-semibold text-foreground">
+        {title}
+      </h2>
+      {description ? (
+        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+      ) : null}
       <div className="mt-4">{children}</div>
     </section>
   )
 }
 
-function Overview({ signal, investigation }: { signal: IndividualSignalDetail; investigation: InvestigationDetail | null }) {
-  const projectedSheet = investigation?.technicalSheet ?? signal.technicalSheet
-  const incorporatedEvidence = investigation ? evidenceMembers(investigation) : []
-  const hasIncorporatedEvidence = incorporatedEvidence.length > 0
-  const technicalFields = projectedSheet
-    ? Object.entries(projectedSheet).filter(([key]) => !HIDDEN_TECHNICAL_FIELDS.has(key))
-    : []
+function Overview({
+  signal,
+  investigation,
+  returnTo,
+}: {
+  signal: IndividualSignalDetail
+  investigation: Composition | null
+  returnTo: string
+}) {
+  const info = investigation?.information ?? informationForSignal(signal)
+  const evidence =
+    investigation?.members.filter(
+      (member) => member.signal.id !== investigation.headSignalId,
+    ) ?? []
+  const fields: Array<{
+    key: string
+    label: string
+    value: React.ReactNode
+    icon: LucideIcon
+  }> = [
+    {
+      key: 'confidentiality',
+      label: 'Confidencialidade',
+      value: info.confidentiality,
+      icon: Shield,
+    },
+    {
+      key: 'signal_type',
+      label: 'Tipo de sinal',
+      value: info.signal_type,
+      icon: FileText,
+    },
+    {
+      key: 'etiology',
+      label: 'Etiologia',
+      value: info.etiology,
+      icon: Stethoscope,
+    },
+    {
+      key: 'hazard_general',
+      label: 'Perigo geral',
+      value: info.hazard_general,
+      icon: TriangleAlert,
+    },
+    {
+      key: 'hazard_specific',
+      label: 'Perigo específico',
+      value: info.hazard_specific,
+      icon: TriangleAlert,
+    },
+    {
+      key: 'tags',
+      label: 'Etiquetas',
+      value: info.tags.length ? (
+        <span className="flex flex-wrap gap-x-2 gap-y-1">
+          {info.tags.map((tag) => (
+            <span key={tag}>{tag}</span>
+          ))}
+        </span>
+      ) : null,
+      icon: Tag,
+    },
+    {
+      key: 'signal_date',
+      label: 'Data do sinal',
+      value: formatInformationDate(info.signal_date),
+      icon: CalendarRange,
+    },
+    {
+      key: 'detected_at',
+      label: 'Data de detecção',
+      value: formatInformationDate(info.detected_at),
+      icon: CalendarClock,
+    },
+    {
+      key: 'notified_at',
+      label: 'Data de notificação',
+      value: formatInformationDate(info.notified_at),
+      icon: CalendarClock,
+    },
+  ]
   return (
-    <div data-overview-layout="reading-and-context" data-overview-dashboard="true" className="grid items-stretch gap-4 lg:grid-cols-12">
+    <div
+      data-overview-layout="reading-and-context"
+      className="grid items-stretch gap-4 lg:grid-cols-12"
+    >
       <div className="min-w-0 lg:col-span-8">
-        <Panel id="ficha-tecnica" title="Ficha técnica" description="Leitura estruturada extraída do conteúdo. Confira cada campo antes de usá-lo na investigação.">
+        <Panel id="ficha-tecnica" title="Ficha técnica">
           <dl className="grid gap-3 sm:grid-cols-2">
-            <ItemCard icon={Activity} label="Etapa" value={STATE_LABEL[signal.state]} state={signal.state} />
-            {technicalFields.map(([key, value]) => (
-              <ItemCard key={key} icon={FIELD_ICON[key] ?? ClipboardList} label={fieldLabel(key)} value={formatFieldValue(value)} />
+            {fields.map(({ key, label, value, icon: Icon }) => (
+              <div
+                key={key}
+                data-information-field={key}
+                className="flex items-center gap-3 rounded-xl border border-border p-3"
+              >
+                <Icon className="size-4 shrink-0 text-primary" aria-hidden />
+                <div className="min-w-0">
+                  <dt className="text-sm font-medium text-foreground">
+                    {label}
+                  </dt>
+                  <dd className="mt-0.5 break-words text-xs leading-relaxed text-muted-foreground">
+                    {value || 'Não informado'}
+                  </dd>
+                </div>
+              </div>
             ))}
           </dl>
-          {technicalFields.length === 0 ? (
-            <p className="mt-3 text-center text-xs text-muted-foreground">Os demais campos da ficha técnica ainda não estão disponíveis.</p>
-          ) : null}
         </Panel>
       </div>
-
-      <aside data-text-position="side" data-overview-side-stack="true" className={`${hasIncorporatedEvidence ? 'grid min-h-0 grid-rows-2 gap-4' : ''} lg:col-span-4`}>
-        <div className={hasIncorporatedEvidence ? 'min-h-0 overflow-y-auto rounded-2xl' : 'h-full'}>
-          <Panel id="texto-fonte" title="Texto original da fonte" description="Conteúdo preservado para leitura e comparação pelo analista.">
+      <aside
+        data-text-position="side"
+        className={`${evidence.length ? 'grid min-h-0 grid-rows-2 gap-4' : ''} lg:col-span-4`}
+      >
+        <div
+          className={
+            evidence.length ? 'min-h-0 overflow-y-auto rounded-2xl' : 'h-full'
+          }
+        >
+          <Panel id="descricao" title="Descrição">
             <div className="border-t border-border pt-4">
-              <p className="whitespace-pre-wrap break-words text-sm leading-6 text-foreground">{signal.source.body}</p>
+              <p className="whitespace-pre-wrap break-words text-sm leading-6 text-foreground">
+                {signal.source.body}
+              </p>
               {signal.source.url ? (
                 <a
                   href={signal.source.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-4 inline-flex min-h-10 items-center gap-2 border-t border-border pt-3 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                  className="mt-4 inline-flex min-h-10 items-center gap-2 text-sm font-medium text-primary hover:underline"
                 >
-                  Abrir publicação original <ExternalLink className="size-4" aria-hidden />
+                  Abrir publicação original{' '}
+                  <ExternalLink className="size-4" aria-hidden />
                 </a>
               ) : null}
             </div>
           </Panel>
         </div>
-        {hasIncorporatedEvidence && investigation ? <div className="min-h-0 overflow-y-auto rounded-2xl">
-          <Panel id="evidencias-incorporadas" title="Evidências incorporadas" description="Sinais relacionados preservados como fontes independentes desta investigação.">
-            <EvidenceTimeline items={incorporatedEvidence.map(toTimelineItem)} headSignalId={investigation.headSignalId} compact />
-          </Panel>
-        </div> : null}
+        {evidence.length && investigation ? (
+          <div className="min-h-0 overflow-y-auto rounded-2xl">
+            <Panel id="evidencias-incorporadas" title="Evidências incorporadas">
+              <EvidenceTimeline
+                items={evidence}
+                headSignalId={investigation.headSignalId}
+                returnTo={returnTo}
+                originTab="overview"
+                compact
+              />
+            </Panel>
+          </div>
+        ) : null}
       </aside>
-
-      {!investigation ? <div data-context-position="full" className="lg:col-span-12">
-        <section aria-labelledby="contexto-analise" className="h-full rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
-          <h2 id="contexto-analise" className="text-sm font-semibold">Contexto da análise</h2>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground">Este é um registro individual. Outros sinais permanecem separados até a decisão explícita do analista.</p>
-        </section>
-      </div> : null}
     </div>
   )
 }
-
-function EvidenceManager({
-  signal,
-  related,
-  returnTo,
-  investigation,
-}: {
-  signal: IndividualSignalDetail
-  related: RelatedSignalPage
-  returnTo: string
-  investigation: InvestigationDetail | null
-}) {
-  return (
-    <Panel id="gerenciar-evidencias" title="Gerenciar evidências" description="Consulte ou desfaça vínculos. Nenhum conteúdo original é alterado ou apagado.">
-      <InvestigationComposer signal={signal} related={related} returnTo={returnTo} initialInvestigation={investigation} mode="evidence" />
-    </Panel>
-  )
-}
-
-function evidenceMembers(investigation: InvestigationDetail | null) {
-  return investigation?.members.filter((member) => member.signal.id !== investigation.headSignalId) ?? []
-}
-
-function toTimelineItem(member: InvestigationDetail['members'][number]) {
-  return {
-    addedAt: member.addedAt,
-    signal: {
-      id: member.signal.id,
-      title: member.signal.title,
-      body: member.signal.source.body,
-      sourceKind: member.signal.sourceKind,
-      sourceName: member.signal.sourceName,
-      publishedAt: member.signal.publishedAt,
-    },
-  }
-}
-
-function RelatedSignals({
-  signal,
-  related,
-  returnTo,
-  initialInvestigation,
-}: {
-  signal: IndividualSignalDetail
-  related: RelatedSignalPage
-  returnTo: string
-  initialInvestigation: InvestigationDetail | null
-}) {
-  return (
-    <Panel
-      id="relacionados-heading"
-      title="Sinais relacionados"
-      description="Sugestões da IA não associam sinais automaticamente. Compare as fontes e decida quais pertencem à mesma investigação."
-    >
-      {related.items.length === 0 ? (
-        <div className="mb-5"><EmptyMessage title="Nenhum sinal relacionado sugerido" description="O sinal principal pode continuar sendo investigado individualmente." /></div>
-      ) : null}
-      <InvestigationComposer signal={signal} related={related} returnTo={returnTo} initialInvestigation={initialInvestigation} />
-    </Panel>
-  )
-}
-
-function ItemCard({ icon: Icon, label, value, state }: { icon: LucideIcon; label: string; value: string; state?: IndividualSignalState }) {
-  return (
-    <div data-technical-item="true" data-technical-state={state} className="flex items-center gap-3 rounded-xl border border-border p-3">
-      <Icon className="size-4 shrink-0 text-primary" aria-hidden />
-      <div className="min-w-0">
-        <dt className="text-sm font-medium text-foreground">{label}</dt>
-        <dd className="mt-0.5 break-words text-xs leading-relaxed text-muted-foreground">{value}</dd>
-      </div>
-    </div>
-  )
-}
-
-function InlineFact({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
-  return (
-    <div className="flex min-w-0 items-center gap-1.5">
-      <Icon className="size-3.5 shrink-0" aria-hidden />
-      <dt className="sr-only">{label}</dt>
-      <dd className="break-words">{value}</dd>
-    </div>
-  )
-}
-
-function EmptyMessage({ title, description }: { title: string; description: string }) {
-  return <div className="rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center"><p className="text-sm font-medium">{title}</p><p className="mt-1 text-xs text-muted-foreground">{description}</p></div>
-}
-
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Manaus' }).format(new Date(value))
-}
-
-function displaySourceName(signal: IndividualSignalDetail): string {
-  return signal.sourceName.startsWith('demo-') ? SOURCE_LABEL[signal.sourceKind] : signal.sourceName
-}
-
-function fieldLabel(value: string): string {
-  const labels: Record<string, string> = {
-    disease_or_condition: 'Condição mencionada',
-    syndrome: 'Síndrome',
-    symptoms: 'Sintomas',
-    location: 'Localização',
-    temporal: 'Período',
-    estimated_cases: 'Quantidade mencionada',
-    estimated_deaths: 'Óbitos estimados',
-    pathogen: 'Patógeno',
-    environment: 'Ambiente',
-    affected_group: 'Grupo afetado',
-    missing_fields: 'Campos não encontrados',
-    country: 'País',
-    state: 'Estado',
-    municipality: 'Município',
-    district: 'Bairro',
-    specific: 'Local específico',
-    precision: 'Precisão',
-    start: 'Início',
-    end: 'Fim',
-  }
-  const fallback = value.replaceAll('_', ' ')
-  return labels[value] ?? `${fallback.charAt(0).toLocaleUpperCase('pt-BR')}${fallback.slice(1)}`
-}
-
-function formatFieldValue(value: unknown): string {
-  if (value === null || value === undefined || value === '') return 'Não informado'
-  if (Array.isArray(value)) {
-    const normalizedItems = [...new Set(value.map(formatFieldValue))]
-    return normalizedItems.length === 0 ? 'Não informado' : normalizedItems.join(', ')
-  }
-  if (typeof value === 'object') return Object.entries(value as Record<string, unknown>)
-    .filter(([, item]) => item !== null && item !== undefined && item !== '')
-    .map(([key, item]) => `${fieldLabel(key)}: ${formatFieldValue(item)}`)
-    .join(' · ') || 'Não informado'
-  if (typeof value === 'boolean') return value ? 'Sim' : 'Não'
-  const text = String(value)
-  return VALUE_LABEL[text.toLocaleLowerCase('en-US')] ?? text
-}
-
-const VALUE_LABEL: Record<string, string> = {
-  district: 'Bairro ou distrito',
-  neighborhood: 'Bairro',
-  specific: 'Local específico',
-  exact: 'Local exato',
-  municipality: 'Município',
-  state: 'Estado',
-  country: 'País',
-  day: 'Dia',
-  month: 'Mês',
-  year: 'Ano',
-  unknown: 'Não informado',
-  fever: 'febre alta',
-  'severe headache': 'dor de cabeça intensa',
-  'stiff neck': 'dificuldade para movimentar o pescoço',
-}
-
-const FIELD_ICON: Record<string, LucideIcon> = {
-  disease_or_condition: Stethoscope,
-  syndrome: Activity,
-  symptoms: Thermometer,
-  location: MapPin,
-  temporal: CalendarRange,
-  estimated_cases: UsersRound,
-  estimated_deaths: UsersRound,
-  missing_fields: Info,
-}
-
-const SOURCE_LABEL: Record<'media' | 'community', string> = {
-  media: 'Mídia',
-  community: 'Relato comunitário',
-}
-
-const STATE_LABEL: Record<IndividualSignalState, string> = {
-  detected: 'Detectado',
-  triage: 'Em triagem',
-  verification: 'Em verificação',
-  risk_assessment: 'Em avaliação de risco',
-  closed: 'Encerrado',
-}
-
-const HIDDEN_TECHNICAL_FIELDS = new Set([
-  'evidence',
-  'confidence',
-  'record_nature',
-  'action_in_progress',
-  'suggested_relevance',
-])

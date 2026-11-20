@@ -4,7 +4,7 @@ type: api
 status: active
 title: Contrato da ficha técnica extraída
 created: 2026-09-29
-updated: 2026-11-04
+updated: 2026-11-20
 owner: VBE Hub
 implemented_code:
   - backend/src/vbe_hub/application/ai/technical_sheet.py
@@ -38,6 +38,12 @@ modelo Pydantic. Mudanças incompatíveis exigem nova versão, sem editar silenc
 já usada em experimentos.
 
 ## Campos
+
+Este é o contrato **interno de extração**, preservado para correlação e auditoria. A issue #92
+introduz a projeção operacional `information`, descrita na [API de sinais individuais](individual-signal-api.md#informações-operacionais-da-ficha).
+A interface exibe somente os dez campos aprovados pelo orientador. A retirada de sintomas,
+localização, magnitude e demais atributos da ficha visível não os apaga desta extração e não muda
+o schema `technical-sheet-v1`, o prompt `extract-v3` ou suas evidências históricas.
 
 | Grupo | Campos | Regra principal |
 | --- | --- | --- |

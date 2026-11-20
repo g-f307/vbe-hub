@@ -12,7 +12,7 @@ export function Header() {
   const panoramaActive = pathname.startsWith("/panorama");
 
   return (
-    <header className="bg-primary pb-6 text-primary-foreground shadow-[0_8px_24px_-18px_rgba(18,50,69,0.85)]">
+    <header className="bg-[var(--brand-blue)] pb-6 text-white shadow-sm">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex min-h-20 items-center justify-between gap-4 py-3 sm:min-h-24">
           <Link href="/" aria-label="VBE Hub — início" className="flex min-w-0 items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary">
@@ -32,22 +32,22 @@ export function Header() {
               aria-label="Sair do ambiente de demonstração"
               variant="ghost"
               size="sm"
-              className="text-white/80 hover:bg-white/10 hover:text-white"
+              className="border border-white/35 text-[15px] font-semibold text-white [text-shadow:0_1px_1px_rgba(8,54,83,0.24)] hover:border-white/60 hover:bg-white/10 hover:text-white focus-visible:ring-white"
             >
-              <LogOut className="w-4 h-4 mr-2" />
+              <LogOut className="size-[18px] mr-2" strokeWidth={2.25} aria-hidden />
               <span className="hidden sm:inline">Sair</span>
             </Button>
           </div>
         </div>
 
-        <nav aria-label="Visões do sistema" className="flex min-h-12 items-end justify-center gap-1 overflow-x-auto border-t border-white/15 px-2">
+        <nav aria-label="Visões do sistema" className="flex min-h-12 items-end justify-center gap-1 overflow-x-auto border-t border-white/15 px-2 [text-shadow:0_1px_1px_rgba(8,54,83,0.24)]">
           <HeaderLink href="/" icon={RadioTower} active={detectedActive}>Detectados</HeaderLink>
           <HeaderLink href="/panorama" icon={MapPinned} active={panoramaActive}>Visão geoespacial</HeaderLink>
           <span
             aria-disabled="true"
-            className="inline-flex min-h-12 shrink-0 cursor-not-allowed items-center gap-2 border-b-2 border-transparent px-3 text-[13px] font-medium text-white/45"
+            className="inline-flex min-h-12 shrink-0 cursor-not-allowed items-center gap-2 border-b-[3px] border-transparent px-3 text-[15px] font-semibold text-white/70"
           >
-            <BarChart3 className="size-4" aria-hidden />
+            <BarChart3 className="size-[18px]" strokeWidth={2.25} aria-hidden />
             Indicadores
           </span>
         </nav>
@@ -61,9 +61,9 @@ function HeaderLink({ href, icon: Icon, active, children }: { href: string; icon
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`inline-flex min-h-12 shrink-0 items-center gap-2 border-b-2 px-3 text-[13px] font-medium hover:border-[#BFE6F7] hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${active ? "border-white text-white" : "border-transparent text-white/80"}`}
+      className={`inline-flex min-h-12 shrink-0 items-center gap-2 border-b-[3px] px-3 text-[15px] font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${active ? "border-white" : "border-transparent hover:border-white/60"}`}
     >
-      <Icon className="size-4" aria-hidden />
+      <Icon className="size-[18px]" strokeWidth={2.25} aria-hidden />
       {children}
     </Link>
   )

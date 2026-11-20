@@ -9,6 +9,7 @@ from vbe_hub.adapters.persistence.investigation_repository import (
     SqlAlchemyInvestigationRepository,
     SqlAlchemySignalSuggestionRepository,
 )
+from vbe_hub.adapters.persistence.models import ProvenanceModel, RawRecordModel
 from vbe_hub.adapters.persistence.relation_models import RelationAssessmentModel
 from vbe_hub.api.app import create_app
 from vbe_hub.api.individual_signals import get_individual_signal_session
@@ -37,6 +38,47 @@ async def test_v1_contract_is_published_without_replacing_legacy_paths() -> None
     assert "/v1/signals" in schema["paths"]
     assert "/v1/signals/{signal_id}/related" in schema["paths"]
     assert "/v1/investigations" in schema["paths"]
+
+
+@pytest.mark.integration
+async def test_signal_information_exposes_source_metadata_and_keeps_historical_absence(
+    db_session: AsyncSession,
+) -> None:
+    records = [await stored_normalized(db_session, index) for index in (501, 502)]
+    raw = await db_session.get(RawRecordModel, records[0].raw_record_id)
+    raw.original_payload = {"signal_information": {
+        "confidentiality": "Nível 1", "signal_type": "Abertura",
+        "hazard_general": "Arbovirose", "hazard_specific": "Dengue",
+        "tags": ["dengue", "Febre", "febre"], "signal_date": "2026-11-01",
+        "notified_at": "2026-11-08T13:00:00Z",
+    }}
+    simulated = await db_session.get(ProvenanceModel, records[1].raw_record_id)
+    simulated.adapter_name = "demo-scenario"
+    simulated.generator_name = "vbe-hub-demo"
+    repository = SqlAlchemyInvestigationRepository(db_session)
+    signals = [await repository.get_or_create_signal(row.id, "individual-signal-v1", NOW)
+               for row in records]
+    await db_session.flush()
+
+    async def session_override():
+        yield db_session
+
+    app = create_app()
+    app.dependency_overrides[get_individual_signal_session] = session_override
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        current = await client.get(f"/v1/signals/{signals[0].id}")
+        historical = await client.get(f"/v1/signals/{signals[1].id}")
+
+    assert current.status_code == 200
+    info = current.json()["information"]
+    assert info["hazard_general"] == "Arbovirose"
+    assert info["tags"] == ["dengue", "febre"]
+    assert info["signal_date"] == "2026-11-01"
+    assert info["detected_at"] is not None
+    assert historical.json()["information"]["confidentiality"] is None
+    assert historical.json()["information"]["notified_at"] is None
+    assert historical.json()["information"]["detected_at"] is None
+    assert historical.json()["provenance"]["collected_at"] is not None
 
 
 @pytest.mark.integration

@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from itertools import combinations
 from types import MappingProxyType
 from typing import Any
@@ -22,6 +22,7 @@ from vbe_hub.adapters.persistence.investigation_repository import (
     SqlAlchemyInvestigationRepository,
     SqlAlchemySignalSuggestionRepository,
 )
+from vbe_hub.adapters.persistence.models import RawRecordModel
 from vbe_hub.adapters.persistence.priority_repository import SqlAlchemyPriorityRepository
 from vbe_hub.adapters.persistence.relation_repository import (
     SqlAlchemyRelationAssessmentRepository,
@@ -688,6 +689,68 @@ async def load_individual_demo_batch(session: AsyncSession) -> DemoLoadResult:
     return DemoLoadResult(created=MappingProxyType(created), signal_ids=tuple(signal_ids))
 
 
+def _demo_information(scenario: _Scenario) -> dict[str, Any]:
+    """Declared demo metadata, not an AI result or a sanitary classification."""
+    categories = {
+        "dengue-compensa": ("Arbovirose", "Dengue"),
+        "leptospirose-jorge-teixeira": ("Zoonose", "Leptospirose"),
+        "sarampo-cidade-nova": ("Doença exantemática", "Sarampo"),
+        "malaria-taruma": ("Doença transmitida por vetor", "Malária"),
+        "doenca-diarreica-educandos": (
+            "Doença de transmissão hídrica e alimentar", "Doença diarreica aguda",
+        ),
+        "influenza-parque-dez": ("Doença respiratória", "Síndrome gripal"),
+        "hepatite-a-colonia-antonio-aleixo": (
+            "Doença de transmissão hídrica e alimentar", "Hepatite A",
+        ),
+        "chikungunya-ponta-negra": ("Arbovirose", "Chikungunya"),
+        "meningite-zumbi": ("Doença com síndrome meníngea", "Meningite"),
+        "febre-amarela-reserva-ducke": ("Arbovirose", "Febre amarela"),
+    }
+    general, specific = categories[scenario.key]
+    return {
+        "confidentiality": "Nível 1", "signal_type": "Abertura",
+        "etiology": f"{specific} (suspeita)",
+        "hazard_general": general, "hazard_specific": specific,
+        "tags": [specific.casefold(), general.casefold(), *scenario.symptoms],
+        "signal_date": scenario.published_at.isoformat(),
+        "notified_at": (scenario.published_at + timedelta(minutes=30)).isoformat(),
+    }
+
+
+async def refresh_demo_information(session: AsyncSession) -> dict[str, int]:
+    """Fill missing demo metadata only; leave source contents and all AI/history untouched."""
+    candidates = {
+        _id(f"raw:{scenario.key}:{source_key}"): (scenario, source_key)
+        for scenario in _BATCH_SCENARIOS
+        for expanded in (False, True)
+        for source_key, *_ in _source_rows(scenario, expanded=expanded)
+    }
+    rows = await session.scalars(
+        select(RawRecordModel).where(RawRecordModel.id.in_(candidates)).with_for_update()
+    )
+    matched = updated = 0
+    for row in rows:
+        scenario, source_key = candidates[row.id]
+        payload = row.original_payload
+        if (
+            payload.get("synthetic") is not True
+            or payload.get("demo_scenario") != scenario.key
+            or row.external_id != f"demo:{scenario.key}:{source_key}"
+        ):
+            continue
+        matched += 1
+        existing = payload.get("signal_information", {})
+        if not isinstance(existing, dict):
+            continue
+        information = _demo_information(scenario) | existing
+        if information != existing:
+            row.original_payload = payload | {"signal_information": information}
+            updated += 1
+    await session.flush()
+    return {"matched": matched, "updated": updated}
+
+
 async def _store_records(
     scenario: _Scenario,
     *,
@@ -712,7 +775,10 @@ async def _store_records(
                 body=body,
                 source_url=None,
                 language="pt-BR",
-                original_payload={"synthetic": True, "demo_scenario": scenario.key},
+                original_payload={
+                    "synthetic": True, "demo_scenario": scenario.key,
+                    "signal_information": _demo_information(scenario),
+                },
             ),
             id=raw_id,
             created_at=scenario.published_at,

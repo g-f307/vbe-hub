@@ -7,10 +7,9 @@ describe('identidade visual global', () => {
   it('expõe a paleta e a pilha tipográfica aprovadas', () => {
     const css = readFileSync(resolve(process.cwd(), 'app/globals.css'), 'utf8')
 
-    expect(css).toContain('--brand-primary: #155e75')
-    expect(css).toContain('--brand-primary-hover: #104a5c')
-    expect(css).toContain('--brand-heading: #123245')
-    expect(css).toContain('--brand-accent: #0f766e')
+    expect(css).toContain('--brand-blue: #319ad3')
+    expect(css).toContain('--brand-primary: #076ba4')
+    expect(css).toContain('--brand-coral: #ff624e')
     expect(css).toContain('--brand-background: #f6f8fa')
     expect(css).toContain('"Geist", "Inter"')
   })

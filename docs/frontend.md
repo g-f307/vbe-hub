@@ -4,7 +4,7 @@ type: design
 status: active
 title: Fundação do frontend
 created: 2026-10-07
-updated: 2026-11-10
+updated: 2026-11-20
 owner: VBE Hub
 related_docs:
   - DES-001
@@ -70,10 +70,10 @@ continua fora do rastreamento.
 ## Princípios de apresentação
 
 - A identidade visual usa a assinatura vetorial aprovada da VBE Hub, Geist com fallback Inter,
-  azul-petróleo `#155E75`, títulos `#123245`, acento `#0F766E`, fundo `#F6F8FA`, superfícies brancas
-  e bordas `#DEE6EA`. Cores de prioridade permanecem reservadas aos respectivos níveis e sempre
+  azul principal `#319AD3`, azul de contraste `#076BA4`, coral `#FF624E`, fundo `#F6F8FA`,
+  superfícies brancas e bordas `#D2E2EC`. Cores de prioridade permanecem reservadas aos respectivos níveis e sempre
   aparecem acompanhadas de texto.
-- O header azul-petróleo usa a assinatura clara aprovada e centraliza a navegação horizontal para
+- O header azul principal usa a assinatura clara aprovada e centraliza a navegação horizontal para
   Detectados, Visão geoespacial e Indicadores. A superfície clara do body sobrepõe sua base com
   cantos superiores arredondados; o azul do header preenche os recortes externos dessa transição. Indicadores
   permanece inativo até que sua rota e seus dados sejam implementados, sem badge auxiliar.
@@ -81,10 +81,10 @@ continua fora do rastreamento.
   14 px/500, descrições e controles em 13 px e metadados em 12 px. Em triagem, fluxo, investigação e
   panorama, sinais, prioridades, decisões e agregados vêm da API e continuam sintéticos.
 - Kanban não prescreve cores universais para estados; ferramentas como Azure Boards permitem regras
-  próprias e recomendam consistência, enquanto a categorização difundida pelo Jira usa cinza para
-  itens a fazer, azul para trabalho em andamento e verde para concluídos. O VBE Hub estende essa
-  semântica com tons sóbrios: azul para detectado, verde folha para triagem, âmbar para verificação, vermelho queimado
-  para avaliação de risco e grafite neutro para encerrado. Cards, lista e Kanban usam o mesmo mapa; texto
+  próprias e recomendam consistência. O VBE Hub usa azul para detectado, verde para triagem,
+  âmbar para verificação, vermelho para avaliação de risco e cinza para encerrado, em tons mais vivos
+  alinhados ao kit 319AD3. Os valores ficam centralizados em `app/globals.css` e os estilos em
+  `lib/workflow-visuals.ts`, compartilhados pela fila e pelo modal. Cards, lista e Kanban usam o mesmo mapa; texto
   continua obrigatório, portanto a cor nunca é a única indicação do estágio.
 - A IA continuará sendo apresentada como sugestão auditável. A revisão, justificativa e decisão
   pertencem ao profissional de vigilância.
@@ -96,38 +96,91 @@ continua fora do rastreamento.
   em telas estreitas, os mesmos campos são reorganizados verticalmente.
 - A visualização em cards mantém três itens por linha em telas amplas, com respiro horizontal moderado
   entre os cartões e aproveitamento maior da largura útil da página.
+- Busca, filtros e seletor de visualização da fila usam a borda suave `#D2E2EC`, sem alterar
+  o token global dos demais formulários. O anel azul de foco de teclado continua visível.
 - Os cards do Kanban usam uma composição compacta e plana, com uma faixa horizontal discreta na cor
   do estágio. Como o nome do estágio já aparece no cabeçalho da coluna, ele não é repetido no card.
 - A rota de detalhe funciona como espaço de investigação em largura ampla, não como modal. O cabeçalho
-  identifica o registro; uma faixa de fatos reúne fonte e datas sem expor identificadores
-  técnicos; abas orientadas às tarefas de analisar, relacionar e gerenciar evidências mantêm o estado na URL. Na análise,
-  texto original e ficha técnica
-  ocupam a área principal, enquanto o contexto operacional permanece em um painel lateral responsivo.
+  identifica o registro e a fonte sem expor identificadores
+  técnicos; as duas abas **Informações** e **Sinais relacionados** mantêm o estado na URL. Em Informações,
+  a ficha técnica ocupa a área principal e a Descrição ocupa o painel lateral responsivo.
   Campos internos de processamento da extração não são apresentados como conteúdo da ficha técnica.
-  Rótulos, chaves estruturadas, precisões e termos clínicos conhecidos são apresentados em português;
-  equivalentes bilíngues são deduplicados apenas na visualização, sem modificar a extração persistida.
+  A ficha apresenta exclusivamente os dez campos operacionais descritos na
+  [API individual](individual-signal-api.md#informações-operacionais-da-ficha), com valores ausentes
+  como “Não informado”. Os demais atributos da extração permanecem internos.
   A proveniência continua preservada no contrato e no backend, mas não é exposta como aba ao usuário final.
   A composição dispensa a etapa intermediária de revisão: após selecionar sugestões prontas, o analista
   confirma diretamente a inclusão na ficha.
   A composição visual do detalhe usa cabeçalho, faixa de abas e módulos independentes sobre um workspace
-  cinza-claro. Ficha técnica, contexto e texto original ocupam cartões proporcionais, seguindo a paleta
-  azul-petróleo e as superfícies neutras do VBE Hub sem introduzir indicadores que não existam no domínio.
+  cinza-claro. Ficha técnica, Descrição e evidências ocupam cartões proporcionais, seguindo a nova paleta
+  azul 319AD3 e as superfícies neutras do VBE Hub sem introduzir indicadores que não existam no domínio.
   Cabeçalho e abas formam uma única peça encostada ao início do body. O alternador de abas é centralizado
   como uma extensão compacta que começa após o limite inferior do cabeçalho e ocupa somente a largura
-  necessária aos seletores, sem criar uma faixa vazia. Na análise, a ficha técnica projetada ocupa
+  necessária aos seletores, sem criar uma faixa vazia. Em Informações, a ficha técnica projetada ocupa
   a área principal, com o ícone centralizado verticalmente ao lado do conteúdo de cada tópico e a etapa
-  atual tratada como dado da própria ficha. Quando há composição, a ficha técnica conserva a largura
-  original; texto original e evidências dividem verticalmente a coluna lateral em duas metades, nesta
+  atual mantida no workflow, sem tópico adicional na ficha. Quando há composição, a ficha técnica conserva a largura
+  original; Descrição e evidências dividem verticalmente a coluna lateral em duas metades, nesta
   ordem, evitando espaço morto ao lado da ficha. Sem evidências incorporadas, o texto original ocupa
   sozinho toda a altura da coluna. Evidências usam uma linha do tempo com o instante da
   incorporação. O mesmo card aparece em grade compacta na aba de gerenciamento, sem repetir o rótulo
-  da seção dentro de cada item. A terceira aba concentra consulta e remoção de evidências; o histórico
+  da seção dentro de cada item. Sinais relacionados concentra consulta e remoção dos incorporados e o botão de candidatos; o histórico
   técnico permanece preservado no backend, mas não é exposto nesse espaço operacional.
-- O card de evidência incorporada usa faixa ameixa dessaturada `#75627F`, ícone de vínculo e rótulo
+- O card de evidência incorporada usa faixa violeta `#8054B7`, ícone de vínculo e rótulo
   textual. Essa categoria não representa etapa do Kanban e, por isso, não reutiliza azul, verde, âmbar,
   vermelho ou cinza do workflow; cor nunca é o único indicador do significado.
 - A futura visão territorial mostra apenas agregados aprovados por área. Relatos individuais,
   endereço e coordenadas precisas não pertencem ao mapa.
+
+## Aplicação do Brand Kit 319AD3
+
+A fonte local é `vbe-hub-frontend/VBEHub_Brand_Kit_319AD3/`, ignorada pelo Git. O catálogo
+`preview/catalogo-visual.png` representa as cores novas; a prancha em `reference/` é histórica.
+Somente as duas assinaturas horizontais e o favicon usados foram copiados para `public/brand/`.
+O build Docker não depende da pasta original. Não foram alterados desenho, proporções ou
+tipografia da logo; os SVGs preservam os pontos coral e não recebem filtros de inversão.
+
+O azul principal é usado no header e na transição do body. `--primary` usa o azul de contraste
+para manter legibilidade de links e botões pequenos com texto branco. A navegação do header usa
+texto e ícones brancos diretamente sobre o azul principal `#319AD3`, sem faixa de outro azul,
+com texto em 15 px/600, ícones de 18 px com traço 2,25 e sombra textual discreta de 1 px.
+O marcador branco da página atual tem 3 px; hover e seleção não clareiam o fundo dos links.
+A ação Sair mantém o fundo do header com contorno branco sutil. `themeColor` usa `#319AD3`.
+Essa composição segue a orientação
+visual aprovada, mas o contraste branco/azul principal de 3,14:1 fica abaixo da meta de 4,5:1
+para texto pequeno; não é apresentada como conformidade integral de contraste da navbar.
+Coral é acento da marca, não a semântica de risco/erro.
+
+| Papel | Cor | Texto / superfície de apoio |
+| --- | --- | --- |
+| Marca / Detectado | `#319AD3` | `#102E40` / `#E7F4FC` |
+| Ação primária | `#076BA4` | Branco; hover `#055785` |
+| Triagem | `#168653` | Branco / `#E8F7EE` |
+| Verificação | `#B77A06` | `#101820` / `#FFF6DC` |
+| Avaliação de risco | `#D33449` | Branco / `#FFF0F1` |
+| Encerrado | `#626D7C` | Branco / `#F0F3F6` |
+| Incorporado | `#8054B7` | Branco / `#F2EAFA` |
+
+As quatro cores de marca são oficiais; workflow, neutros e variantes de interação são tokens
+derivados/complementares da interface. Não representam classificação sanitária da IA.
+Branco sobre azul principal resulta em aproximadamente 3,14:1; branco sobre azul de contraste,
+5,76:1; branco sobre coral, 2,95:1. Por isso os dois primeiros não são intercambiáveis em controles
+com texto pequeno. O objetivo é ao menos 4,5:1 em texto normal e 3:1 em texto grande, foco e
+componentes funcionais aplicáveis, com rótulos além da cor.
+
+O modal reutiliza `InvestigationComposer` e o Dialog do export v0, com foco contido, Escape,
+restauração do foco e rolagem própria em viewport pequena. O contador soma apenas sugestões
+prontas, de relação elegível, livres e não incorporadas; a leitura percorre as páginas persistidas
+para não ficar limitada aos primeiros 25 itens. Nenhuma abertura dispara extração ou julgamento.
+Após confirmação, o estado compartilhado atualiza imediatamente membros, contador e ficha; o
+modal fecha e anuncia sucesso. Falhas preservam a seleção e mostram mensagem para nova tentativa.
+
+A consulta de incorporados usa `lib/signal-navigation.ts` para compor o retorno aninhado:
+fila → principal → incorporado. A trilha identifica o principal por título e mantém sua aba
+(`overview` ou `evidence`) e o endereço completo da fila, incluindo cursor, filtros e visualização.
+A leitura direta de um incorporado resolve sua cabeça pela investigação ativa. Destinos externos
+ou caminhos ambíguos são rejeitados. A ficha incorporada permanece somente para consulta,
+sem badge ou link auxiliar no cabeçalho; o retorno ao principal usa seu título na trilha.
+As [evidências da issue #92](evidence/issue-92/README.md) registram testes, percurso e capturas.
 
 ## Fronteira com a API
 
@@ -145,16 +198,17 @@ envia `actor_id`. O backend continua sendo a autoridade para alvo revisável, tr
 idempotência e ator sintético. Erros de validação, indisponibilidade, 404 e conflito de versão são
 mostrados no painel; no conflito, a atualização explícita dos dados preserva o formulário local.
 
-Abrir `Sinais relacionados` lê apenas sugestões persistidas e ainda inéditas. Os estados `pending`, `ready` e
+O botão **Possíveis sinais relacionados**, dentro de Sinais relacionados, abre um modal com sugestões persistidas e ainda inéditas. Os estados `pending`, `ready` e
 `failed` são exibidos sem iniciar chamada à OpenAI; uma sugestão pronta é apresentada ao analista apenas
 como possível relação, sem transformar confiança técnica em informação operacional. Marcar candidatos também não escreve: a confirmação mostra o sinal principal,
-os candidatos e seus IDs, preserva cada texto separadamente e só então inicia triagem e composição
+os candidatos por título, preserva cada texto separadamente e só então inicia triagem e composição
 com chaves idempotentes. A composição permanece em triagem até uma ação posterior e explícita do
 analista. A resposta remove imediatamente os membros incorporados da seleção, sem exigir atualização
 manual. O sinal aberto permanece como cabeça; relacionados confirmados deixam a fila, aparecem como
-evidências e mantêm uma página própria somente para consulta. `Gerenciar evidências` usa a mesma
+evidências e mantêm uma página própria somente para consulta. `Sinais relacionados` usa a mesma
 linguagem visual em uma grade compacta e permite remoção; retirar uma evidência exige motivo,
-controle de versão e mantém o evento corretivo. A URL da página e das abas é compartilhável. O parâmetro `returnTo` aceita apenas
+controle de versão e mantém o evento corretivo. A URL da página e das abas é compartilhável. URLs antigas `tab=related` abrem a aba
+Sinais relacionados e seu modal; `tab=evidence` continua abrindo os incorporados. O parâmetro `returnTo` aceita apenas
 destinos internos e preserva filtros, busca e cursor ao voltar para a fila.
 
 O frontend não acessa PostgreSQL, Redis, provedores de IA ou conectores diretamente. A API já

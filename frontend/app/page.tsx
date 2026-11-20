@@ -25,7 +25,7 @@ export default async function Home({
   })
 
   return (
-    <div className="min-h-screen bg-primary">
+    <div className="min-h-screen bg-[var(--brand-blue)]">
       <Header />
       <BodySurface>
         <DetectedSignalsView items={page.items} nextCursor={page.nextCursor} filters={filters} />

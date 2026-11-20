@@ -74,6 +74,8 @@ describe('investigation composition', () => {
       related('pending', 'pending'),
       related('failed', 'failed'),
       related('ready-assigned', 'ready', 'existing-file'),
+      { ...related('unrelated', 'ready'), relation: 'unrelated' },
+      { ...related('closed', 'ready'), candidate: { ...related('closed', 'ready').candidate, state: 'closed' } },
     ]).map((item) => item.candidate.id)).toEqual(['ready-free'])
   })
 

@@ -35,6 +35,11 @@ from vbe_hub.adapters.persistence.models import (
 )
 from vbe_hub.adapters.persistence.relation_models import RelationAssessmentModel
 from vbe_hub.api.workflow import get_review_actor_id
+from vbe_hub.application.investigations.information import (
+    SignalInformation,
+    compose_information,
+    project_information,
+)
 from vbe_hub.application.investigations.projection import compose_technical_sheet
 from vbe_hub.domain.investigations import (
     HeadInvestigationMemberError,
@@ -101,6 +106,7 @@ class SignalDetail(BaseModel):
     provenance: ProvenanceResponse
     technical_sheet: dict[str, Any] | None
     active_investigation_id: UUID | None
+    information: SignalInformation
 
 
 class RelatedItem(BaseModel):
@@ -167,6 +173,9 @@ class InvestigationDetailResponse(BaseModel):
     technical_sheet: dict[str, Any]
     technical_sheet_provenance: dict[str, list[str]]
     technical_sheet_conflicts: list[dict[str, Any]]
+    information: SignalInformation
+    information_provenance: dict[str, list[str]]
+    information_conflicts: list[dict[str, Any]]
 
 
 class InvestigationTransferResponse(BaseModel):
@@ -371,6 +380,15 @@ async def _signal_details(
             provenance=ProvenanceResponse.model_validate(provenance, from_attributes=True),
             technical_sheet=sheets.get(signal.normalized_record_id),
             active_investigation_id=file_id,
+            information=project_information(
+                source_payload=raw.original_payload,
+                technical_sheet=sheets.get(signal.normalized_record_id),
+                detected_at=provenance.collected_at,
+                collection_is_simulated=(
+                    provenance.adapter_name == "demo-scenario"
+                    and provenance.generator_name == "vbe-hub-demo"
+                ),
+            ),
         )
     return details
 
@@ -516,6 +534,11 @@ async def _investigation_detail(
             if member.signal_id != file.head_signal_id
         ],
     )
+    information = compose_information(
+        file.head_signal_id, head.information,
+        [(member.signal_id, signal_details[member.signal_id].information)
+         for member in members if member.signal_id != file.head_signal_id],
+    )
     return InvestigationDetailResponse(
         id=file.id,
         head_signal_id=file.head_signal_id,
@@ -544,6 +567,9 @@ async def _investigation_detail(
         technical_sheet=projection.technical_sheet,
         technical_sheet_provenance=projection.provenance,
         technical_sheet_conflicts=projection.conflicts,
+        information=information.information,
+        information_provenance=information.provenance,
+        information_conflicts=information.conflicts,
     )
 
 

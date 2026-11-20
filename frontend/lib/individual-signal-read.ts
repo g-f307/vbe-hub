@@ -1,4 +1,5 @@
 const DEFAULT_INTERNAL_API_URL = 'http://api:8000'
+import { mapSignalInformation, type SignalInformation } from './signal-information'
 
 export type IndividualSignalState = 'detected' | 'triage' | 'verification' | 'risk_assessment' | 'closed'
 export type IndividualSourceKind = 'media' | 'community'
@@ -27,6 +28,7 @@ export type SignalProvenance = {
 }
 
 export type IndividualSignalDetail = IndividualSignalCard & {
+  information?: SignalInformation
   contractVersion: string
   source: {
     externalId: string | null
@@ -64,6 +66,7 @@ export type SignalAuditEvent = {
   comment: string | null
 }
 export type InvestigationDetail = {
+  information?: SignalInformation
   id: string
   headSignalId: string
   version: number
@@ -140,6 +143,7 @@ export async function getIndividualSignal(signalId: string): Promise<IndividualS
       collectedAt: requiredString(payload.provenance.collected_at),
     },
     technicalSheet: isRecord(payload.technical_sheet) ? payload.technical_sheet : null,
+    information: mapSignalInformation(payload.information),
   }
 }
 
@@ -166,6 +170,22 @@ export async function listRelatedSignals(signalId: string, cursor?: string): Pro
     }),
     nextCursor: nullableString(payload.next_cursor),
   }
+}
+
+/** Read all persisted candidate pages so the counter is not limited to the first 25. */
+export async function listAllRelatedSignals(signalId: string): Promise<RelatedSignalPage> {
+  const items: RelatedSignal[] = []
+  const cursors = new Set<string>()
+  let cursor: string | undefined
+  do {
+    const page = await listRelatedSignals(signalId, cursor)
+    items.push(...page.items)
+    if (!page.nextCursor) return { items, nextCursor: null }
+    if (cursors.has(page.nextCursor) || cursors.size >= 100) invalid('Paginação das sugestões inválida.')
+    cursors.add(page.nextCursor)
+    cursor = page.nextCursor
+  } while (cursor)
+  return { items, nextCursor: null }
 }
 
 export async function listSignalAuditEvents(signalId: string): Promise<SignalAuditEvent[]> {
@@ -202,6 +222,7 @@ export async function getInvestigation(fileId: string): Promise<InvestigationDet
     createdAt: requiredString(payload.created_at),
     updatedAt: requiredString(payload.updated_at),
     technicalSheet: isRecord(payload.technical_sheet) ? payload.technical_sheet : {},
+    information: mapSignalInformation(payload.information),
     technicalSheetProvenance: stringArrayRecord(payload.technical_sheet_provenance),
     technicalSheetConflicts: Array.isArray(payload.technical_sheet_conflicts)
       ? payload.technical_sheet_conflicts.filter(isRecord)
@@ -263,6 +284,7 @@ function mapDetail(payload: unknown): IndividualSignalDetail {
       collectedAt: requiredString(payload.provenance.collected_at),
     },
     technicalSheet: isRecord(payload.technical_sheet) ? payload.technical_sheet : null,
+    information: mapSignalInformation(payload.information),
   }
 }
 
