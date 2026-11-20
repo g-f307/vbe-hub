@@ -139,7 +139,9 @@ tipografia da logo; os SVGs preservam os pontos coral e não recebem filtros de 
 
 O azul principal é usado no header e na transição do body. `--primary` usa o azul de contraste
 para manter legibilidade de links e botões pequenos com texto branco. A navegação do header usa
-texto escuro `#102E40` sobre azul e marcador branco da página atual. `themeColor` usa `#319AD3`.
+texto e ícones brancos sobre uma faixa `#076BA4`, com marcador branco da página atual e
+hover/seleção escurecidos para não reduzir o contraste. O header mantém `#319AD3` e `themeColor`
+usa a mesma cor. A ação Sair também usa superfície azul de contraste e texto branco.
 Coral é acento da marca, não a semântica de risco/erro.
 
 | Papel | Cor | Texto / superfície de apoio |

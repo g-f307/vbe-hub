@@ -32,7 +32,7 @@ export function Header() {
               aria-label="Sair do ambiente de demonstração"
               variant="ghost"
               size="sm"
-              className="text-[#102E40] hover:bg-white/20 hover:text-[#102E40]"
+              className="bg-primary text-white hover:bg-[var(--brand-primary-hover)] hover:text-white focus-visible:ring-white"
             >
               <LogOut className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Sair</span>
@@ -40,12 +40,12 @@ export function Header() {
           </div>
         </div>
 
-        <nav aria-label="Visões do sistema" className="flex min-h-12 items-end justify-center gap-1 overflow-x-auto border-t border-white/15 px-2">
+        <nav aria-label="Visões do sistema" className="flex min-h-12 items-end justify-center gap-1 overflow-x-auto border-t border-white/15 bg-primary px-2">
           <HeaderLink href="/" icon={RadioTower} active={detectedActive}>Detectados</HeaderLink>
           <HeaderLink href="/panorama" icon={MapPinned} active={panoramaActive}>Visão geoespacial</HeaderLink>
           <span
             aria-disabled="true"
-            className="inline-flex min-h-12 shrink-0 cursor-not-allowed items-center gap-2 border-b-2 border-transparent px-3 text-[13px] font-medium text-[#102E40]/70"
+            className="inline-flex min-h-12 shrink-0 cursor-not-allowed items-center gap-2 border-b-2 border-transparent px-3 text-[13px] font-medium text-white/70"
           >
             <BarChart3 className="size-4" aria-hidden />
             Indicadores
@@ -61,7 +61,7 @@ function HeaderLink({ href, icon: Icon, active, children }: { href: string; icon
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`inline-flex min-h-12 shrink-0 items-center gap-2 border-b-2 px-3 text-[13px] font-medium text-[#102E40] hover:border-white hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#102E40] ${active ? "border-white bg-white/15" : "border-transparent"}`}
+      className={`inline-flex min-h-12 shrink-0 items-center gap-2 border-b-2 px-3 text-[13px] font-medium text-white hover:border-white hover:bg-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${active ? "border-white bg-black/10" : "border-transparent"}`}
     >
       <Icon className="size-4" aria-hidden />
       {children}
