@@ -9,6 +9,15 @@ from vbe_hub.application.investigations.information import (
 NOW = datetime(2026, 11, 20, 12, tzinfo=UTC)
 
 
+def test_simulated_collection_date_is_not_presented_as_real_detection() -> None:
+    result = project_information(
+        source_payload={}, technical_sheet=None, detected_at=NOW,
+        collection_is_simulated=True,
+    )
+    assert result.detected_at is None
+    assert "detected_at" not in result.origins
+
+
 def test_information_preserves_missing_operational_fields_and_date_precision() -> None:
     result = project_information(
         source_payload={},

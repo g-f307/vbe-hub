@@ -20,20 +20,20 @@ class SignalInformation(BaseModel):
     hazard_specific: str | None = None
     tags: list[str] = Field(default_factory=list)
     signal_date: str | None = None
-    detected_at: datetime
+    detected_at: datetime | None
     notified_at: datetime | None = None
     origins: dict[str, str] = Field(default_factory=dict)
 
 
 def project_information(
     *, source_payload: dict[str, Any], technical_sheet: dict[str, Any] | None,
-    detected_at: datetime,
+    detected_at: datetime, collection_is_simulated: bool = False,
 ) -> SignalInformation:
     explicit = source_payload.get("signal_information")
     source = explicit if isinstance(explicit, dict) else {}
     sheet = technical_sheet or {}
     values: dict[str, Any] = {}
-    origins = {"detected_at": "provenance:collected_at"}
+    origins = {} if collection_is_simulated else {"detected_at": "provenance:collected_at"}
     fields = ("confidentiality", "signal_type", "etiology", "hazard_general", "hazard_specific")
     for field in fields:
         value = source.get(field)
@@ -65,7 +65,9 @@ def project_information(
     if notified:
         values["notified_at"] = notified
         origins["notified_at"] = "source:signal_information.notified_at"
-    return SignalInformation(**values, detected_at=detected_at, origins=origins)
+    return SignalInformation(
+        **values, detected_at=None if collection_is_simulated else detected_at, origins=origins,
+    )
 
 
 def _timestamp(value: Any) -> datetime | None:

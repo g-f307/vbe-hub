@@ -9,7 +9,7 @@ from vbe_hub.adapters.persistence.investigation_repository import (
     SqlAlchemyInvestigationRepository,
     SqlAlchemySignalSuggestionRepository,
 )
-from vbe_hub.adapters.persistence.models import RawRecordModel
+from vbe_hub.adapters.persistence.models import ProvenanceModel, RawRecordModel
 from vbe_hub.adapters.persistence.relation_models import RelationAssessmentModel
 from vbe_hub.api.app import create_app
 from vbe_hub.api.individual_signals import get_individual_signal_session
@@ -52,6 +52,9 @@ async def test_signal_information_exposes_source_metadata_and_keeps_historical_a
         "tags": ["dengue", "Febre", "febre"], "signal_date": "2026-11-01",
         "notified_at": "2026-11-08T13:00:00Z",
     }}
+    simulated = await db_session.get(ProvenanceModel, records[1].raw_record_id)
+    simulated.adapter_name = "demo-scenario"
+    simulated.generator_name = "vbe-hub-demo"
     repository = SqlAlchemyInvestigationRepository(db_session)
     signals = [await repository.get_or_create_signal(row.id, "individual-signal-v1", NOW)
                for row in records]
@@ -71,8 +74,11 @@ async def test_signal_information_exposes_source_metadata_and_keeps_historical_a
     assert info["hazard_general"] == "Arbovirose"
     assert info["tags"] == ["dengue", "febre"]
     assert info["signal_date"] == "2026-11-01"
+    assert info["detected_at"] is not None
     assert historical.json()["information"]["confidentiality"] is None
     assert historical.json()["information"]["notified_at"] is None
+    assert historical.json()["information"]["detected_at"] is None
+    assert historical.json()["provenance"]["collected_at"] is not None
 
 
 @pytest.mark.integration

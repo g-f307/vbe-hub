@@ -384,6 +384,10 @@ async def _signal_details(
                 source_payload=raw.original_payload,
                 technical_sheet=sheets.get(signal.normalized_record_id),
                 detected_at=provenance.collected_at,
+                collection_is_simulated=(
+                    provenance.adapter_name == "demo-scenario"
+                    and provenance.generator_name == "vbe-hub-demo"
+                ),
             ),
         )
     return details

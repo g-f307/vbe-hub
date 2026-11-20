@@ -114,7 +114,7 @@ mas não são apresentados como campos adicionais na ficha.
 | `hazard_general` / `hazard_specific` | Categorias explícitas de `signal_information`; sem dado, `null`. Não são deduzidas da síndrome nem atribuídas por confiança de extração. |
 | `tags` | Lista explícita `signal_information.tags`, normalizada por espaços/casefold e sem duplicatas. Não copia sintomas automaticamente nem traduz termos sem vocabulário aprovado. |
 | `signal_date` | Data ISO ou timestamp com fuso informado na origem; na ausência, início válido de `technical_sheet.temporal`. Não usa publicação como fallback nem inventa hora. |
-| `detected_at` | Coleta da origem em `provenance.collected_at`, preservando timestamps simulados dos dados sintéticos históricos. Não reutiliza `published_at` ou a data de incorporação como detecção. |
+| `detected_at` | Coleta da origem em `provenance.collected_at`. Para cargas `demo-scenario` / `vbe-hub-demo`, cujo timestamp é simulado e retroativo, retorna `null` em vez de apresentá-lo como detecção real. O timestamp original continua na proveniência. Não reutiliza publicação ou incorporação como detecção. |
 | `notified_at` | Timestamp explícito com fuso em `signal_information.notified_at` ou `null`; nenhuma notificação é presumida. |
 | `origins` | Mapa campo → caminho de origem (`source:…`, `extraction:…` ou `provenance:…`). |
 
