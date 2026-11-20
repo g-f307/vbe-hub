@@ -176,8 +176,10 @@ describe('detalhe do sinal', () => {
         initialInvestigation={investigation}
       />,
     )
-    expect(html).toContain('Somente consulta')
-    expect(html).toContain('Voltar ao sinal principal')
+    expect(html).not.toContain('Somente consulta')
+    expect(html).not.toContain('Voltar ao sinal principal')
+    expect(html).toContain('Trilha de navegação')
+    expect(html).toContain(`href="${headReturn.replaceAll('&', '&amp;')}"`)
     expect(html).toContain('Descrição própria da evidência.')
     expect(html).toContain(
       'href="/?view=list&amp;cursor=page2&amp;state=triage"',

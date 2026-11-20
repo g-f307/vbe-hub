@@ -188,19 +188,6 @@ export function IndividualSignalDetailView({
                 </p>
               </div>
             </div>
-            {readOnly ? (
-              <div className="flex shrink-0 flex-col gap-2 lg:items-end">
-                <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
-                  Somente consulta
-                </span>
-                <Link
-                  className="text-sm font-medium text-primary hover:underline"
-                  href={navigation.headHref!}
-                >
-                  Voltar ao sinal principal
-                </Link>
-              </div>
-            ) : null}
           </div>
         </header>
         <div

@@ -176,7 +176,8 @@ A consulta de incorporados usa `lib/signal-navigation.ts` para compor o retorno 
 fila → principal → incorporado. A trilha identifica o principal por título e mantém sua aba
 (`overview` ou `evidence`) e o endereço completo da fila, incluindo cursor, filtros e visualização.
 A leitura direta de um incorporado resolve sua cabeça pela investigação ativa. Destinos externos
-ou caminhos ambíguos são rejeitados. A ficha incorporada permanece somente para consulta.
+ou caminhos ambíguos são rejeitados. A ficha incorporada permanece somente para consulta,
+sem badge ou link auxiliar no cabeçalho; o retorno ao principal usa seu título na trilha.
 As [evidências da issue #92](evidence/issue-92/README.md) registram testes, percurso e capturas.
 
 ## Fronteira com a API
