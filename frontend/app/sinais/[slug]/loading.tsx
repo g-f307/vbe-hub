@@ -3,7 +3,7 @@ import { BodySurface } from '@/v0/components/body-surface'
 
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-primary">
+    <div className="min-h-screen bg-[var(--brand-blue)]">
       <Header />
       <BodySurface><main id="conteudo-principal" aria-label="Carregando página do sinal" className="mx-auto max-w-screen-2xl animate-pulse px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <div className="h-11 w-48 rounded bg-muted" />

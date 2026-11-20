@@ -6,7 +6,7 @@ import { BodySurface } from '@/v0/components/body-surface'
 
 export default function SignalNotFound() {
   return (
-    <div className="min-h-screen bg-primary">
+    <div className="min-h-screen bg-[var(--brand-blue)]">
       <Header />
       <BodySurface><main id="conteudo-principal" className="mx-auto max-w-2xl px-4 py-16 text-center">
         <SearchX className="mx-auto size-9 text-muted-foreground" aria-hidden />

@@ -24,7 +24,7 @@ describe('Header', () => {
     expect(html).not.toContain('rounded-b-')
     expect(html).toContain('pb-6')
     expect(html).toContain('aria-current="page"')
-    expect(html).toContain('border-white text-white')
+    expect(html).toContain('border-white bg-white/15')
     expect(html).not.toContain('data-lucide="activity"')
   })
 })

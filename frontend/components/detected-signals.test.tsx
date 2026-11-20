@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
-import { DetectedSignalsView } from './detected-signals'
+import { buildQueueHref, DetectedSignalsView } from './detected-signals'
 import type { IndividualSignalCard } from '@/lib/individual-signal-read'
 
 const items: IndividualSignalCard[] = [
@@ -30,6 +30,10 @@ const items: IndividualSignalCard[] = [
 ]
 
 describe('DetectedSignalsView', () => {
+  it('preserva todos os estados explicitamente ao paginar e voltar do detalhe', () => {
+    expect(buildQueueHref({ state: 'all', view: 'list', cursor: 'page-two' }))
+      .toBe('/?state=all&cursor=page-two&view=list')
+  })
   it('mantém cada fonte em um card e preserva o retorno e a paginação na URL', () => {
     const html = renderToStaticMarkup(
       <DetectedSignalsView
@@ -58,8 +62,8 @@ describe('DetectedSignalsView', () => {
     expect(html).toContain('data-layered-card="true"')
     expect(html).toContain('data-progress-outline="true"')
     expect(html).toContain('[clip-path:inset(0_0_50%_0)]')
-    expect(html).toContain('bg-[#3E6F9E]')
-    expect(html).toContain('border-[#3E6F9E]')
+    expect(html).toContain('bg-[var(--workflow-tone)]')
+    expect(html).toContain('border-[var(--workflow-tone)]')
     expect(html).not.toContain('border-blue-600')
     expect(html).toContain('xl:grid-cols-3')
     expect(html).toContain('gap-x-8')
@@ -87,7 +91,7 @@ describe('DetectedSignalsView', () => {
     expect(html).toContain('query%3Dmanchas%2Bvermelhas')
   })
 
-  it('mantém a convenção cromática sóbria definida para os estágios do fluxo', () => {
+  it('compartilha os tokens cromáticos definidos para os estágios do fluxo', () => {
     const states = ['detected', 'triage', 'verification', 'risk_assessment', 'closed'] as const
     const html = renderToStaticMarkup(
       <DetectedSignalsView
@@ -97,11 +101,7 @@ describe('DetectedSignalsView', () => {
       />,
     )
 
-    expect(html).toContain('bg-[#3E6F9E]')
-    expect(html).toContain('bg-[#47735F]')
-    expect(html).toContain('bg-[#A47B32]')
-    expect(html).toContain('bg-[#A6534D]')
-    expect(html).toContain('bg-[#626970]')
+    for (const state of states) expect(html).toContain(`workflow-${state}`)
   })
 
   it.each([

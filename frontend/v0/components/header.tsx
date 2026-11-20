@@ -12,7 +12,7 @@ export function Header() {
   const panoramaActive = pathname.startsWith("/panorama");
 
   return (
-    <header className="bg-primary pb-6 text-primary-foreground shadow-[0_8px_24px_-18px_rgba(18,50,69,0.85)]">
+    <header className="bg-[var(--brand-blue)] pb-6 text-white shadow-sm">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex min-h-20 items-center justify-between gap-4 py-3 sm:min-h-24">
           <Link href="/" aria-label="VBE Hub — início" className="flex min-w-0 items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary">
@@ -32,7 +32,7 @@ export function Header() {
               aria-label="Sair do ambiente de demonstração"
               variant="ghost"
               size="sm"
-              className="text-white/80 hover:bg-white/10 hover:text-white"
+              className="text-[#102E40] hover:bg-white/20 hover:text-[#102E40]"
             >
               <LogOut className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Sair</span>
@@ -45,7 +45,7 @@ export function Header() {
           <HeaderLink href="/panorama" icon={MapPinned} active={panoramaActive}>Visão geoespacial</HeaderLink>
           <span
             aria-disabled="true"
-            className="inline-flex min-h-12 shrink-0 cursor-not-allowed items-center gap-2 border-b-2 border-transparent px-3 text-[13px] font-medium text-white/45"
+            className="inline-flex min-h-12 shrink-0 cursor-not-allowed items-center gap-2 border-b-2 border-transparent px-3 text-[13px] font-medium text-[#102E40]/70"
           >
             <BarChart3 className="size-4" aria-hidden />
             Indicadores
@@ -61,7 +61,7 @@ function HeaderLink({ href, icon: Icon, active, children }: { href: string; icon
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`inline-flex min-h-12 shrink-0 items-center gap-2 border-b-2 px-3 text-[13px] font-medium hover:border-[#BFE6F7] hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${active ? "border-white text-white" : "border-transparent text-white/80"}`}
+      className={`inline-flex min-h-12 shrink-0 items-center gap-2 border-b-2 px-3 text-[13px] font-medium text-[#102E40] hover:border-white hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#102E40] ${active ? "border-white bg-white/15" : "border-transparent"}`}
     >
       <Icon className="size-4" aria-hidden />
       {children}

@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 export default async function PanoramaPage() {
   const summary = await getGeographicSummary()
   return (
-    <div className="min-h-screen bg-primary">
+    <div className="min-h-screen bg-[var(--brand-blue)]">
       <Header />
       <BodySurface>
         <PanoramaBoard summary={summary} />

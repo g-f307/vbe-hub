@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { STATE_VISUAL_STYLE } from '@/lib/workflow-visuals'
 import { CalendarClock, ChevronRight, Filter, Inbox, Newspaper, Search, UsersRound } from 'lucide-react'
 
 import type {
@@ -215,7 +216,7 @@ function DetectedCard({ signal, returnTo }: { signal: IndividualSignalCard; retu
     >
       <span
         data-state-banner={signal.state}
-        className={`relative z-0 flex min-h-10 items-start justify-center rounded-t-xl border border-b-0 border-white/25 px-4 pt-1.5 text-[11px] font-semibold tracking-wide text-white uppercase ${STATE_VISUAL_STYLE[signal.state].banner}`}
+        className={`relative z-0 flex min-h-10 items-start justify-center rounded-t-xl border border-b-0 border-white/25 px-4 pt-1.5 text-[11px] font-semibold tracking-wide uppercase ${STATE_VISUAL_STYLE[signal.state].banner}`}
       >
         {STATE_LABEL[signal.state]}
       </span>
@@ -235,7 +236,7 @@ function DetectedCard({ signal, returnTo }: { signal: IndividualSignalCard; retu
 
 export function buildQueueHref(filters: DetectedFilters): string {
   const search = new URLSearchParams()
-  if (filters.state && filters.state !== 'all') search.set('state', filters.state)
+  if (filters.state) search.set('state', filters.state)
   if (filters.sourceKind && filters.sourceKind !== 'all') search.set('source_kind', filters.sourceKind)
   if (filters.query?.trim()) search.set('query', filters.query.trim())
   if (filters.cursor?.trim()) search.set('cursor', filters.cursor.trim())
@@ -259,28 +260,6 @@ const STATE_LABEL: Record<IndividualSignalState, string> = {
   verification: 'Em verificação',
   risk_assessment: 'Avaliação de risco',
   closed: 'Encerrado',
-}
-const STATE_VISUAL_STYLE: Record<IndividualSignalState, { banner: string; folder: string; outline: string; line: string; surface: string; rowMarker: string }> = {
-  detected: {
-    banner: 'bg-[#3E6F9E]', folder: 'bg-[#3E6F9E]/15',
-    outline: 'border-[#3E6F9E]', line: 'bg-[#3E6F9E]', surface: 'bg-[#EDF3F8]', rowMarker: 'bg-[#3E6F9E]',
-  },
-  triage: {
-    banner: 'bg-[#47735F]', folder: 'bg-[#47735F]/15',
-    outline: 'border-[#47735F]', line: 'bg-[#47735F]', surface: 'bg-[#EDF4F0]', rowMarker: 'bg-[#47735F]',
-  },
-  verification: {
-    banner: 'bg-[#A47B32]', folder: 'bg-[#A47B32]/15',
-    outline: 'border-[#A47B32]', line: 'bg-[#A47B32]', surface: 'bg-[#F8F3E7]', rowMarker: 'bg-[#A47B32]',
-  },
-  risk_assessment: {
-    banner: 'bg-[#A6534D]', folder: 'bg-[#A6534D]/15',
-    outline: 'border-[#A6534D]', line: 'bg-[#A6534D]', surface: 'bg-[#F8EEEE]', rowMarker: 'bg-[#A6534D]',
-  },
-  closed: {
-    banner: 'bg-[#626970]', folder: 'bg-[#626970]/15',
-    outline: 'border-[#626970]', line: 'bg-[#626970]', surface: 'bg-[#F1F2F3]', rowMarker: 'bg-[#626970]',
-  },
 }
 
 const STATE_ORDER: IndividualSignalState[] = ['detected', 'triage', 'verification', 'risk_assessment', 'closed']

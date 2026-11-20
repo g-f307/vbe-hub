@@ -4,15 +4,17 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --brand-primary: #155e75;
-  --brand-primary-hover: #104a5c;
-  --brand-heading: #123245;
-  --brand-accent: #0f766e;
+  --brand-blue: #319ad3;
+  --brand-primary: #076ba4;
+  --brand-primary-hover: #055785;
+  --brand-coral: #ff624e;
+  --brand-heading: #153d55;
+  --brand-accent: #076ba4;
   --brand-background: #f6f8fa;
   --brand-surface: #ffffff;
-  --brand-border: #dee6ea;
+  --brand-border: #d2e2ec;
   --brand-text: #1a2b36;
-  --brand-text-muted: #647582;
+  --brand-text-muted: #526777;
 
   --background: var(--brand-background);
   --foreground: var(--brand-text);
@@ -22,16 +24,16 @@
   --popover-foreground: var(--brand-text);
   --primary: var(--brand-primary);
   --primary-foreground: #ffffff;
-  --secondary: #edf3f5;
+  --secondary: #e8f3fb;
   --secondary-foreground: var(--brand-heading);
-  --muted: #eef3f5;
+  --muted: #edf4f9;
   --muted-foreground: var(--brand-text-muted);
-  --accent: #e6f3f1;
-  --accent-foreground: #0b5c57;
-  --destructive: #b42335;
+  --accent: #e0f1fc;
+  --accent-foreground: #055785;
+  --destructive: #c82d42;
   --destructive-foreground: #ffffff;
   --border: var(--brand-border);
-  --input: #cbd8de;
+  --input: #7d97a8;
   --ring: var(--brand-accent);
   --chart-1: oklch(0.55 0.22 25);
   --chart-2: oklch(0.65 0.18 85);
@@ -147,11 +149,11 @@
   --color-nevoa: var(--brand-background);
   --color-mineral: var(--brand-surface);
   --color-encontro: var(--brand-heading);
-  --color-encontro-soft: #1b465b;
+  --color-encontro-soft: #076ba4;
   --color-igarape: var(--brand-accent);
-  --color-igarape-ink: #0b5c57;
+  --color-igarape-ink: #055785;
   --color-vitoria: #bfe6f7;
-  --color-vitoria-soft: #e6f3f1;
+  --color-vitoria-soft: #e0f1fc;
   --color-agua: var(--brand-border);
   --color-agua-strong: #c4d2d8;
   --color-ardosia: var(--brand-text-muted);
@@ -194,6 +196,27 @@
 .kanban-column {
   min-height: calc(100vh - 220px);
 }
+
+/* One palette for cards, list, Kanban and candidate selection. */
+.workflow-detected, [data-workflow-state='detected'] {
+  --workflow-tone: #319ad3; --workflow-ink: #102e40; --workflow-soft: #e7f4fc;
+}
+.workflow-triage, [data-workflow-state='triage'] {
+  --workflow-tone: #168653; --workflow-ink: #ffffff; --workflow-soft: #e8f7ee;
+}
+.workflow-verification, [data-workflow-state='verification'] {
+  --workflow-tone: #b77a06; --workflow-ink: #101820; --workflow-soft: #fff6dc;
+}
+.workflow-risk_assessment, [data-workflow-state='risk_assessment'] {
+  --workflow-tone: #d33449; --workflow-ink: #ffffff; --workflow-soft: #fff0f1;
+}
+.workflow-closed, [data-workflow-state='closed'] {
+  --workflow-tone: #626d7c; --workflow-ink: #ffffff; --workflow-soft: #f0f3f6;
+}
+:root {
+  --evidence-tone: #8054b7; --evidence-soft: #f2eafa; --evidence-line: #bda4da;
+}
+.workflow-candidate { border-top-color: var(--workflow-tone); }
 
 .signal-card {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
