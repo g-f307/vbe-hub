@@ -17,6 +17,52 @@ from vbe_hub.synthetic.demo import load_individual_demo_batch
 
 
 @pytest.mark.integration
+async def test_demo_information_refresh_is_bounded_idempotent_and_preserves_sources(
+    db_session: AsyncSession,
+) -> None:
+    from vbe_hub.synthetic.demo import refresh_demo_information
+
+    await load_individual_demo_batch(db_session)
+    rows = list(await db_session.scalars(select(RawRecordModel)))
+    head = next(row for row in rows if row.external_id == "demo:dengue-compensa:media")
+    untouched = rows[-1]
+    untouched.original_payload = {"synthetic": False, "demo_scenario": "custom"}
+    head.original_payload = {
+        "synthetic": True, "demo_scenario": "dengue-compensa", "preserved": "yes",
+        "signal_information": {"confidentiality": "Nível 2"},
+    }
+    # Simulate old demo rows, without operational metadata.
+    for row in rows:
+        if row not in (head, untouched):
+            row.original_payload = {
+                key: value for key, value in row.original_payload.items()
+                if key != "signal_information"
+            }
+    await db_session.flush()
+    before = [(row.id, row.body, row.title, row.content_hash, row.updated_at) for row in rows]
+
+    result = await refresh_demo_information(db_session)
+    repeated = await refresh_demo_information(db_session)
+
+    assert result == {"matched": 39, "updated": 39}
+    assert repeated == {"matched": 39, "updated": 0}
+    assert before == [
+        (row.id, row.body, row.title, row.content_hash, row.updated_at) for row in rows
+    ]
+    assert untouched.original_payload == {"synthetic": False, "demo_scenario": "custom"}
+    assert head.original_payload["preserved"] == "yes"
+    info = head.original_payload["signal_information"]
+    assert info["confidentiality"] == "Nível 2"
+    assert info["etiology"] == "Dengue (suspeita)"
+    assert info["hazard_general"] == "Arbovirose"
+    assert info["hazard_specific"] == "Dengue"
+    assert info["signal_type"] == "Abertura"
+    assert "dengue" in info["tags"]
+    assert info["signal_date"] == "2026-10-10T08:00:00+00:00"
+    assert info["notified_at"] == "2026-10-10T08:30:00+00:00"
+
+
+@pytest.mark.integration
 async def test_demo_scenario_materializes_reproducible_signals_for_the_panel(
     db_session: AsyncSession,
 ) -> None:
@@ -105,3 +151,14 @@ async def test_individual_demo_batch_leaves_titled_signals_pending_for_live_ai_p
     assert all(title and title.strip() for title in community_titles)
     assert suggestions == []
     assert technical_sheets == []
+    raw_records = list(await db_session.scalars(select(RawRecordModel)))
+    for record in raw_records:
+        information = record.original_payload["signal_information"]
+        assert information["confidentiality"] == "Nível 1"
+        assert information["signal_type"] == "Abertura"
+        assert information["etiology"].endswith("(suspeita)")
+        assert information["hazard_general"]
+        assert information["hazard_specific"]
+        assert information["tags"]
+        assert information["signal_date"]
+        assert information["notified_at"]
