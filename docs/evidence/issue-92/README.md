@@ -37,8 +37,9 @@ Os volumes do projeto isolado de testes foram descartados após a validação.
 
 As capturas mostram conteúdo demonstrativo, sem credenciais ou informações pessoais.
 Algumas foram feitas durante a composição de validação, antes de desfazer os vínculos.
-Na revisão posterior, os textos e ícones da navbar passaram a branco, sobre a faixa azul
-de contraste; as capturas anteriores preservam o registro da validação inicial.
+Na revisão posterior, os textos e ícones da navbar passaram a branco. A faixa azul de contraste
+foi retirada por orientação visual: o fundo final permanece no azul principal `#319AD3`.
+As capturas anteriores preservam o registro das revisões, não uma certificação de contraste.
 
 - [Informações — desktop](informacoes-desktop.png)
 - [Informações — móvel](informacoes-mobile.png)
