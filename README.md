@@ -145,6 +145,11 @@ mínima de `0.65` e pontuação agregada mínima de `0.55`, permitindo que ficha
 clinicamente equivalentes cheguem ao julgamento sem remover os limites de custo. Abrir a aba de relacionados apenas
 lerá os estados persistidos `pending`, `ready` ou `failed`.
 
+Para popular a interface com 40 sinais e processá-los por esse fluxo real, use
+`docker compose --profile tools run --rm demo-populate`. Essa carga não contém fichas ou relações
+pré-gravadas: o resultado depende das respostas persistidas da OpenAI e consome os créditos da
+conta configurada.
+
 ### Avaliações históricas opcionais
 
 A execução básica, os testes e os dados sintéticos não exigem chave externa. Gemini não participa
