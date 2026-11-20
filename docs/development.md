@@ -180,6 +180,30 @@ docker compose logs --follow relation-worker
 Use um banco limpo ao substituir uma carga demonstrativa antiga, pois entidades idempotentes já
 processadas preservam suas evidências auditáveis.
 
+### Atualizar metadados dos exemplos existentes
+
+Para somente adaptar as cargas `demo-load` e `demo-populate` aos campos operacionais atuais,
+**não limpe o banco** nem repita o processamento por IA. Execute:
+
+```bash
+docker compose --profile tools run --build --rm demo-refresh-information
+```
+
+O comando completa `signal_information` apenas nos registros de identidade conhecida do gerador
+`vbe-hub-demo`, marcados como sintéticos e com cenário/identificador externo correspondentes.
+Não cria sinais, não altera títulos, descrições, IDs, extrações, sugestões, associações ou histórico,
+e não acessa provedores de IA nem enfileira trabalho. Valores operacionais já preenchidos são
+preservados. A transação é atômica; a repetição informa `updated: 0`.
+
+As novas cargas já incluem os mesmos metadados: `Nível 1` e `Abertura` são valores demonstrativos,
+não uma política institucional; etiologias são suspeitas, nunca diagnósticos. Categorias e etiquetas
+são declaradas no fixture, não novas conclusões da IA. A data do sinal segue a publicação simulada;
+a notificação é simulada para 30 minutos depois e **não representa envio a uma autoridade**.
+A detecção permanece “Não informado” nessas cargas históricas: a coleta retroativa não comprova
+uma detecção real. A proveniência original e o marcador `synthetic` permanecem preservados.
+
+### Reconstrução e verificação
+
 Para reconstruir sem reaproveitar o cache local:
 
 ```bash

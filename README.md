@@ -158,6 +158,11 @@ Para popular a interface com 40 sinais e processá-los por esse fluxo real, use
 pré-gravadas: o resultado depende das respostas persistidas da OpenAI e consome os créditos da
 conta configurada.
 
+Para adequar os exemplos já existentes aos campos operacionais da ficha, sem apagar dados nem
+chamar a IA, execute `docker compose --profile tools run --build --rm demo-refresh-information`.
+Esse comando apenas completa metadados demonstrativos ausentes; preserva descrições, vínculos,
+histórico e resultados da OpenAI. Consulte os [limites das datas e classificações simuladas](docs/development.md#atualizar-metadados-dos-exemplos-existentes).
+
 ### Avaliações históricas opcionais
 
 A execução básica, os testes e os dados sintéticos não exigem chave externa. Gemini não participa

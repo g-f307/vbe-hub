@@ -64,3 +64,23 @@ Os testes de integração devem usar infraestrutura descartável, não o banco d
 O painel fica em `http://localhost:3000`. Não é necessário reprocessar dados com IA para
 atualizar cores, abas ou os campos apresentados. Metadados inexistentes aparecem como
 “Não informado”; a interface não preenche valores copiando o exemplo do orientador.
+
+## Adequação dos exemplos aos campos operacionais
+
+Ainda em 20/11/2026, foi executado `demo-refresh-information` sobre a demonstração local:
+40 origens identificadas, 40 atualizadas e zero atualizações na repetição. O comando apenas
+completa metadados demonstrativos ausentes. Novas cargas incluem os mesmos dados declarados,
+sem apresentá-los como extração ou decisão da IA; os limites estão no
+[guia de execução](../../development.md#atualizar-metadados-dos-exemplos-existentes).
+
+Uma comparação transacional de todas as tabelas públicas antes/depois, excluindo somente o
+envelope `signal_information`, confirmou igualdade dos demais dados: 40 sinais, 40 descrições,
+40 extrações, 40 embeddings, 56 avaliações/sugestões de relações, seis fichas, 13 registros de
+participação e 15 eventos de composição preservados. Não houve enfileiramento nem chamada à IA.
+A API local retornou os novos campos no detalhe do sinal de mídia sobre o Zumbi.
+
+Nesta revisão, 279 testes unitários e 65 de integração passaram, assim como Ruff, `docs-check`
+e `git diff --check`. A auditoria adicional com a versão atual do skill r-doc apontou dez erros
+estruturais e um aviso preexistentes (IDs documentais duplicados, navegação de evidências,
+sucessores de documentos substituídos e revisão vencida do plano). Portanto, essa auditoria
+ampliada não está aprovada; a verificação documental oficial do repositório está aprovada.
