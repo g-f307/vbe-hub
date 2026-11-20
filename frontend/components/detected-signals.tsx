@@ -53,12 +53,12 @@ export function DetectedSignalsView({
             name="query"
             defaultValue={filters.query ?? ''}
             placeholder="Buscar no lote carregado"
-            className="h-11 w-full rounded-md border border-input bg-background pl-10 pr-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-11 w-full rounded-md border border-border bg-background pl-10 pr-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </label>
         <label>
           <span className="sr-only">Estado do fluxo</span>
-          <select name="state" defaultValue={filters.state ?? 'detected'} className="h-11 w-full rounded-md border border-input bg-background px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <select name="state" defaultValue={filters.state ?? 'detected'} className="h-11 w-full rounded-md border border-border bg-background px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <option value="all">Todos os estados</option>
             <option value="detected">Detectados</option>
             <option value="triage">Em triagem</option>
@@ -69,7 +69,7 @@ export function DetectedSignalsView({
         </label>
         <label>
           <span className="sr-only">Tipo de fonte</span>
-          <select name="source_kind" defaultValue={filters.sourceKind ?? 'all'} className="h-11 w-full rounded-md border border-input bg-background px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <select name="source_kind" defaultValue={filters.sourceKind ?? 'all'} className="h-11 w-full rounded-md border border-border bg-background px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <option value="all">Todas as fontes</option>
             <option value="media">Mídia</option>
             <option value="community">Relato comunitário</option>

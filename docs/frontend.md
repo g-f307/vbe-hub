@@ -96,6 +96,8 @@ continua fora do rastreamento.
   em telas estreitas, os mesmos campos são reorganizados verticalmente.
 - A visualização em cards mantém três itens por linha em telas amplas, com respiro horizontal moderado
   entre os cartões e aproveitamento maior da largura útil da página.
+- Busca, filtros e seletor de visualização da fila usam a borda suave `#D2E2EC`, sem alterar
+  o token global dos demais formulários. O anel azul de foco de teclado continua visível.
 - Os cards do Kanban usam uma composição compacta e plana, com uma faixa horizontal discreta na cor
   do estágio. Como o nome do estágio já aparece no cabeçalho da coluna, ele não é repetido no card.
 - A rota de detalhe funciona como espaço de investigação em largura ampla, não como modal. O cabeçalho

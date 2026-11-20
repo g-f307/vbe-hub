@@ -30,6 +30,15 @@ const items: IndividualSignalCard[] = [
 ]
 
 describe('DetectedSignalsView', () => {
+  it('mantém bordas suaves nos quatro controles da barra e foco de teclado visível', () => {
+    const html = renderToStaticMarkup(
+      <DetectedSignalsView items={items} nextCursor={null} filters={{ state: 'all' }} />,
+    )
+    expect(html.match(/border border-border bg-background/g)).toHaveLength(4)
+    expect(html).not.toContain('border-input')
+    expect(html.match(/focus-visible:ring-2 focus-visible:ring-ring/g)!.length).toBeGreaterThanOrEqual(4)
+  })
+
   it('preserva todos os estados explicitamente ao paginar e voltar do detalhe', () => {
     expect(buildQueueHref({ state: 'all', view: 'list', cursor: 'page-two' }))
       .toBe('/?state=all&cursor=page-two&view=list')

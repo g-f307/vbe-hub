@@ -32,7 +32,7 @@ export function ViewSelector({ view, hrefs }: { view: DetectedView; hrefs: Recor
   return (
     <div className="rounded-xl border border-border bg-card p-3 shadow-sm lg:w-52">
       <details ref={detailsRef} className="group relative" data-view={view} data-close-on-outside="true">
-        <summary aria-label="Selecionar visualização" className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-md border border-input bg-background px-3 text-[13px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+        <summary aria-label="Selecionar visualização" className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-md border border-border bg-background px-3 text-[13px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
           <span className="flex items-center gap-2">
             <span className="inline-flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary"><ActiveIcon className="size-4" aria-hidden /></span>
             {active.label}
